@@ -1,0 +1,52 @@
+{if $isHidden}
+    <div class="ow_stdmargin">
+        {$componentForumCaption}
+    </div>
+{$breadcrumb}
+{/if}
+
+{if !$authMsg}
+<div class="ow_automargin ow_superwide">
+    {form name='add-topic-form'}
+    <table class="ow_table_1 ow_form ow_stdmargin">
+        <tr class="ow_alt2 ow_tr_first">
+            <td class="ow_label">{text key='forum+new_topic_subject'}</td>
+            <td class="ow_value">
+			{input name='title'}
+			{error name='title'}
+            </td>
+        </tr>
+        {if $isHidden}
+        {input name='group'}
+        {else}
+        <tr class="ow_alt1">
+            <td class="ow_label">{text key='forum+new_topic_group'}</td>
+            <td class="ow_value">
+                {input name='group'}
+                {error name='group'}
+            </td>
+        </tr>
+        {/if}
+        <tr class="ow_alt2 {if !$enableAttachments}ow_tr_last{/if}">
+            <td class="ow_label">{text key='forum+new_topic_body'}</td>
+            <td class="ow_value">
+			{input name='text' class='ow_forum_post_area' id='post_body'}
+			{error name='text'}
+            {if $enableAttachments}{$attachments}{/if}
+            </td>
+        </tr>
+        <tr class="ow_alt1">
+            <td class="ow_label">{label name='subscribe'}</td>
+            <td class="ow_value">{input name='subscribe'}</td>
+        </tr>
+    </table>
+    <div class="clearfix ow_stdmargin">
+        <div class="ow_right">
+            {submit name='post' class='ow_positive'}
+        </div>    
+    </div>
+    {/form}
+</div>
+{else}
+    <div class="ow_anno ow_std_margin ow_nocontent">{$authMsg}</div>
+{/if}

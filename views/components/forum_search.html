@@ -1,0 +1,69 @@
+{style}
+{literal}
+    .forum_search_form { display: inline-block; }
+    .forum_search_tag_input {
+        border-width: 1px;
+        border-top: none; border-bottom: none; border-right: none;
+        width: 110px;
+        padding: 4px;
+    }
+    .forum_search_wrap {
+        display: inline-block;
+        background-image: url({/literal}{$themeUrl}{literal}inputbg.gif);
+        background-repeat: repeat-x;
+        background-position: 0px 0px;
+        font-size: 0px;
+        line-height: 28px;
+        margin: 0px 0px 20px 0px;
+        padding: 0px 24px 0px 0px;
+        border-radius: 3px;
+        border-width: 1px;
+        -moz-border-radius: 3px;
+        -webkit-border-radius: 3px;
+        position: relative;
+        vertical-align: top;
+    }
+    body .forum_search_wrap input {
+        border: none;
+        background-image: none;
+        padding: 0px 0px 3px;
+        height: 20px;
+    }
+    .forum_search_input { padding: 4px; width: 130px; }
+    .forum_search_inputs .forum_search_input { float: left; }
+    .forum_search_inputs .forum_search_tag_input { float: right; }
+    .ow_forum_search_context_menu {
+        display: none;
+        position: absolute;
+        right: 4px;
+        top: 4px;
+    }
+    .ow_context_more.ow_miniic_delete { background-position: -1px center; }
+    .ow_context_action:hover .ow_context_more.ow_miniic_delete {
+        background-image: url({/literal}{$themeUrl}{literal}/miniic_x.png);
+        background-position: -1px center;
+    }
+{/literal}
+{/style}
+
+<form id="forum_search" class="forum_search_form">
+    <div class="forum_search_wrap ow_border">
+        <div id="forum_search_cont" class="clearfix{if $userToken} forum_search_inputs{/if}">
+            <div class="forum_search_input">{$input}</div>
+            <div class="ow_forum_search_context_menu" style="display: block;">
+                <div class="add_filter"{if $userToken} style="display: none;"{/if}>{$filterContext}</div>
+            </div>
+            <div class="forum_search_tag_input ow_border"{if !$userToken} style="visibility: hidden; height: 0px; padding: 0px;"{/if}>
+                <div class="ow_forum_search_context_menu" style="display: block;">
+                    <div class="ow_context_action_block clearfix">
+                        <div class="ow_context_action">
+                            <span class="ow_context_more ow_miniic_delete"></span>
+                        </div>
+                    </div>
+                </div>
+                {$userInput}
+                <input type="submit" name="search_submit" style="visibility: hidden; position: absolute; top: -1000px;" />
+            </div>
+        </div>
+    </div>
+</form>

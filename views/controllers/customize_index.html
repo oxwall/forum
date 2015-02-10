@@ -1,0 +1,161 @@
+{style}
+{literal}
+.ow_forum .ow_lbutton:hover {
+    cursor: default;
+}
+{/literal}
+{/style}
+<div class="ow_box ow_highbox ow_smallmargin ow_center">
+    {decorator name='button' langLabel='base+widgets_finish_customize_btn' id='finish_customizing' class='ow_ic_lock'}
+</div>
+
+<div class="forum_sections">
+
+{foreach from=$sectionGroupList item='section'}
+<table class="ow_table_1 ow_stdmargin ow_forum forum_section" id="section_{$section.sectionId}">
+    <tr class="forum_section_tr ow_tr_first">
+        <th class="ow_name"><a href="{$section.sectionUrl}">{$section.sectionName}</a></th>
+        <th class="ow_topics">{text key='forum+topics'}</th>
+        <th class="ow_replies">{text key='forum+replies'}</th>
+        <th class="ow_action">
+            <div class="ow_section_acts" style="display: none">
+                <a class="ow_lbutton section_edit" href="javascript://">{text key='forum+edit_section'}</a>&nbsp;<a class="ow_lbutton ow_red section_delete" href="javascript://">{text key='forum+delete_section'}</a>
+            </div>
+        </th>
+    </tr>
+    
+    {foreach from=$section.groups item=group name=groups}
+    <tr class="forum_group {if $smarty.foreach.groups.last}ow_tr_last{/if}" id="group_{$group.id}">
+        <td class="ow_name">
+            <a href="{$group.groupUrl}"><b>{$group.name}</b> </a>
+            <div class="ow_small">{$group.description}</div>
+            {if $group.isPrivate}
+                <span class="ow_lbutton ow_green">{text key='forum+is_private'}</span> 
+                <span class="ow_small ow_remark">{text key='forum+visible_to'}: {foreach from=$group.roles item='r' name='r'}{$r}{if !$smarty.foreach.r.last}, {/if}{/foreach}</span>
+            {/if}
+        </td>
+        <td class="ow_topics">{$group.topicCount}</td>
+        <td class="ow_replies">{$group.replyCount}</td>
+        <td class="ow_action">
+            <div class="ow_group_acts" style="display: none;">
+                <a class="ow_lbutton group_edit" href="javascript://">{text key='forum+edit_group'}</a>&nbsp;<a class="ow_lbutton ow_red group_delete" href="javascript://">{text key='forum+delete_group'}</a>
+            </div>
+        </td>
+    </tr>
+    {/foreach}
+    <tr class="forum_group no_forum_group" {if $section.groups}style="display: none;"{/if}>
+        <td colspan="4">{text key='forum+no_group'}</td>
+    </tr>
+</table>
+{/foreach}
+
+</div>
+
+<div class="ow_stdmargin ow_txtright">
+    {decorator name='button' langLabel='forum+add_new_forum_btn' id='add_forum_btn' class='ow_ic_add'}
+</div>
+
+{*add forum form*}
+<div style="display: none">
+<div class="add_forum_form" id="add_forum_form">
+    {form name='add-forum-form'}
+        <table class="ow_table_1 ow_form ow_full">
+		<tr class="ow_alt2">
+			<td class="ow_label">{text key='forum+add_new_forum_name'}</td>
+			<td class="ow_value">
+				{input name='group-name'}
+				{error name='group-name'}
+			</td>
+		</tr>
+		<tr class="ow_alt1">
+			<td class="ow_label">{text key='forum+add_new_forum_section'}</td>
+			<td class="ow_value">
+				{input name='section'}
+				{error name='section'}
+			</td>
+		</tr>
+		<tr class="ow_alt2">
+			<td class="ow_label">{text key='forum+add_new_forum_description'}</td>
+			<td class="ow_value">
+				{input name='description'}
+				{error name='description'}
+			</td>
+		</tr>
+		<tr class="ow_alt1">
+          <td class="ow_label">{text key='forum+is_private'}</td>
+          <td class="ow_value">{input name='is-private'}</td>
+        </tr>
+        <tr class="ow_alt2 private_forum_roles" style="display: none;">
+          <td class="ow_label">{text key='forum+visible_to'}</td>
+          <td class="ow_value">{input name='roles'}</td>
+        </tr>
+		</table>
+		<div class="clearfix">
+            <div class="ow_right">
+        	{submit name='add' class='ow_positive'}
+        	</div>
+        </div>
+	{/form}
+</div>
+</div>
+
+{*edit section form*}
+<div style="display: none">
+<div class="edit_section_form" id="edit_section_form">
+	{form name='edit-section-form'}
+		<table class="ow_table_1 ow_form ow_full">
+		<tr class="ow_alt2">
+            <td class="ow_label"><span class="ow_nowrap">{text key='forum+edit_section_name'}</span></td>
+			<td class="ow_value">
+				{input name='section-name'}
+				{error name='section-name'}
+				{input name='section-id'}
+			</td>
+		</tr>			
+		</table>
+		<div class="clearfix">
+            <div class="ow_right">
+            {submit name='save' class='ow_positive'}
+            </div>
+        </div>
+	{/form}
+</div>
+</div>
+
+{*edit group form*}
+<div style="display: none;">
+<div class="edit_group_form"  id="edit_group_form">
+	{form name='edit-group-form'}
+		<table class="ow_table_1 ow_form ow_full">
+		<tr class="ow_alt2">
+			<td class="ow_label">{text key='forum+edit_group_name'}</td>
+			<td class="ow_value">
+				{input name='group-name'}
+				{error name='group-name'}
+				{input name='group-id'}
+			</td>
+		</tr>
+		<tr class="ow_alt1">
+			<td class="ow_label">{text key='forum+edit_group_description'}</td>
+			<td class="ow_value">
+				{input name='description'}
+				{error name='description'}
+			</td>
+		</tr>
+		<tr class="ow_alt2">
+		  <td class="ow_label">{text key='forum+is_private'}</td>
+		  <td class="ow_value">{input name='is-private'}</td>
+		</tr>
+		<tr class="ow_alt1 private_forum_roles">
+		  <td class="ow_label">{text key='forum+visible_to'}</td>
+		  <td class="ow_value">{input name='roles'}</td>
+		</tr>
+		</table>
+		<div class="clearfix">
+            <div class="ow_right">
+            {submit name='save' class='ow_positive'}
+            </div>
+        </div>
+	{/form}
+</div>
+</div>

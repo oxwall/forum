@@ -1,0 +1,85 @@
+{style}
+{literal}
+.ow_author { 
+    width: 25%; 
+}
+
+.ow_reply_info {
+    margin-bottom: 3px;
+}
+.ow_forum .ow_lbutton:hover {
+    cursor: default;
+}
+{/literal}
+{/style}
+
+{script}
+{literal}
+    $("#btn-customize-forum").click(function(){
+        window.location.href='{/literal}{$customizeUrl}{literal}';
+    });
+{/literal}
+{/script}
+
+<div class="clearfix">
+{if $singleMode}
+    {add_content key='forum.add_content.list.top' listType='group'}
+{else}
+    {add_content key='forum.add_content.list.top' listType='forum'}
+{/if}
+</div>
+
+{if $isModerator}
+    <div class="ow_box ow_highbox ow_stdmargin ow_center">
+        {decorator name='button' langLabel='base+widgets_customize_btn' id='btn-customize-forum' class='ow_ic_gear_wheel'}
+    </div>
+{/if}
+
+{if $singleMode}
+    {$groupCmp}
+{else}
+<div class="clearfix">
+	<div class="ow_right ow_smallmargin">
+	   {$search}
+	</div>
+</div>
+
+<table class="ow_table_1 ow_stdmargin ow_forum">
+{foreach from=$sectionGroupList item='section'}
+    <tr class="ow_tr_first">
+        <th class="ow_name"><a href="{$section.sectionUrl}"><span id="section-{$section.sectionId}">{$section.sectionName}</span></a></th>
+        <th class="ow_topics">{text key='forum+topics'}</th>
+        <th class="ow_replies">{text key='forum+replies'}</th>
+        <th class="ow_author">{text key='forum+last_reply'}</th>
+    </tr>
+    
+    {foreach from=$section.groups item=group name='g'}
+    <tr class="{cycle values='ow_alt1,ow_alt2' reset=$smarty.foreach.g.first} {if $smarty.foreach.g.last}ow_tr_last{/if}">
+        <td class="ow_name">
+            <a href="{$group.groupUrl}"><b>{$group.name}</b></a>
+            <div class="ow_small">{$group.description}</div>
+            {if $group.isPrivate}
+                <span class="ow_lbutton ow_green">{text key='forum+is_private'}</span> 
+                <span class="ow_small ow_remark">{text key='forum+visible_to'}: {foreach from=$group.roles item='r' name='r'}{$r}{if !$smarty.foreach.r.last}, {/if}{/foreach}</span>
+            {/if}
+        </td>
+        <td class="ow_topics">{$group.topicCount}</td>
+        <td class="ow_replies">{$group.replyCount}</td>
+        <td class="ow_txtleft ow_small">
+        {if !empty($group.lastReply)}
+            <div class="ow_reply_info">
+	            <span class="ow_nowrap ow_icon_control ow_ic_user">
+	                {user_link username=$userNames[$group.lastReply.userId] name=$displayNames[$group.lastReply.userId]}
+	            </span> &middot;
+	            <span class="ow_nowrap ow_remark">{format_date timestamp=$group.lastReply.createStamp}</span>
+            </div>
+            {text key='forum+in'} <a href="{$group.lastReply.postUrl}">{$group.lastReply.title}</a>
+        {/if}
+        </td>
+    </tr>
+    {/foreach}
+    
+    <tr class="ow_tr_delimiter"><td colspan="3"></td></tr>
+{/foreach}
+</table>
+{/if}

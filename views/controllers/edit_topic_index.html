@@ -1,0 +1,94 @@
+{*Edit topic form*}
+
+{script}
+{literal}
+    $("a.forum_delete_attachment").each(function(){
+        
+        var container_handler = $(this).closest(".attachment_container");
+        
+        $(this).click(function(){            
+            
+            if ( confirm(OW.getLanguageText('forum', 'confirm_delete_attachment')) )
+            {
+               var attachment_id = $(this).data("aid");
+               
+               var params = {};
+               var url = '{/literal}{url_for_route for='forum_delete_attachment'}{literal}';
+               params['attachmentId'] = attachment_id;
+               
+               $.ajaxSetup({dataType: 'json'});
+               $.post(url, params, function(data){
+                    if ( data.result == true ) {
+                        OW.info(data.msg);
+                        container_handler.remove();
+                    }
+                    else if (data.error != undefined) {
+                        OW.warning(data.error);
+                    }
+               });             
+            }
+            else
+            {
+                return false;
+            }
+        });
+    });
+{/literal}
+{/script}
+
+{if $isHidden}
+    <div class="ow_stdmargin">
+        {$componentForumCaption}
+    </div>
+{/if}
+{$breadcrumb}
+
+
+{form name='edit-topic-form'}
+    <table class="ow_table_1 ow_form" width="100%">
+    <tbody>
+        <tr class="ow_alt{cycle values='2,1'}ow_tr_first {if !$enableAttachments}ow_tr_last{/if}">
+            <td class="ow_label">{text key='forum+new_topic_subject'}</td>
+            <td class="ow_value">
+                {input name='title'}
+                {error name='title'}
+            </td>
+        </tr>
+        <tr class="ow_alt{cycle values='2,1'}">
+            <td class="ow_label">{text key='forum+new_topic_body'}</td>
+            <td class="ow_value">
+                <div class="ow_smallmargin">
+                {input name='text' id='post_body'}
+                {error name='text'}
+                </div>
+                {if $enableAttachments}
+                    {capture assign='postId'}{$post->id}{/capture}
+                    {if isset($attachments[$postId])}
+                    <div class="ow_file_attachment_preview clearfix">
+                        {foreach from=$attachments[$postId] item='attm'}
+                        <div class="attachment_container ow_file_attachment_block{cycle values='1,2'}">
+                            <div class="ow_file_attachment_info">
+                                <div class="ow_file_attachment_name">
+                                    {if $attm.downloadUrl != ''}<a href="{$attm.downloadUrl}">{$attm.fileName}</a>{else}{$attm.fileName}{/if}
+                                    <span class="ow_file_attachment_size" style="display: inline-block;">({$attm.fileSize}Kb)</span>
+                                </div>
+                                <a href="javascript://" class="ow_file_attachment_close forum_delete_attachment" data-aid="{$attm.id}"></a>
+                            </div>
+                        </div>
+                        {/foreach}
+                    </div>
+                    {/if}
+                    <div class="ow_smallmargin">
+                        {$attachmentsCmp}
+                    </div>
+                {/if}
+            </td>
+        </tr>
+    </tbody>
+    </table>
+    <div class="clearfix ow_stdmargin">
+    <div class="ow_right">
+		{submit name='save' class="ow_ic_save ow_positive"} 
+	</div>
+	</div>
+{/form}

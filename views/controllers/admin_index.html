@@ -1,0 +1,22 @@
+<div class="ow_automargin ow_superwide">
+{form name='configSaveForm'}
+
+<table class="ow_table_1 ow_form">
+    <tr class="ow_tr_first">
+        <th class="ow_name ow_txtleft" colspan="3">
+            <span class="ow_section_icon ow_ic_forum">{text key='forum+general_settings'}</span>
+        </th>
+    </tr>
+    <tr class="ow_alt{cycle values='1,2'}">
+        <td class="ow_label">{text key='forum+enable_attachments'}</td>
+        <td class="ow_value">
+            {input name='enableAttachments'} {error name='enableAttachments'}
+        </td>
+        <td class="ow_desc ow_small"></td>
+    </tr>
+</table>
+<div class="clearfix ow_stdmargin">
+	{submit name='save' class='ow_ic_save ow_submit ow_right'}
+</div>
+{/form}
+</div>

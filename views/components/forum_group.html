@@ -1,0 +1,97 @@
+{style}
+{literal}
+.ow_forum_attachment_icon {
+display: inline-block;
+background-repeat: no-repeat;
+cursor: pointer;
+width: 14px;
+height: 17px;
+}
+{/literal}
+{/style}
+
+{if empty($authError)}
+{script}
+{literal}
+$(".btn_add_topic").click(function(){
+window.location.href='{/literal}{$addTopicUrl}{literal}';
+});
+{/literal}
+{/script}
+{/if}
+{if !empty($showCaption)}
+    {if $isHidden}
+    <div class="ow_stdmargin">
+        {$componentForumCaption}
+    </div>
+    {else}
+    {$breadcrumb}
+    {/if}
+{/if}
+
+{if !empty($authError)}
+    <div class="ow_anno ow_std_margin ow_nocontent">{$authError}</div>
+{else}
+<div class="clearfix">
+    <div class="ow_left">{$paging}</div>
+    <div class="ow_right ow_txtright ow_smallmargin ow_narrow">
+        <div class="ow_smallmargin">
+            {$search}
+        </div>
+        {if $canEdit}
+        {decorator name='button' langLabel='forum+new_topic_btn' class='ow_ic_add btn_add_topic'}
+        {/if}
+    </div>
+
+</div>
+
+<table class="ow_table_1 ow_forum_topic">
+    <tr class="ow_tr_first">
+        <th class="ow_icon"></th>
+        <th class="ow_title">{text key='forum+topic'}</th>
+        <th class="ow_posts">{text key='forum+replies'}</th>
+        <th class="ow_views">{text key='forum+views'}</th>
+        <th class="ow_author">{text key='forum+last_reply'}</th>
+    </tr>
+    {foreach from=$topicList item=topic name=topic}
+    <tr class="{cycle values='ow_alt1, ow_alt2'} {if $smarty.foreach.topic.last}ow_tr_last{/if}">
+        <td class="ow_icon">
+            {if $topic.new}<span class="ow_lbutton ow_green">{text key='forum+new'}</span>{/if}
+            {if $topic.locked}<span class="ow_lbutton ow_red">{text key='forum+locked'}</span>{/if}
+            {if $topic.sticky}<span class="ow_lbutton">{text key='forum+sticky'}</span>{/if}
+        </td>
+        <td class="ow_title">
+            {if isset($attachments[$topic.id])}
+            <span class="ow_forum_attachment_icon ow_ic_attach" title="{text key='forum+topic_attachments' count=$attachments[$topic.id]}">&nbsp;</span>
+            {/if}
+            <a href="{$topic.topicUrl}">{$topic.title}</a></td>
+        <td class="ow_posts">{if $topic.replyCount}{$topic.replyCount}{else}-{/if}</td>
+        <td class="ow_views">{$topic.viewCount}</td>
+        <td class="ow_author ow_small">
+            {if isset($topic.lastPost)}
+            <a href="{$topic.lastPost.postUrl}">{text key='forum+last_reply'}</a> {text key='forum+by'}
+            {user_link username=$usernames[$topic.lastPost.userId] name=$displayNames[$topic.lastPost.userId]}
+            <span class="ow_nowrap ow_remark">{$topic.lastPost.createStamp}</span>
+            {/if}
+        </td>
+    </tr>
+    {/foreach}
+
+    {if !$topicList}
+    <tr>
+        <td colspan="5">{text key='forum+no_topic'}</td>
+    </tr>
+    {/if}
+</table>
+
+<div class="ow_std_margin clearfix">
+    <div class="ow_left">
+        {$paging}
+    </div>
+    <div class="ow_right">
+        {if $canEdit}
+        {decorator name='button' langLabel='forum+new_topic_btn' class='ow_ic_add btn_add_topic'}
+        {/if}
+    </div>
+</div>
+{/if}

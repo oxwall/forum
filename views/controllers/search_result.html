@@ -1,0 +1,62 @@
+{style}
+{literal}
+    .ow_forum_matching_posts { padding: 5px; }
+    .ow_forum_search_result .ow_highbox { padding: 0 3px; }
+{/literal}
+{/style}
+
+{if !empty($token) || !empty($userToken)}
+	{if isset($componentForumCaption)}
+	    <div class="ow_stdmargin">
+	        {$componentForumCaption}        
+	    </div>
+	{/if}
+
+    <div class="ow_smallmargin clearfix">
+        <div class="ow_left">{if isset($paging)}{$paging}{/if}</div>
+	    <div class="ow_right ow_txtright">{$search}</div>
+    </div>
+    
+    {if $topics}
+    
+    {if !empty($token)}{$sort}{/if}
+    	
+	<div class="ow_forum_search_result">
+    {foreach from=$topics item='topic'}
+        {capture assign='label'}<a href="{$topic.topicUrl}">{$topic.title}</a>{/capture}
+        {block_decorator name='box' type='empty' addClass='ow_stdmargin' label=$label iconClass='ow_ic_forum'}
+        <div class="ow_forum_matching_posts">
+        <div class="ow_smallmargin ow_small">
+            {text key='forum+topic_location'}
+            <a href="{url_for_route for="forum-default"}#section-{$topic.sectionId}">{$topic.sectionName}</a> 
+            &raquo; <a href="{url_for_route for="group-default:[groupId=>`$topic.groupId`]"}">{$topic.groupName}</a>
+        </div>
+        {if isset($topic.posts)}
+            {foreach from=$topic.posts item='post'}
+
+            {capture assign='info_string'}
+                <a href="{$avatars[$post.userId].url}">{$avatars[$post.userId].title}</a> <span class="ow_tiny ow_ipc_date">{$post.createStamp}</span>
+            {/capture}
+	
+            {capture assign='content'}
+	            <div class="post_content">{$post.text} <a href="{$post.postUrl}" class="ow_lbutton">{text key='base+more'}</a></div>
+	        {/capture}
+	
+	        {decorator name='ipc' addClass='ow_smallmargin'
+	            avatar=$avatars[$post.userId]
+	            content=$content
+	            infoString=$info_string}
+
+		   {/foreach}
+	   {/if}
+	   </div>
+	   {/block_decorator}
+	{/foreach}
+	</div>
+	
+	{if isset($paging)}{$paging}{/if}
+	
+	{else}
+	   <div class="ow_anno ow_center">{text key='forum+no_posts_found'}</div>
+	{/if}
+{/if}

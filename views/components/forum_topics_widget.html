@@ -1,0 +1,29 @@
+
+{foreach from=$topics item='topic'}
+
+	{capture assign='info_string'}
+	    <a href="{$topic.lastPost.postUrl}">{$topic.title}</a>
+	{/capture}
+	
+	{capture assign='content'}
+    	{assign var="sectId" value=$groups[$topic.groupId]->sectionId}
+		<div class="ow_smallmargin ow_small">
+		    <a href="{url_for_route for="forum-default"}#section-{$sectId}">{$sections[$sectId]->name}</a> &raquo; <a href="{url_for_route for="group-default:[groupId=>`$topic.groupId`]"}">{$groups[$topic.groupId]->name}</a>
+		</div>
+	    <div class="ow_smallmargin">
+            {capture assign='length'}{$topic.lastPost.text|count_characters}{/capture}
+            {$topic.lastPost.text|truncate:$postLength} {if $length > $postLength}<a href="{$topic.lastPost.postUrl}" class="ow_lbutton">{text key='base+more'}</a>{/if}
+	    </div>
+	{/capture}
+	
+	{decorator name='ipc'
+		addClass='ow_smallmargin'
+	    avatar=$avatars[$topic.lastPost.userId]
+	    infoString=$info_string
+	    content=$content
+	    toolbar=$toolbars[$topic.lastPost.postId]
+	}
+	
+{foreachelse}
+    <div class="ow_nocontent">{text key='forum+no_topics'}, <a href="{url_for_route for='add-topic-default'}">{text key='forum+add_new'}</a></div>
+{/foreach}
