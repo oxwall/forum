@@ -209,6 +209,18 @@ class FORUM_CTRL_EditTopic extends OW_ActionController
                     }
                 }
             }
+            
+            $params = array(
+                'topicId' => $topicDto->id,
+                'entity' => $forumSection->entity ? $forumSection->entity : NULL,
+                'entityId' => $forumGroup->entityId ? $forumGroup->entityId : NULL,
+                'userId' => $topicDto->userId,
+                'topicUrl' => $topicUrl,
+                'topicTitle' => $topicDto->title,
+                'postText' => $postDto->text
+            );
+            $event = new OW_Event('forum.topic_add', $params);
+            OW::getEventManager()->trigger($event);
 
             OW::getEventManager()->trigger(new OW_Event('feed.action', array(
                 'pluginKey' => 'forum',

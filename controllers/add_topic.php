@@ -262,11 +262,16 @@ class FORUM_CTRL_AddTopic extends OW_ActionController
                 if ( $isHidden && isset($forumSection) )
                 {
                     BOL_AuthorizationService::getInstance()->trackAction($forumSection->entity, 'add_topic');
-
+                }
+                else
+                {
+                    BOL_AuthorizationService::getInstance()->trackAction('forum', 'edit');
+                }
+                
                     $params = array(
                         'topicId' => $topicDto->id,
-                        'entity' => $forumSection->entity,
-                        'entityId' => $forumGroup->entityId,
+                    'entity' => $forumSection->entity ? $forumSection->entity : NULL,
+                    'entityId' => $forumGroup->entityId ? $forumGroup->entityId : NULL,
                         'userId' => $topicDto->userId,
                         'topicUrl' => $topicUrl,
                         'topicTitle' => $topicDto->title,
@@ -274,11 +279,6 @@ class FORUM_CTRL_AddTopic extends OW_ActionController
                     );
                     $event = new OW_Event('forum.topic_add', $params);
                     OW::getEventManager()->trigger($event);
-                }
-                else
-                {
-                    BOL_AuthorizationService::getInstance()->trackAction('forum', 'edit');
-                }
 
                 OW::getEventManager()->trigger(new OW_Event(FORUM_BOL_ForumService::EVENT_AFTER_TOPIC_ADD, array(
                     'topicId' => $topicDto->id
