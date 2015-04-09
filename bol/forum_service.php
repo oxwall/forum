@@ -51,6 +51,9 @@ final class FORUM_BOL_ForumService
     const STATUS_APPROVED = 'approved';
     const STATUS_BLOCKED = 'blocked';
 
+    CONST SEARCH_ENTITY_TYPE_TOPIC = 'forum_topic';
+    CONST SEARCH_ENTITY_TYPE_POST = 'forum_post';
+
     /**
      * @var FORUM_BOL_ForumService
      */
@@ -894,6 +897,18 @@ final class FORUM_BOL_ForumService
     public function addTopic( $topicDto )
     {
         $this->topicDao->save($topicDto);
+
+        if ( $topicDto->status == self::STATUS_APPROVED )
+        {
+            $topicTags = array(
+                'forum_topic_id_' . $topicDto->id,
+                'forum_topic_user_id_' . $topicDto->userId,
+                'forum_topic_group_id_' . $topicDto->groupId
+            );
+
+            OW::getTextSearchManager()->
+                    addEntity(self::SEARCH_ENTITY_TYPE_TOPIC, $topicDto->id, $topicDto->title, time(), $topicTags);
+        }
     }
 
     /**
@@ -1022,6 +1037,35 @@ final class FORUM_BOL_ForumService
     public function saveOrUpdatePost( $postDto )
     {
         $this->postDao->save($postDto);
+
+        // TODO: delete old post via tags
+        // delete old post
+        //OW::getTextSearchManager()->deleteEntity(self::SEARCH_ENTITY_TYPE_POST, $postDto->id);
+        //OW::getTextSearchManager()->deleteEntity(self::SEARCH_ENTITY_TYPE_TOPIC, $postDto->id);
+
+        // get topic info
+        $topicInfo = $this->getTopicInfo($postDto->topicId);
+
+        // add a new one
+        $postTags = array(
+            'forum_post_id_' . $postDto->id,
+            'forum_post_user_id_' . $postDto->userId,
+            'forum_post_topic_id_' . $postDto->topicId,
+            'forum_post_group_id_' . $topicInfo['groupId']
+        );
+
+        OW::getTextSearchManager()->
+                addEntity(self::SEARCH_ENTITY_TYPE_POST, $postDto->id, $postDto->text, $postDto->createStamp, $postTags);
+
+        // duplicate this post as a part of topic
+         $topicTags = array(
+            'forum_topic_user_id_' . $postDto->userId,
+            'forum_topic_group_id_' . $topicInfo['groupId'],
+            'forum_post_id_' . $postDto->id
+        );
+
+        OW::getTextSearchManager()->
+                addEntity(self::SEARCH_ENTITY_TYPE_TOPIC, $topicInfo['id'], $postDto->text, $postDto->createStamp, $topicTags);
     }
 
     /**
