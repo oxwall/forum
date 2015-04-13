@@ -57,3 +57,6 @@ foreach( $event->getData() as $widgetInfo )
 require_once dirname(__FILE__) . DS .  'classes' . DS . 'credits.php';
 $credits = new FORUM_CLASS_Credits();
 $credits->triggerCreditActionsAdd();
+
+require_once dirname(__FILE__) . DS .  'classes' . DS . 'forum_text_search.php';
+FORUM_CLASS_ForumTextSearch::getInstance()->activateEntities();

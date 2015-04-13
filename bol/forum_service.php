@@ -50,9 +50,6 @@ final class FORUM_BOL_ForumService
     const STATUS_APPROVAL = 'approval';
     const STATUS_APPROVED = 'approved';
 
-    CONST SEARCH_ENTITY_TYPE_TOPIC = 'forum_topic';
-    CONST SEARCH_ENTITY_TYPE_POST = 'forum_post';
-
     /**
      * @var FORUM_BOL_ForumService
      */
@@ -88,6 +85,16 @@ final class FORUM_BOL_ForumService
         $this->topicDao = FORUM_BOL_TopicDao::getInstance();
         $this->postDao = FORUM_BOL_PostDao::getInstance();
         $this->userDao = BOL_UserDao::getInstance();
+    }
+
+    /**
+     * Get forum text search
+     * 
+     * @return FORUM_CLASS_ForumTextSearch
+     */
+    private function getForumTextSearch()
+    {
+        return FORUM_CLASS_ForumTextSearch::getInstance();
     }
 
     /**
@@ -897,30 +904,8 @@ final class FORUM_BOL_ForumService
     {
         $this->topicDao->save($topicDto);
 
-        /* rebiuld the search index */
-
-        $groupInfo = $this->getGroupInfo($topicDto->groupId);
-        $sectionInfo = $this->findSectionById($groupInfo->sectionId);
-
-        $topicTags = array(
-            'forum_topic', // global search
-            'forum_topic_user_id_' . $topicDto->userId, // global search by a specific user
-            'forum_topic_group_id_' . $topicDto->groupId, // search into a specific forum
-            'forum_topic_group_id_' . $topicDto->groupId . '_user_id_' . $topicDto->userId, // search into a specific forum and specific user              
-            'forum_topic_section_id_' . $groupInfo->sectionId, // search into a specific section
-            'forum_topic_section_id_' . $groupInfo->sectionId . '_user_id_' . $topicDto->userId, // search into a specific section and specific user
-            'forum_topic_id_' . $topicDto->id
-        );
-
-        if ( !$groupInfo->isPrivate && !$sectionInfo->isHidden ) 
-        {
-            $topicTags = array_merge($topicTags, array(
-                'forum_topic_public' // visible everywhere
-            ));
-        }
-
-        OW::getTextSearchManager()->
-                addEntity(self::SEARCH_ENTITY_TYPE_TOPIC, $topicDto->id, $topicDto->title, time(), $topicTags); 
+        // add a topic into the search index
+        $this->getForumTextSearch()->addTopic($topicDto);
     }
 
     /**
@@ -933,58 +918,19 @@ final class FORUM_BOL_ForumService
         $oldTopicInfo = $this->getTopicInfo($topicDto->id);
         $this->topicDao->save($topicDto);
 
-        /* rebuild the search index */
-
-        // check the topic status
+        // add or edit a topic into the search index
         if ( $oldTopicInfo['status'] != $topicDto->status )
         {
             // activate or deactivate topics and posts
-            if ( $topicDto->status != self::STATUS_APPROVED ) 
-            {
-                OW::getTextSearchManager()->deactivateAllEntitiesByTags(array(
-                    'forum_topic_id_' . $topicDto->id,
-                    'forum_post_topic_id_' . $topicDto->id
-                ));
-            }
-            else // activate all topics and posts 
-            {
-                OW::getTextSearchManager()->activateAllEntitiesByTags(array(
-                    'forum_topic_id_' . $topicDto->id,
-                    'forum_post_topic_id_' . $topicDto->id
-                ));
-            }
+            $topicDto->status != self::STATUS_APPROVED
+                ? $this->getForumTextSearch()->setTopicStatus($topicDto->id, false)
+                : $this->getForumTextSearch()->setTopicStatus($topicDto->id);
         }
 
         // update topic info 
         if ( $oldTopicInfo['title'] != $topicDto->title && $topicDto->status == self::STATUS_APPROVED ) 
         {
-            // delete old topic
-            OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
-                'forum_topic_id_' . $topicDto->id
-            ));
-
-            $groupInfo = $this->getGroupInfo($topicDto->groupId);
-            $sectionInfo = $this->findSectionById($groupInfo->sectionId);
-
-            $topicTags = array(
-                'forum_topic', // global search
-                'forum_topic_user_id_' . $topicDto->userId, // global search by a specific user
-                'forum_topic_group_id_' . $topicDto->groupId, // search into a specific forum
-                'forum_topic_group_id_' . $topicDto->groupId . '_user_id_' . $topicDto->userId, // search into a specific forum and specific user              
-                'forum_topic_section_id_' . $groupInfo->sectionId, // search into a specific section
-                'forum_topic_section_id_' . $groupInfo->sectionId . '_user_id_' . $topicDto->userId, // search into a specific section and specific user
-                'forum_topic_id_' . $topicDto->id
-            );
-
-            if ( !$groupInfo->isPrivate && !$sectionInfo->isHidden ) 
-            {
-                $topicTags = array_merge($topicTags, array(
-                    'forum_topic_public' // visible everywhere
-                ));
-            }
-
-            OW::getTextSearchManager()->
-                    addEntity(self::SEARCH_ENTITY_TYPE_TOPIC, $topicDto->id, $topicDto->title, time(), $topicTags); 
+            $this->getForumTextSearch()->saveOrUpdateTopic($topicDto);
         }
     }
 
@@ -1106,79 +1052,10 @@ final class FORUM_BOL_ForumService
         $oldPostInfo = $this->findPostById($postDto->id);
         $this->postDao->save($postDto);
 
-        /* rebiuld the search index */
-
-        if ( $oldPostInfo->text != $postDto->text )
+        // add or edit a post into the search index
+        if ( !$oldPostInfo || $oldPostInfo->text != $postDto->text )
         {
-            // get topic, group and section info
-            $topicInfo = $this->getTopicInfo($postDto->topicId);
-            $groupInfo = $this->getGroupInfo($topicInfo['groupId']);
-            $sectionInfo = $this->findSectionById($groupInfo->sectionId);
-
-            // delete old posts by tags
-            OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
-                'forum_post_id_' . $postDto->id
-            ));
-
-            // add a new one
-            $postTags = array(
-                'forum_post', // global search
-                'forum_post_user_id_' . $postDto->userId, // global search by a specific user
-                'forum_post_group_id_' . $topicInfo['groupId'], // search into a specific forum
-                'forum_post_group_id_' . $topicInfo['groupId'] . '_user_id_' . $postDto->userId, // search into a specific forum
-                'forum_post_section_id_' . $groupInfo->sectionId, // search into a specific section,
-                'forum_post_section_id_' . $groupInfo->sectionId . '_user_id_' . $postDto->userId, // search into a specific section and specific user
-                'forum_post_topic_id_'   . $topicInfo['id'], // search into a specific topic
-                'forum_post_id_' . $postDto->id
-            );
-
-            if ( !$groupInfo->isPrivate && !$sectionInfo->isHidden ) 
-            {
-                $postTags = array_merge($postTags, array(
-                    'forum_post_public' // visible everywhere
-                ));
-            }
-
-            if ( $topicInfo['status'] == self::STATUS_APPROVED )
-            {
-                OW::getTextSearchManager()->
-                        addEntity(self::SEARCH_ENTITY_TYPE_POST, $postDto->id, $postDto->text, $postDto->createStamp, $postTags);
-            }
-            else
-            {
-                OW::getTextSearchManager()->addEntity(self::SEARCH_ENTITY_TYPE_POST, 
-                        $postDto->id, $postDto->text, $postDto->createStamp, $postTags, OW_TextSearchManager::ENTITY_STATUS_NOT_ACTIVE);
-            }
-
-            // duplicate this post as a part of topic
-             $topicTags = array(
-                'forum_topic', // global search
-                'forum_topic_user_id_' . $postDto->userId, // global search by a specific user
-                'forum_topic_group_id_' . $topicInfo['groupId'], // search into a specific forum
-                'forum_topic_group_id_' . $topicInfo['groupId'] . '_user_id_' . $postDto->userId, // search into a specific forum and specific user              
-                'forum_topic_section_id_' . $groupInfo->sectionId, // search into a specific section
-                'forum_topic_section_id_' . $groupInfo->sectionId . '_user_id_' . $postDto->userId, // search into a specific section and specific user
-                'forum_post_topic_id_'   . $topicInfo['id'], // needed for global delete
-                'forum_post_id_' . $postDto->id
-            );
-
-            if ( !$groupInfo->isPrivate && !$sectionInfo->isHidden ) 
-            {
-                $topicTags = array_merge($topicTags, array(
-                    'forum_topic_public' // visible everywhere
-                ));
-            }
-
-            if ( $topicInfo['status'] == self::STATUS_APPROVED )
-            {
-                OW::getTextSearchManager()->addEntity(self::SEARCH_ENTITY_TYPE_TOPIC, 
-                        $topicInfo['id'], $postDto->text, $postDto->createStamp, $topicTags);
-            }
-            else
-            {
-                OW::getTextSearchManager()->addEntity(self::SEARCH_ENTITY_TYPE_TOPIC, 
-                        $topicInfo['id'], $postDto->text, $postDto->createStamp, $topicTags, OW_TextSearchManager::ENTITY_STATUS_NOT_ACTIVE);
-            }
+            $this->getForumTextSearch()->saveOrUpdatePost($postDto);
         }
     }
 
@@ -1334,11 +1211,8 @@ final class FORUM_BOL_ForumService
         $event = new OW_Event(self::EVENT_AFTER_POST_DELETE, array('postId' => $postId));
         OW::getEventManager()->trigger($event);
 
-        /* rebiuld the search index */
-
-        OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
-            'forum_post_id_' . $postId
-        ));
+        // delete a post from the search index
+        $this->getForumTextSearch()->deletePost($postId);
     }
 
     /**
@@ -1386,12 +1260,8 @@ final class FORUM_BOL_ForumService
         $event = new OW_Event(self::EVENT_AFTER_TOPIC_DELETE, array('topicId' => $topicId));
         OW::getEventManager()->trigger($event);
 
-        /* rebiuld the search index */
-
-        OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
-            'forum_topic_id_' . $topicId, // delete the topic
-            'forum_post_topic_id_' . $topicId, // delete all posts inside
-        ));
+        // delete a topic from the search index
+        $this->getForumTextSearch()->deleteTopic($topicId);
     }
 
     public function formatQuote( $text )
