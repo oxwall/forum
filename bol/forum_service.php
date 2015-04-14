@@ -76,6 +76,11 @@ final class FORUM_BOL_ForumService
     private $userDao;
 
     /**
+     * @var FORUM_BOL_UpdateSearchIndexDao 
+     */
+    private $updateSearchIndexDao;
+
+    /**
      * Class constructor
      */
     private function __construct()
@@ -85,16 +90,28 @@ final class FORUM_BOL_ForumService
         $this->topicDao = FORUM_BOL_TopicDao::getInstance();
         $this->postDao = FORUM_BOL_PostDao::getInstance();
         $this->userDao = BOL_UserDao::getInstance();
+        $this->updateSearchIndexDao = FORUM_BOL_UpdateSearchIndexDao::getInstance();
     }
 
     /**
-     * Get forum text search
+     * Find update search index 
      * 
-     * @return FORUM_CLASS_ForumTextSearch
+     * @param integer $limit
+     * @return array
      */
-    private function getForumTextSearch()
+    public function findUpdateSearchIndex($limit = 1)
     {
-        return FORUM_CLASS_ForumTextSearch::getInstance();
+        return $this->updateSearchIndexDao->findUpdateSearchIndex($limit);
+    }
+
+    /**
+     * Get text search service
+     * 
+     * @return FORUM_BOL_TextSearchService
+     */
+    private function getTextSearchService()
+    {
+        return FORUM_BOL_TextSearchService::getInstance();
     }
 
     /**
@@ -905,7 +922,7 @@ final class FORUM_BOL_ForumService
         $this->topicDao->save($topicDto);
 
         // add a topic into the search index
-        $this->getForumTextSearch()->addTopic($topicDto);
+        $this->getTextSearchService()->addTopic($topicDto);
     }
 
     /**
@@ -915,23 +932,10 @@ final class FORUM_BOL_ForumService
      */
     public function saveOrUpdateTopic( $topicDto )
     {
-        $oldTopicInfo = $this->getTopicInfo($topicDto->id);
         $this->topicDao->save($topicDto);
 
         // add or edit a topic into the search index
-        if ( $oldTopicInfo['status'] != $topicDto->status )
-        {
-            // activate or deactivate topics and posts
-            $topicDto->status != self::STATUS_APPROVED
-                ? $this->getForumTextSearch()->setTopicStatus($topicDto->id, false)
-                : $this->getForumTextSearch()->setTopicStatus($topicDto->id);
-        }
-
-        // update topic info 
-        if ( $oldTopicInfo['title'] != $topicDto->title && $topicDto->status == self::STATUS_APPROVED ) 
-        {
-            $this->getForumTextSearch()->saveOrUpdateTopic($topicDto);
-        }
+        $this->getTextSearchService()->saveOrUpdateTopic($topicDto);
     }
 
     /**
@@ -978,6 +982,17 @@ final class FORUM_BOL_ForumService
         $readTopicDao->deleteByTopicId($topicId);
 
         return true;
+    }
+
+    /**
+     * Get all topic post list
+     * 
+     * @apram integer $topicId
+     * @return array
+     */
+    public function getAllTopicPostList( $topicId )
+    {
+        return $this->postDao->findAllTopicPostList($topicId);
     }
 
     /**
@@ -1049,14 +1064,10 @@ final class FORUM_BOL_ForumService
      */
     public function saveOrUpdatePost( $postDto )
     {
-        $oldPostInfo = $this->findPostById($postDto->id);
         $this->postDao->save($postDto);
 
         // add or edit a post into the search index
-        if ( !$oldPostInfo || $oldPostInfo->text != $postDto->text )
-        {
-            $this->getForumTextSearch()->saveOrUpdatePost($postDto);
-        }
+        $this->getTextSearchService()->saveOrUpdatePost($postDto);
     }
 
     /**
@@ -1212,7 +1223,7 @@ final class FORUM_BOL_ForumService
         OW::getEventManager()->trigger($event);
 
         // delete a post from the search index
-        $this->getForumTextSearch()->deletePost($postId);
+        $this->getTextSearchService()->deletePost($postId);
     }
 
     /**
@@ -1261,7 +1272,7 @@ final class FORUM_BOL_ForumService
         OW::getEventManager()->trigger($event);
 
         // delete a topic from the search index
-        $this->getForumTextSearch()->deleteTopic($topicId);
+        $this->getTextSearchService()->deleteTopic($topicId);
     }
 
     public function formatQuote( $text )

@@ -107,6 +107,22 @@ class FORUM_BOL_PostDao extends OW_BaseDao
     }
 
     /**
+     * Returns all topic's post list
+     *
+     * @param int $topicId
+     * @return array of FORUM_BOL_Post
+     */
+    public function findAllTopicPostList( $topicId )
+    {
+        $example = new OW_Example();
+
+        $example->andFieldEqual('topicId', $topicId);
+        $example->setOrder('`id`');
+
+        return $this->findListByExample($example);
+    }
+
+    /**
      * Returns topic's post count
      *
      * @param int $topicId

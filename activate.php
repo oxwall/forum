@@ -58,5 +58,5 @@ require_once dirname(__FILE__) . DS .  'classes' . DS . 'credits.php';
 $credits = new FORUM_CLASS_Credits();
 $credits->triggerCreditActionsAdd();
 
-require_once dirname(__FILE__) . DS .  'classes' . DS . 'forum_text_search.php';
-FORUM_CLASS_ForumTextSearch::getInstance()->activateEntities();
+require_once dirname(__FILE__) . DS .  'bol' . DS . 'text_search_service.php';
+FORUM_BOL_TextSearchService::getInstance()->activateEntities();

@@ -49,13 +49,89 @@ class FORUM_Cron extends OW_Cron
         $this->addJob('topicsDeleteProcess', 1);
         
         $this->addJob('tempTopicsDeleteProcess', 60);
+
+        $this->addJob('updateSearchIndex', 1);
     }
 
     public function run()
     {
         
     }
-    
+
+    /**
+     * Update search index
+     * 
+     * @throws Exception
+     * @return void
+     */
+    public function updateSearchIndex()
+    {
+        $forumService = FORUM_BOL_ForumService::getInstance();
+        $updateSearchIndexDao = FORUM_BOL_UpdateSearchIndexDao::getInstance();
+
+        // get the search index updates
+        $update = $forumService->findUpdateSearchIndex();
+        
+        if ( $update )
+        {
+            foreach ($update as $entity) 
+            {
+                // mark the update
+                $entity->updateStatus = FORUM_BOL_UpdateSearchIndexDao::UPDATE_STATUS_IN_PROCESS;
+                $updateSearchIndexDao->save($entity);
+
+                switch ($entity->type)
+                {
+                    // move all topic's posts
+                    case FORUM_BOL_UpdateSearchIndexDao::UPDATE_TYPE_MOVE_TOPIC :
+                        $this->updateTopicPostsSearchIndex($entity->entityId);
+                        break;
+                }
+
+                $updateSearchIndexDao->delete($entity);
+            }
+        }
+    }
+
+    /**
+     * Update topic posts search index
+     * 
+     * @param integer $topicId
+     * @throws Exception
+     * @return void
+     */
+    private function updateTopicPostsSearchIndex($topicId)
+    {
+        $forumService = FORUM_BOL_ForumService::getInstance();
+
+        // get topic info
+        $topic = $forumService->findTopicById($topicId);
+
+        if ( $topic )
+        {
+            $posts = $forumService->getAllTopicPostList($topic->id);
+
+            if ( $posts )
+            {
+                foreach ($posts as $post)
+                {
+                    // add post into the search index
+                    $this->getTextSearchService()->saveOrUpdatePost($post, true);
+                }
+            }
+        }
+    }
+
+    /**
+     * Get text search service
+     * 
+     * @return FORUM_BOL_TextSearchService
+     */
+    private function getTextSearchService()
+    {
+        return FORUM_BOL_TextSearchService::getInstance();
+    }
+
     public function tempTopicsDeleteProcess()
     {
         $forumService = FORUM_BOL_ForumService::getInstance();
