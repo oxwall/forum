@@ -6,11 +6,9 @@ $sql = array(
     'ALTER  TABLE `' . OW_DB_PREFIX . 'forum_post`  DROP INDEX `post_text`',
     'CREATE TABLE `' . OW_DB_PREFIX . 'forum_update_search_index` (
         `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-        `type` enum("move_topic") NOT NULL DEFAULT "move_topic",
+        `type` varchar(50) NOT NULL,
         `entityId` int(10) unsigned NOT NULL,
-        `updateStatus` enum("not_started","in_process") NOT NULL,
-        PRIMARY KEY (`id`),
-        KEY `updateStatus` (`updateStatus`)
+        PRIMARY KEY (`id`)
     ) ENGINE=MyIsam DEFAULT CHARSET=utf8'
 );
 

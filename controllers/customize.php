@@ -369,6 +369,7 @@ class FORUM_CTRL_Customize extends OW_ActionController
             $groupDto->roles = count($roles) ? json_encode($roles) : null;
 
             $forumService->saveOrUpdateGroup($groupDto);
+            FORUM_BOL_TextSearchService::getInstance()->rebuildGroup($groupDto);
 
             echo true;
             exit();

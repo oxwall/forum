@@ -49,10 +49,4 @@ class FORUM_BOL_UpdateSearchIndex extends OW_Entity
      * @var int
      */
     public $entityId;
-
-    /**
-     * Update status
-     * @var string
-     */
-    public $updateStatus = 'not_started';
 }

@@ -39,24 +39,24 @@
 class FORUM_BOL_UpdateSearchIndexDao extends OW_BaseDao
 {
     /**
-     * Update status
+     * Delete topic
      */
-    const UPDATE_STATUS = 'updateStatus';
+    const DELETE_TOPIC = 'delete_topic';
 
     /**
-     * Type move topic
+     * Update topic
      */
-    const UPDATE_TYPE_MOVE_TOPIC = 'move_topic';
+    const UPDATE_TOPIC = 'update_topic';
 
     /**
-     * Not started
+     * Delete group
      */
-    const UPDATE_STATUS_NOT_STARTED = 'not_started';
+    const DELETE_GROUP = 'delete_group';
 
     /**
-     * In process
+     * Update group
      */
-    const UPDATE_STATUS_IN_PROCESS = 'in_process';
+    const UPDATE_GROUP = 'update_group';
 
     /**
      * Class constructor
@@ -107,18 +107,33 @@ class FORUM_BOL_UpdateSearchIndexDao extends OW_BaseDao
     }
 
     /**
-     * Find update search index
+     * Find queue entities
      * 
      * @param integer $limit
      * @return array
      */
-    public function findUpdateSearchIndex($limit)
+    public function findQueueEntities($limit)
     {
         $example = new OW_Example();
-        $example->andFieldEqual(self::UPDATE_STATUS, self::UPDATE_STATUS_NOT_STARTED);
         $example->setOrder('`id` ASC');
         $example->setLimitClause(0, $limit);
 
         return $this->findListByExample($example);
+    }
+
+    /**
+     * Add a queue
+     * 
+     * @param integer $entityId
+     * @param string $type
+     * @return void
+     */
+    public function addQueue($entityId, $type)
+    {
+        $updateSearchIndexDto = new FORUM_BOL_UpdateSearchIndex();
+        $updateSearchIndexDto->entityId = $entityId;
+        $updateSearchIndexDto->type     = $type;
+
+        $this->save($updateSearchIndexDto);
     }
 }

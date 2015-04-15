@@ -105,7 +105,30 @@ class FORUM_BOL_TextSearchService
     {
         OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
             'forum_post_topic_id_' . $topicId
-        ));   
+        ));
+    }
+
+    /**
+     * Rebuild topic
+     * 
+     * @param FORUM_BOL_Topic $topicDto
+     * @return void
+     */
+    public function rebuildTopic( $topicDto )
+    {
+        FORUM_BOL_UpdateSearchIndexDao::getInstance()->
+                addQueue($topicDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_TOPIC);
+    }
+
+    /**
+     * Rebuild group
+     * 
+     * @param FORUM_BOL_Group $groupDto
+     */
+    public function rebuildGroup( $groupDto )
+    {
+        FORUM_BOL_UpdateSearchIndexDao::getInstance()->
+                addQueue($groupDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_GROUP);
     }
 
     /**
@@ -142,7 +165,8 @@ class FORUM_BOL_TextSearchService
             if ( !$groupInfo->isPrivate && !$sectionInfo->isHidden ) 
             {
                 $postTags = array_merge($postTags, array(
-                    'forum_post_public' // visible everywhere
+                    'forum_post_public', // visible everywhere
+                    'forum_post_public_user_id_' . $postDto->userId
                 ));
             }
 
@@ -172,7 +196,8 @@ class FORUM_BOL_TextSearchService
             if ( !$groupInfo->isPrivate && !$sectionInfo->isHidden ) 
             {
                 $topicTags = array_merge($topicTags, array(
-                    'forum_topic_public' // visible everywhere
+                    'forum_topic_public', // visible everywhere
+                    'forum_topic_public_user_id_' . $postDto->userId
                 ));
             }
 
@@ -270,7 +295,8 @@ class FORUM_BOL_TextSearchService
         if ( !$groupInfo->isPrivate && !$sectionInfo->isHidden ) 
         {
             $topicTags = array_merge($topicTags, array(
-                'forum_topic_public' // visible everywhere
+                'forum_topic_public', // visible everywhere
+                'forum_topic_public_user_id_' . $topicDto->userId
             ));
         }
 
@@ -317,6 +343,21 @@ class FORUM_BOL_TextSearchService
         OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
             'forum_topic_id_' . $topicId, // delete the topic
             'forum_post_topic_id_' . $topicId, // delete all posts inside
+        ));
+    }
+
+    /**
+     * Delete group
+     * 
+     * @param integer $groupId
+     * @return void
+     */
+    public function deleteGroup( $groupId )
+    {
+        // delete all topics and posts into the group
+        OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
+            'forum_topic_group_id_' . $groupId,
+            'forum_post_group_id_' . $groupId
         ));
     }
 }

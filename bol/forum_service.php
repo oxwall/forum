@@ -76,11 +76,6 @@ final class FORUM_BOL_ForumService
     private $userDao;
 
     /**
-     * @var FORUM_BOL_UpdateSearchIndexDao 
-     */
-    private $updateSearchIndexDao;
-
-    /**
      * Class constructor
      */
     private function __construct()
@@ -90,18 +85,6 @@ final class FORUM_BOL_ForumService
         $this->topicDao = FORUM_BOL_TopicDao::getInstance();
         $this->postDao = FORUM_BOL_PostDao::getInstance();
         $this->userDao = BOL_UserDao::getInstance();
-        $this->updateSearchIndexDao = FORUM_BOL_UpdateSearchIndexDao::getInstance();
-    }
-
-    /**
-     * Find update search index 
-     * 
-     * @param integer $limit
-     * @return array
-     */
-    public function findUpdateSearchIndex($limit = 1)
-    {
-        return $this->updateSearchIndexDao->findUpdateSearchIndex($limit);
     }
 
     /**
@@ -929,6 +912,7 @@ final class FORUM_BOL_ForumService
      * Saves or updates topic
      * 
      * @param FORUM_BOL_Topic $topicDto
+     * @param boolean $rebuildIndex
      */
     public function saveOrUpdateTopic( $topicDto )
     {
@@ -993,6 +977,17 @@ final class FORUM_BOL_ForumService
     public function getAllTopicPostList( $topicId )
     {
         return $this->postDao->findAllTopicPostList($topicId);
+    }
+
+    /**
+     * Get all topic list
+     * 
+     * @param integer $groupId
+     * @return array
+     */
+    public function getAllTopicList( $groupId )
+    {
+        return $this->topicDao->findAllTopicList($groupId);
     }
 
     /**

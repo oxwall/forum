@@ -42,6 +42,8 @@ class FORUM_Cron extends OW_Cron
     
     const MEDIA_DELETE_LIMIT = 10;
     
+    const SEARCH_QUEUE_ENTITIES_COUNT = 1;
+
     public function __construct()
     {
         parent::__construct();
@@ -66,60 +68,148 @@ class FORUM_Cron extends OW_Cron
      */
     public function updateSearchIndex()
     {
-        $forumService = FORUM_BOL_ForumService::getInstance();
-        $updateSearchIndexDao = FORUM_BOL_UpdateSearchIndexDao::getInstance();
-
-        // get the search index updates
-        $update = $forumService->findUpdateSearchIndex();
+        $config = OW::getConfig();
         
-        if ( $update )
+        if ( $config->getValue('forum', 'update_search_index_cron_busy') )
         {
-            foreach ($update as $entity) 
-            {
-                // mark the update
-                $entity->updateStatus = FORUM_BOL_UpdateSearchIndexDao::UPDATE_STATUS_IN_PROCESS;
-                $updateSearchIndexDao->save($entity);
+            return;
+        }
 
-                switch ($entity->type)
+        $config->saveConfig('forum', 'update_search_index_cron_busy', 1);
+        $updateSearchIndexDao = FORUM_BOL_UpdateSearchIndexDao::getInstance();
+        $queueEntities = $updateSearchIndexDao->findQueueEntities(self::SEARCH_QUEUE_ENTITIES_COUNT);
+
+        if ( $queueEntities )
+        {
+            foreach ($queueEntities as $entity) 
+            {   switch ($entity->type)
                 {
-                    // move all topic's posts
-                    case FORUM_BOL_UpdateSearchIndexDao::UPDATE_TYPE_MOVE_TOPIC :
-                        $this->updateTopicPostsSearchIndex($entity->entityId);
+                    // delete topic
+                    case FORUM_BOL_UpdateSearchIndexDao::DELETE_TOPIC :
+                        $this->deleteTopicFromSearchIndex($entity->entityId);
+                        break;
+
+                    // update topic
+                    case FORUM_BOL_UpdateSearchIndexDao::UPDATE_TOPIC :
+                        $this->updateTopicInSearchIndex($entity->entityId);
+                        break;
+
+                    // delete group
+                    case FORUM_BOL_UpdateSearchIndexDao::DELETE_GROUP :
+                        $this->deleteGroupFromSearchIndex($entity->entityId);
+                        break;
+
+                    // update group
+                    case FORUM_BOL_UpdateSearchIndexDao::UPDATE_GROUP :
+                        $this->updateGroupInSearchIndex($entity->entityId);
                         break;
                 }
 
                 $updateSearchIndexDao->delete($entity);
             }
         }
+
+        $config->saveConfig('forum', 'update_search_index_cron_busy', 0);
     }
 
     /**
-     * Update topic posts search index
+     * Update group
      * 
-     * @param integer $topicId
-     * @throws Exception
+     * @param integer $groupId
      * @return void
      */
-    private function updateTopicPostsSearchIndex($topicId)
+    private function updateGroupInSearchIndex( $groupId )
+    {
+        $forumService = FORUM_BOL_ForumService::getInstance();
+        
+        // get the group info
+        $group = $forumService->findGroupById($groupId);
+
+        if ( $group )
+        {
+            // get all topics inrto the group
+            $topics = $forumService->getAllTopicList($groupId);
+
+            if ( $topics )
+            {
+                foreach ($topics as $topic)
+                {
+                    // add the topic
+                    $this->getTextSearchService()->addTopic($topic);
+
+                    // get all posts into the topic
+                    $posts = $forumService->getAllTopicPostList($topic->id);
+
+                    if ( $posts )
+                    {
+                        // add posts
+                        foreach ($posts as $post)
+                        {
+                            $this->getTextSearchService()->saveOrUpdatePost($post, true);
+                        }
+                    } 
+               }
+            }
+        }
+    }
+
+    /**
+     * Delete group from the search index
+     * 
+     * @param integer $groupId
+     * @return void
+     */
+    private function deleteGroupFromSearchIndex( $groupId )
+    {
+        $this->getTextSearchService()->deleteGroup($groupId);
+
+        FORUM_BOL_UpdateSearchIndexDao::getInstance()->
+                addQueue($groupId, FORUM_BOL_UpdateSearchIndexDao::UPDATE_GROUP);
+    }
+
+    /**
+     * Update topic
+     * 
+     * @param integer $topicId
+     * @return void
+     */
+    private function updateTopicInSearchIndex( $topicId )
     {
         $forumService = FORUM_BOL_ForumService::getInstance();
 
-        // get topic info
+        // get the topic info
         $topic = $forumService->findTopicById($topicId);
 
         if ( $topic )
         {
+            // add the topic
+            $this->getTextSearchService()->addTopic($topic);
+
             $posts = $forumService->getAllTopicPostList($topic->id);
 
             if ( $posts )
             {
+                // add posts
                 foreach ($posts as $post)
                 {
-                    // add post into the search index
                     $this->getTextSearchService()->saveOrUpdatePost($post, true);
                 }
             }
         }
+    }
+
+    /**
+     * Delete topic from the search index
+     * 
+     * @param integer $topicId
+     * @return void
+     */
+    private function deleteTopicFromSearchIndex( $topicId )
+    {
+        $this->getTextSearchService()->deleteTopic($topicId);
+
+        FORUM_BOL_UpdateSearchIndexDao::getInstance()->
+                addQueue($topicId, FORUM_BOL_UpdateSearchIndexDao::UPDATE_TOPIC);
     }
 
     /**

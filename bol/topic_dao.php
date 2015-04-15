@@ -89,6 +89,22 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
     }
 
     /**
+     * Returns all topics
+     *
+     * @param int $groupId
+     * @return array of FORUM_BOL_Post
+     */
+    public function findAllTopicList( $groupId )
+    {
+        $example = new OW_Example();
+
+        $example->andFieldEqual('groupId', $groupId);
+        $example->setOrder('`id`');
+
+        return $this->findListByExample($example);
+    }
+
+    /**
      * Returns forum group's topic count
      * 
      * @param int 

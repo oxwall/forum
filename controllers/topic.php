@@ -969,18 +969,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
             $topicDto->lastPostId = $postDto->id;
 
             $this->forumService->saveOrUpdateTopic($topicDto);
-
-            // delete old topics from the search index
-            $this->getTextSearchService()->deleteTopicPosts($topicDto->id);
-
-            // move all posts into the new topic
-            $updateSearchIndexDto = new FORUM_BOL_UpdateSearchIndex();
-
-            $updateSearchIndexDto->entityId = $topicDto->id;
-            $updateSearchIndexDto->type = FORUM_BOL_UpdateSearchIndexDao::UPDATE_TYPE_MOVE_TOPIC;
-
-            $updateSearchIndexDao = FORUM_BOL_UpdateSearchIndexDao::getInstance();
-            $updateSearchIndexDao->save($updateSearchIndexDto);
+            FORUM_BOL_TextSearchService::getInstance()->rebuildTopic($topicDto);
 
             echo json_encode($this->forumService->getPostUrl($replaceTopicDto->id, $replacePostDto->id, false));
         }
