@@ -44,6 +44,8 @@ class FORUM_Cron extends OW_Cron
 
     const UPDATE_SEARCH_INDEX_LIFE_TIME = 3600;
 
+    const UPDATE_SEARCH_INDEX_MAX_TIME = 15;
+
     public function __construct()
     {
         parent::__construct();
@@ -142,9 +144,10 @@ class FORUM_Cron extends OW_Cron
         if ( $group )
         {
             $topicPage = 1;
+            $maxExecutionTime = time() + self::UPDATE_SEARCH_INDEX_MAX_TIME;
 
             // get group's topics 
-            while ( true )
+            while ( time() <  $maxExecutionTime )
             {
                 if ( null == ($topics = $forumService->
                         getSimpleGroupTopicList($group->id, $topicPage, $firstQueue->lastEntityId)) )
@@ -238,10 +241,11 @@ class FORUM_Cron extends OW_Cron
 
         if ( $topic )
         {
+            $maxExecutionTime = time() + self::UPDATE_SEARCH_INDEX_MAX_TIME;
             $postPage = 1;
 
             // get topic's post list
-            while ( true )
+            while ( time() <  $maxExecutionTime )
             {
                 if ( null == ($posts = $forumService->
                         getSimpleTopicPostList($topic->id, $postPage, $firstQueue->lastEntityId)) )
