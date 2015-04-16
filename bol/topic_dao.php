@@ -132,6 +132,32 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
     }
 
     /**
+     * Returns simple forum group's topic list
+     *
+     * @param int $groupId
+     * @param int $first
+     * @param int $count
+     * @param integer $lastTopicId
+     * @return array of FORUM_BOL_Topic
+     */
+    public function findSimpleGroupTopicList( $groupId, $first, $count, $lastTopicId = null )
+    {
+        $example = new OW_Example();
+
+        $example->andFieldEqual('groupId', $groupId);
+
+        if ( $lastTopicId )
+        {
+            $example->andFieldGreaterThan('id', $lastTopicId);
+        }
+
+        $example->setOrder('`id`');
+        $example->setLimitClause($first, $count);
+
+        return $this->findListByExample($example);
+    }
+
+    /**
      * Returns forum group's topic list
      * 
      * @param int $groupId

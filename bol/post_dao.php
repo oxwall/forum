@@ -93,13 +93,19 @@ class FORUM_BOL_PostDao extends OW_BaseDao
      * @param int $topicId
      * @param int $first
      * @param int $count
+     * @param int $lastPostId
      * @return array of FORUM_BOL_Post
      */
-    public function findTopicPostList( $topicId, $first, $count )
+    public function findTopicPostList( $topicId, $first, $count, $lastPostId = null )
     {
         $example = new OW_Example();
-
         $example->andFieldEqual('topicId', $topicId);
+
+        if ( $lastPostId )
+        {
+            $example->andFieldGreaterThan('id', $lastPostId);
+        }
+
         $example->setOrder('`id`');
         $example->setLimitClause($first, $count);
 

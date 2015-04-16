@@ -57,3 +57,6 @@ foreach( $event->getData() as $widgetInfo )
 require_once dirname(__FILE__) . DS .  'classes' . DS . 'credits.php';
 $credits = new FORUM_CLASS_Credits();
 $credits->triggerCreditActionsAdd();
+
+require_once dirname(__FILE__) . DS .  'bol' . DS . 'text_search_service.php';
+FORUM_BOL_TextSearchService::getInstance()->activateEntities();

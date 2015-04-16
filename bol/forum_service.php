@@ -49,7 +49,6 @@ final class FORUM_BOL_ForumService
 
     const STATUS_APPROVAL = 'approval';
     const STATUS_APPROVED = 'approved';
-    const STATUS_BLOCKED = 'blocked';
 
     /**
      * @var FORUM_BOL_ForumService
@@ -86,6 +85,16 @@ final class FORUM_BOL_ForumService
         $this->topicDao = FORUM_BOL_TopicDao::getInstance();
         $this->postDao = FORUM_BOL_PostDao::getInstance();
         $this->userDao = BOL_UserDao::getInstance();
+    }
+
+    /**
+     * Get text search service
+     * 
+     * @return FORUM_BOL_TextSearchService
+     */
+    private function getTextSearchService()
+    {
+        return FORUM_BOL_TextSearchService::getInstance();
     }
 
     /**
@@ -894,16 +903,23 @@ final class FORUM_BOL_ForumService
     public function addTopic( $topicDto )
     {
         $this->topicDao->save($topicDto);
+
+        // add a topic into the search index
+        $this->getTextSearchService()->addTopic($topicDto);
     }
 
     /**
      * Saves or updates topic
      * 
      * @param FORUM_BOL_Topic $topicDto
+     * @param boolean $rebuildIndex
      */
     public function saveOrUpdateTopic( $topicDto )
     {
         $this->topicDao->save($topicDto);
+
+        // add or edit a topic into the search index
+        $this->getTextSearchService()->saveOrUpdateTopic($topicDto);
     }
 
     /**
@@ -953,10 +969,42 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Returns group's topic list
+     * 
+     * @param integer $groupId
+     * @param integer $page
+     * @param integer $lastTopicId
+     * @return FORUM_BOL_Topic 
+     */
+    public function getSimpleGroupTopicList( $groupId, $page, $lastTopicId = null )
+    {
+        $count = $this->getPostPerPageConfig();
+        $first = ($page - 1) * $count;
+
+        return $this->topicDao->findSimpleGroupTopicList($groupId, $first, $count, $lastTopicId);
+    }
+
+    /**
+     * Returns simple topic's post list
+     * 
+     * @param int $topicId
+     * @param integer $page
+     * @param integer $lastPostId
+     * @return array of FORUM_BOL_Post
+     */
+    public function getSimpleTopicPostList( $topicId, $page, $lastPostId = null )
+    {
+        $count = $this->getPostPerPageConfig();
+        $first = ($page - 1) * $count;
+
+        return $this->postDao->findTopicPostList($topicId, $first, $count, $lastPostId);
+    }
+
+    /**
      * Returns topic's post list
      * 
      * @param int $topicId
-     * @param $page
+     * @param integer $page
      * @return array
      */
     public function getTopicPostList( $topicId, $page )
@@ -965,7 +1013,6 @@ final class FORUM_BOL_ForumService
         $first = ($page - 1) * $count;
 
         $postDtoList = $this->postDao->findTopicPostList($topicId, $first, $count);
-
         $postList = array();
         $postIds = array();
 
@@ -1022,6 +1069,9 @@ final class FORUM_BOL_ForumService
     public function saveOrUpdatePost( $postDto )
     {
         $this->postDao->save($postDto);
+
+        // add or edit a post into the search index
+        $this->getTextSearchService()->saveOrUpdatePost($postDto);
     }
 
     /**
@@ -1175,6 +1225,9 @@ final class FORUM_BOL_ForumService
 
         $event = new OW_Event(self::EVENT_AFTER_POST_DELETE, array('postId' => $postId));
         OW::getEventManager()->trigger($event);
+
+        // delete a post from the search index
+        $this->getTextSearchService()->deletePost($postId);
     }
 
     /**
@@ -1213,7 +1266,7 @@ final class FORUM_BOL_ForumService
 
         //delete topic
         $this->topicDao->deleteById($topicId);
-        
+
         OW::getEventManager()->trigger(new OW_Event('feed.delete_item', array(
             'entityType' => 'forum-topic',
             'entityId' => $topicId
@@ -1221,6 +1274,9 @@ final class FORUM_BOL_ForumService
 
         $event = new OW_Event(self::EVENT_AFTER_TOPIC_DELETE, array('topicId' => $topicId));
         OW::getEventManager()->trigger($event);
+
+        // delete a topic from the search index
+        $this->getTextSearchService()->deleteTopic($topicId);
     }
 
     public function formatQuote( $text )
