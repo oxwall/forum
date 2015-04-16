@@ -39,6 +39,16 @@
 class FORUM_BOL_UpdateSearchIndexDao extends OW_BaseDao
 {
     /**
+     * High priority
+     */
+    const HIGH_PRIORITY = 1;
+
+    /**
+     * Normal priority
+     */
+    const NORMAL_PRIORITY = 0;
+
+    /**
      * Delete topic
      */
     const DELETE_TOPIC = 'delete_topic';
@@ -47,6 +57,11 @@ class FORUM_BOL_UpdateSearchIndexDao extends OW_BaseDao
      * Update topic
      */
     const UPDATE_TOPIC = 'update_topic';
+
+    /**
+     * Update topic posts
+     */
+    const UPDATE_TOPIC_POSTS = 'update_topic_posts';
 
     /**
      * Delete group
@@ -107,18 +122,16 @@ class FORUM_BOL_UpdateSearchIndexDao extends OW_BaseDao
     }
 
     /**
-     * Find queue entities
+     * Find first queue
      * 
-     * @param integer $limit
      * @return array
      */
-    public function findQueueEntities($limit)
+    public function findFirstQueue()
     {
         $example = new OW_Example();
-        $example->setOrder('`id` ASC');
-        $example->setLimitClause(0, $limit);
+        $example->setOrder('`priority` DESC, `id` ASC');
 
-        return $this->findListByExample($example);
+        return $this->findObjectByExample($example);
     }
 
     /**
@@ -126,13 +139,15 @@ class FORUM_BOL_UpdateSearchIndexDao extends OW_BaseDao
      * 
      * @param integer $entityId
      * @param string $type
+     * @param integer $priority
      * @return void
      */
-    public function addQueue($entityId, $type)
+    public function addQueue($entityId, $type, $priority = self::NORMAL_PRIORITY)
     {
         $updateSearchIndexDto = new FORUM_BOL_UpdateSearchIndex();
         $updateSearchIndexDto->entityId = $entityId;
         $updateSearchIndexDto->type     = $type;
+        $updateSearchIndexDto->priority = $priority;
 
         $this->save($updateSearchIndexDto);
     }

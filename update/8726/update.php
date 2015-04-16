@@ -8,6 +8,8 @@ $sql = array(
         `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
         `type` varchar(50) NOT NULL,
         `entityId` int(10) unsigned NOT NULL,
+        `lastEntityId` int(10) unsigned DEFAULT NULL,
+        `priority` tinyint(1) unsigned NOT NULL DEFAULT "0",
         PRIMARY KEY (`id`)
     ) ENGINE=MyIsam DEFAULT CHARSET=utf8'
 );

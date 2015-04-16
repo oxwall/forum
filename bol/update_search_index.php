@@ -49,4 +49,16 @@ class FORUM_BOL_UpdateSearchIndex extends OW_Entity
      * @var int
      */
     public $entityId;
+
+    /**
+     * Last entity id
+     * @var int
+     */
+    public $lastEntityId;
+
+    /**
+     * Priority
+     * @var integer
+     */
+    public $priority;
 }

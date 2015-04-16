@@ -137,13 +137,20 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
      * @param int $groupId
      * @param int $first
      * @param int $count
+     * @param integer $lastTopicId
      * @return array of FORUM_BOL_Topic
      */
-    public function findSimpleGroupTopicList( $groupId, $first, $count )
+    public function findSimpleGroupTopicList( $groupId, $first, $count, $lastTopicId = null )
     {
         $example = new OW_Example();
 
         $example->andFieldEqual('groupId', $groupId);
+
+        if ( $lastTopicId )
+        {
+            $example->andFieldGreaterThan('id', $lastTopicId);
+        }
+
         $example->setOrder('`id`');
         $example->setLimitClause($first, $count);
 

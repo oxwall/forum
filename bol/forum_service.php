@@ -973,14 +973,31 @@ final class FORUM_BOL_ForumService
      * 
      * @param integer $groupId
      * @param integer $page
+     * @param integer $lastTopicId
      * @return FORUM_BOL_Topic 
      */
-    public function getSimpleGroupTopicList( $groupId, $page )
+    public function getSimpleGroupTopicList( $groupId, $page, $lastTopicId = null )
     {
         $count = $this->getPostPerPageConfig();
         $first = ($page - 1) * $count;
 
-        return $this->topicDao->findSimpleGroupTopicList($groupId, $first, $count);
+        return $this->topicDao->findSimpleGroupTopicList($groupId, $first, $count, $lastTopicId);
+    }
+
+    /**
+     * Returns simple topic's post list
+     * 
+     * @param int $topicId
+     * @param integer $page
+     * @param integer $lastPostId
+     * @return array of FORUM_BOL_Post
+     */
+    public function getSimpleTopicPostList( $topicId, $page, $lastPostId = null )
+    {
+        $count = $this->getPostPerPageConfig();
+        $first = ($page - 1) * $count;
+
+        return $this->postDao->findTopicPostList($topicId, $first, $count, $lastPostId);
     }
 
     /**
@@ -988,21 +1005,14 @@ final class FORUM_BOL_ForumService
      * 
      * @param int $topicId
      * @param integer $page
-     * @param boolean $getArray
-     * @return array|FORUM_BOL_Post
+     * @return array
      */
-    public function getTopicPostList( $topicId, $page, $getArray = true )
+    public function getTopicPostList( $topicId, $page )
     {
         $count = $this->getPostPerPageConfig();
         $first = ($page - 1) * $count;
 
         $postDtoList = $this->postDao->findTopicPostList($topicId, $first, $count);
-
-        if ( !$getArray )
-        {
-            return $postDtoList;
-        }
-
         $postList = array();
         $postIds = array();
 
