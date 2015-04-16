@@ -969,40 +969,39 @@ final class FORUM_BOL_ForumService
     }
 
     /**
-     * Get all topic post list
-     * 
-     * @apram integer $topicId
-     * @return array
-     */
-    public function getAllTopicPostList( $topicId )
-    {
-        return $this->postDao->findAllTopicPostList($topicId);
-    }
-
-    /**
-     * Get all topic list
+     * Returns group's topic list
      * 
      * @param integer $groupId
-     * @return array
+     * @param integer $page
+     * @return FORUM_BOL_Topic 
      */
-    public function getAllTopicList( $groupId )
+    public function getSimpleGroupTopicList( $groupId, $page )
     {
-        return $this->topicDao->findAllTopicList($groupId);
+        $count = $this->getPostPerPageConfig();
+        $first = ($page - 1) * $count;
+
+        return $this->topicDao->findSimpleGroupTopicList($groupId, $first, $count);
     }
 
     /**
      * Returns topic's post list
      * 
      * @param int $topicId
-     * @param $page
-     * @return array
+     * @param integer $page
+     * @param boolean $getArray
+     * @return array|FORUM_BOL_Post
      */
-    public function getTopicPostList( $topicId, $page )
+    public function getTopicPostList( $topicId, $page, $getArray = true )
     {
         $count = $this->getPostPerPageConfig();
         $first = ($page - 1) * $count;
 
         $postDtoList = $this->postDao->findTopicPostList($topicId, $first, $count);
+
+        if ( !$getArray )
+        {
+            return $postDtoList;
+        }
 
         $postList = array();
         $postIds = array();

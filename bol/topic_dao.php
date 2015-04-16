@@ -89,22 +89,6 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
     }
 
     /**
-     * Returns all topics
-     *
-     * @param int $groupId
-     * @return array of FORUM_BOL_Post
-     */
-    public function findAllTopicList( $groupId )
-    {
-        $example = new OW_Example();
-
-        $example->andFieldEqual('groupId', $groupId);
-        $example->setOrder('`id`');
-
-        return $this->findListByExample($example);
-    }
-
-    /**
      * Returns forum group's topic count
      * 
      * @param int 
@@ -145,6 +129,25 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
 		    WHERE `t`.`' . self::GROUP_ID . '` = :groupId AND `t`.`' . self::STATUS . '` = :status';
 
         return (int)$this->dbo->queryForColumn($query, array('groupId' => $groupId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED));
+    }
+
+    /**
+     * Returns simple forum group's topic list
+     *
+     * @param int $groupId
+     * @param int $first
+     * @param int $count
+     * @return array of FORUM_BOL_Topic
+     */
+    public function findSimpleGroupTopicList( $groupId, $first, $count )
+    {
+        $example = new OW_Example();
+
+        $example->andFieldEqual('groupId', $groupId);
+        $example->setOrder('`id`');
+        $example->setLimitClause($first, $count);
+
+        return $this->findListByExample($example);
     }
 
     /**

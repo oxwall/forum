@@ -44,6 +44,8 @@ class FORUM_Cron extends OW_Cron
     
     const SEARCH_QUEUE_ENTITIES_COUNT = 1;
 
+    const UPDATE_SEARCH_INDEX_LIFE_TIME = 3600;
+
     public function __construct()
     {
         parent::__construct();
@@ -69,13 +71,14 @@ class FORUM_Cron extends OW_Cron
     public function updateSearchIndex()
     {
         $config = OW::getConfig();
-        
-        if ( $config->getValue('forum', 'update_search_index_cron_busy') )
+        $cronBusyValue = (int) $config->getValue('forum', 'update_search_index_cron_busy');
+
+        if ( time() <  $cronBusyValue)
         {
             return;
         }
 
-        $config->saveConfig('forum', 'update_search_index_cron_busy', 1);
+        $config->saveConfig('forum', 'update_search_index_cron_busy', time() + self::UPDATE_SEARCH_INDEX_LIFE_TIME);
         $updateSearchIndexDao = FORUM_BOL_UpdateSearchIndexDao::getInstance();
         $queueEntities = $updateSearchIndexDao->findQueueEntities(self::SEARCH_QUEUE_ENTITIES_COUNT);
 
@@ -127,30 +130,43 @@ class FORUM_Cron extends OW_Cron
 
         if ( $group )
         {
-            // get all topics inrto the group
-            $topics = $forumService->getAllTopicList($groupId);
+            $topicPage = 1;
 
-            if ( $topics )
+            // get group's topics 
+            while ( true )
             {
+                if ( null == ($topics = $forumService->getSimpleGroupTopicList($group->id, $topicPage)) )
+                {
+                    break;
+                }
+
+                // add topics into the group
                 foreach ($topics as $topic)
                 {
-                    // add the topic
                     $this->getTextSearchService()->addTopic($topic);
 
-                    // get all posts into the topic
-                    $posts = $forumService->getAllTopicPostList($topic->id);
-
-                    if ( $posts )
+                    // get topic's post list
+                    $postPage = 1;
+                    while ( true )
                     {
-                        // add posts
+                        if ( null == ($posts = $forumService->getTopicPostList($topic->id, $postPage, false)) )
+                        {
+                            break;
+                        }
+
+                        // add posts into the topic
                         foreach ($posts as $post)
                         {
-                            $this->getTextSearchService()->saveOrUpdatePost($post, true);
+                            $this->getTextSearchService()->saveOrUpdatePost($post, true);   
                         }
-                    } 
-               }
+
+                        $postPage++;
+                    }
+                }
+
+                $topicPage++;
             }
-        }
+        }            
     }
 
     /**
@@ -185,15 +201,23 @@ class FORUM_Cron extends OW_Cron
             // add the topic
             $this->getTextSearchService()->addTopic($topic);
 
-            $posts = $forumService->getAllTopicPostList($topic->id);
+            $postPage = 1;
 
-            if ( $posts )
+            // get topic's post list
+            while ( true )
             {
-                // add posts
+                if ( null == ($posts = $forumService->getTopicPostList($topic->id, $postPage, false)) )
+                {
+                    break;
+                }
+
+                // add posts into the topic
                 foreach ($posts as $post)
                 {
-                    $this->getTextSearchService()->saveOrUpdatePost($post, true);
+                    $this->getTextSearchService()->saveOrUpdatePost($post, true);   
                 }
+
+                $postPage++;
             }
         }
     }
