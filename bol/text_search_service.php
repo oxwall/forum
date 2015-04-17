@@ -109,26 +109,19 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Rebuild topic
-     * 
-     * @param FORUM_BOL_Topic $topicDto
-     * @return void
-     */
-    public function rebuildTopic( $topicDto )
-    {
-        FORUM_BOL_UpdateSearchIndexDao::getInstance()->
-                addQueue($topicDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_TOPIC);
-    }
-
-    /**
-     * Rebuild group
+     * Save or update group
      * 
      * @param FORUM_BOL_Group $groupDto
      */
-    public function rebuildGroup( $groupDto )
+    public function saveOrUpdateGroup( $groupDto )
     {
-        FORUM_BOL_UpdateSearchIndexDao::getInstance()->
-                addQueue($groupDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_GROUP);
+        if ( !empty($groupDto->id) && 
+                (in_array('sectionId', $groupDto->getEntinyUpdatedFields()) 
+                || in_array('isPrivate', $groupDto->getEntinyUpdatedFields())) )
+        {
+            FORUM_BOL_UpdateSearchIndexDao::getInstance()->
+                    addQueue($groupDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_GROUP);
+        }
     }
 
     /**
@@ -272,6 +265,45 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
+     * Count global search in groups
+     * 
+     * @param string $text
+     * @param integer $userId
+     * @return integer
+     */
+    public function countGlobalSearchInGroups( $text, $userId )
+    {
+        $tags = $userId
+            ? array('forum_topic_public_user_id_' . $userId)
+            : array('forum_topic_public');
+
+        return OW::getTextSearchManager()->searchEntitiesCount($text, $tags);
+    }
+
+    /**
+     * Search global in groups
+     * 
+     * @param string $text
+     * @param integer $first
+     * @param integer $limit
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function searchGlobalInGroups( $text, $first, $limit, $sortBy = null, $userId = null )
+    {
+        $sort =  $sortBy == 'rel' 
+            ? OW_TextSearchManager::SORT_BY_RELEVANCE
+            : OW_TextSearchManager::SORT_BY_DATE;
+
+        $tags = $userId
+            ? array('forum_topic_public_user_id_' . $userId)
+            : array('forum_topic_public');
+
+        return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
+    }
+
+    /**
      * Add topic
      * 
      * @param FORUM_BOL_Topic $topicDto
@@ -308,9 +340,10 @@ class FORUM_BOL_TextSearchService
      * Save or update topic
      * 
      * @param FORUM_BOL_Topic $topicDto
+     * @param boolean $refreshPosts
      * @return void
      */
-    public function saveOrUpdateTopic( FORUM_BOL_Topic $topicDto )
+    public function saveOrUpdateTopic( FORUM_BOL_Topic $topicDto, $refreshPosts = false )
     {
         // activate or deactivate topics and posts
         if ( in_array('status', $topicDto->getEntinyUpdatedFields()) )
@@ -329,6 +362,12 @@ class FORUM_BOL_TextSearchService
             ));
 
             $this->addTopic($topicDto);    
+        }
+
+        if ( $refreshPosts )
+        {
+            FORUM_BOL_UpdateSearchIndexDao::getInstance()->
+                addQueue($topicDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_TOPIC);
         }
     }
 

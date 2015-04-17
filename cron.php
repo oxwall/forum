@@ -93,35 +93,40 @@ class FORUM_Cron extends OW_Cron
 
         if ( $firstQueue )
         {
+            $result = false;
+
             switch ($firstQueue->type)
              {
                  // delete topic
                  case FORUM_BOL_UpdateSearchIndexDao::DELETE_TOPIC :
-                     $this->deleteTopicFromSearchIndex($firstQueue->entityId);
+                     $result = $this->deleteTopicFromSearchIndex($firstQueue->entityId);
                      break;
 
                  // update topic
                  case FORUM_BOL_UpdateSearchIndexDao::UPDATE_TOPIC :
-                     $this->updateTopicInSearchIndex($firstQueue->entityId);
+                     $result = $this->updateTopicInSearchIndex($firstQueue->entityId);
                      break;
 
                  // update topic posts
                  case FORUM_BOL_UpdateSearchIndexDao::UPDATE_TOPIC_POSTS :
-                     $this->updateTopicPostsInSearchIndex($firstQueue->entityId, $firstQueue);
+                     $result = $this->updateTopicPostsInSearchIndex($firstQueue->entityId, $firstQueue);
                      break;
 
                  // delete group
                  case FORUM_BOL_UpdateSearchIndexDao::DELETE_GROUP :
-                     $this->deleteGroupFromSearchIndex($firstQueue->entityId);
+                     $result = $this->deleteGroupFromSearchIndex($firstQueue->entityId);
                      break;
 
                  // update group
                  case FORUM_BOL_UpdateSearchIndexDao::UPDATE_GROUP :
-                     $this->updateGroupInSearchIndex($firstQueue->entityId, $firstQueue);
+                     $result = $this->updateGroupInSearchIndex($firstQueue->entityId, $firstQueue);
                      break;
              }
 
-             $this->getUpdateSearchIndexDao()->delete($firstQueue);
+             if ( $result )
+             {
+                $this->getUpdateSearchIndexDao()->delete($firstQueue);
+             }
         }
 
         $config->saveConfig('forum', 'update_search_index_cron_busy', 0);
@@ -132,7 +137,7 @@ class FORUM_Cron extends OW_Cron
      * 
      * @param integer $groupId
      * @param FORUM_BOL_UpdateSearchIndex $firstQueue
-     * @return void
+     * @return boolean
      */
     private function updateGroupInSearchIndex( $groupId, FORUM_BOL_UpdateSearchIndex $firstQueue )
     {
@@ -152,7 +157,7 @@ class FORUM_Cron extends OW_Cron
                 if ( null == ($topics = $forumService->
                         getSimpleGroupTopicList($group->id, $topicPage, $firstQueue->lastEntityId)) )
                 {
-                    break;
+                    return true;
                 }
 
                 // add topics into the group
@@ -171,14 +176,18 @@ class FORUM_Cron extends OW_Cron
 
                 $topicPage++;
             }
+
+            return false;
         }
+
+        return true;
     }
 
     /**
      * Delete group from the search index
      * 
      * @param integer $groupId
-     * @return void
+     * @return boolean
      */
     private function deleteGroupFromSearchIndex( $groupId )
     {
@@ -186,13 +195,15 @@ class FORUM_Cron extends OW_Cron
 
         FORUM_BOL_UpdateSearchIndexDao::getInstance()->addQueue($groupId, 
                 FORUM_BOL_UpdateSearchIndexDao::UPDATE_GROUP, FORUM_BOL_UpdateSearchIndexDao::HIGH_PRIORITY);
+
+        return true;
     }
 
     /**
      * Delete topic from the search index
      * 
      * @param integer $topicId
-     * @return void
+     * @return boolean
      */
     private function deleteTopicFromSearchIndex( $topicId )
     {
@@ -200,13 +211,15 @@ class FORUM_Cron extends OW_Cron
 
         FORUM_BOL_UpdateSearchIndexDao::getInstance()->addQueue($topicId, 
                 FORUM_BOL_UpdateSearchIndexDao::UPDATE_TOPIC, FORUM_BOL_UpdateSearchIndexDao::HIGH_PRIORITY);
+
+        return true;
     }
 
     /**
      * Update topic
      * 
      * @param integer $topicId
-     * @return void
+     * @return boolean
      */
     private function updateTopicInSearchIndex( $topicId )
     {
@@ -223,6 +236,8 @@ class FORUM_Cron extends OW_Cron
             FORUM_BOL_UpdateSearchIndexDao::getInstance()->addQueue($topicId, 
                     FORUM_BOL_UpdateSearchIndexDao::UPDATE_TOPIC_POSTS, FORUM_BOL_UpdateSearchIndexDao::HIGH_PRIORITY);
         }
+
+        return true;
     }
 
     /**
@@ -230,7 +245,7 @@ class FORUM_Cron extends OW_Cron
      * 
      * @param integer $topicId
      * @param FORUM_BOL_UpdateSearchIndex $firstQueue
-     * @return void
+     * @return boolean
      */
     private function updateTopicPostsInSearchIndex( $topicId, FORUM_BOL_UpdateSearchIndex $firstQueue )
     {
@@ -250,7 +265,7 @@ class FORUM_Cron extends OW_Cron
                 if ( null == ($posts = $forumService->
                         getSimpleTopicPostList($topic->id, $postPage, $firstQueue->lastEntityId)) )
                 {
-                    break;
+                    return true;
                 }
 
                 // add posts into the topic
@@ -265,7 +280,11 @@ class FORUM_Cron extends OW_Cron
 
                 $postPage++;
             }
+
+            return false;
         }
+
+        return true;
     }
 
     /**

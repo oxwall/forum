@@ -830,6 +830,9 @@ final class FORUM_BOL_ForumService
     public function saveOrUpdateGroup( $groupDto )
     {
         $this->groupDao->save($groupDto);
+
+        // update forum group into the search index
+        $this->getTextSearchService()->saveOrUpdateGroup($groupDto);
     }
 
     /**
@@ -912,14 +915,15 @@ final class FORUM_BOL_ForumService
      * Saves or updates topic
      * 
      * @param FORUM_BOL_Topic $topicDto
-     * @param boolean $rebuildIndex
+     * @param boolean $rebuildTopic
+     * @param boolean $refreshPosts
      */
-    public function saveOrUpdateTopic( $topicDto )
+    public function saveOrUpdateTopic( $topicDto, $refreshPosts = false )
     {
         $this->topicDao->save($topicDto);
 
         // add or edit a topic into the search index
-        $this->getTextSearchService()->saveOrUpdateTopic($topicDto);
+        $this->getTextSearchService()->saveOrUpdateTopic($topicDto, $refreshPosts);
     }
 
     /**
@@ -1400,8 +1404,65 @@ final class FORUM_BOL_ForumService
 
         return false;
     }
-    
-    public function searchInGroups( $token, $userToken, $page, $excludeGroupIdList = null, $sortBy = null )
+
+    /**
+     * Get count of global search in groups
+     * 
+     * @param string $token
+     * @param integer $userId
+     * @return integer
+     */
+    public function countGlobalSearchInGroups( $token, $userId )
+    {
+        return $this->getTextSearchService()->countGlobalSearchInGroups($token, $userId);
+    }
+
+    /**
+     * Search global in groups
+     * 
+     * @param string $token
+     * @param integer $page
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function searchGlobalInGroups( $token, $page, $sortBy = null, $userId = null )
+    {
+        $limit = $this->getTopicPerPageConfig();
+        $first = ( $page - 1 ) * $limit;
+
+        // make a search
+        $topics = $this->getTextSearchService()->
+                searchGlobalInGroups($token, $first, $limit, $sortBy, $userId);
+
+        if ( $topics )
+        {
+            $topicsIds = array();
+
+            // collect list of topics id
+            foreach($topics as $topic)
+            {
+                $topicsIds[] = $topic['entityId'];
+            }
+
+            $topics = $this->topicDao->findListByTopicIds($topicsIds);
+            $result = array();
+
+            // process topics
+            foreach($topics as &$topic)
+            {
+                $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
+
+            }
+
+            return $topics;
+        }
+
+        return array();
+    }
+
+    // TODO: Delete me later
+   /* public function searchInGroups( $token, $userToken, $page, $excludeGroupIdList = null, $sortBy = null )
     {
         if ( !mb_strlen($token) && !mb_strlen($userToken) )
         {
@@ -1448,12 +1509,9 @@ final class FORUM_BOL_ForumService
         }
         
         return $topics;
-    }
+    }*/
     
-    public function countFoundTopicsInGroups( $token, $userToken, $excludeGroupIdList = null )
-    {
-        return $this->postDao->countFoundTopicsInGroups($token, $userToken, $excludeGroupIdList);
-    }
+
     
     public function searchInSection( $token, $userToken, $sectionId, $page, $excludeGroupIdList = null, $sortBy = null )
     {

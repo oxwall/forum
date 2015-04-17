@@ -968,8 +968,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
             $topicDto->groupId = $groupDto->id;
             $topicDto->lastPostId = $postDto->id;
 
-            $this->forumService->saveOrUpdateTopic($topicDto);
-            FORUM_BOL_TextSearchService::getInstance()->rebuildTopic($topicDto);
+            $this->forumService->saveOrUpdateTopic($topicDto, true);
 
             echo json_encode($this->forumService->getPostUrl($replaceTopicDto->id, $replacePostDto->id, false));
         }

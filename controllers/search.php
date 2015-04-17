@@ -46,14 +46,89 @@ class FORUM_CTRL_Search extends OW_ActionController
         
         $this->forumService = FORUM_BOL_ForumService::getInstance();
     }
-    
 
     /**
      * Controller's default action
      * 
      * @param array $params
      */
-    public function inForums( array $params = null )
+    public function inForums( array $params = array() )
+    {
+        $plugin = OW::getPluginManager()->getPlugin('forum');
+        $this->setTemplate($plugin->getCtrlViewDir() . 'search_result.html');
+        $lang = OW::getLanguage();
+
+        $token = !empty($_GET['q']) && is_string($_GET['q']) 
+            ? urldecode(htmlspecialchars(trim($_GET['q']))) 
+            : null;
+
+        $userToken = !empty($_GET['u']) && is_string($_GET['u']) 
+            ? urldecode(htmlspecialchars(trim($_GET['u']))) 
+            : null;
+
+        $sortBy = !empty($_GET['sort']) ? $_GET['sort'] : null; 
+        $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
+
+        if ( !mb_strlen($token) )
+        {
+            $this->redirect(OW::getRouter()->urlForRoute('forum-default'));
+        }
+
+        $tokenQuery = '&q=' . $token;
+        $userTokenQuery = $userToken ? '&u=' . $userToken : null;
+
+        $userInfo = $userToken
+            ? BOL_UserService::getInstance()->findByUsername($userToken)
+            : null;
+
+        // filter by user id
+        $userId = $userToken
+            ? ($userInfo ? $userInfo->id : -1)
+            : null;
+
+        // make a search
+        $authors = array();
+        $total = $this->forumService->countGlobalSearchInGroups($token, $userId);
+        $topics = $total
+            ? $this->forumService->searchGlobalInGroups($token, $page, $sortBy, $userId)
+            : array();
+
+        $this->assign('topics', $topics);
+        $this->assign('token', $token);
+        $this->assign('userToken', $userToken);
+    
+        $this->addComponent('search', new FORUM_CMP_ForumSearch(
+            array('scope' => 'all_forum', 'token' => $token, 'userToken' => $userToken))
+        );
+
+        // paging
+        $perPage = $this->forumService->getTopicPerPageConfig();
+        $pages = (int) ceil($total / $perPage);
+        $paging = new BASE_CMP_Paging($page, $pages, $perPage);
+        $this->assign('paging', $paging->render());
+
+        // sort control
+        $sortCtrl = new BASE_CMP_SortControl();
+        $url = OW::getRouter()->urlForRoute('forum_search') . '?' . $tokenQuery . $userTokenQuery;
+        $sortCtrl->addItem('date', $lang->text('forum', 'sort_by_date'), $url.'&sort=date', !$sortBy || $sortBy == 'date');
+        $sortCtrl->addItem('relevance', $lang->text('forum', 'sort_by_relevance'), $url.'&sort=rel', $sortBy == 'rel');
+
+        $this->addComponent('sort', $sortCtrl);
+
+        $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
+
+        OW::getDocument()->setHeading($lang->text('forum', 'search_page_heading'));
+        OW::getDocument()->setHeadingIconClass('ow_ic_forum');
+        OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
+    }
+
+    // TODO: DLETE me later
+    /**
+     * Controller's default action
+     * 
+     * @param array $params
+     */
+   /* public function inForums( array $params = null )
     {
         $plugin = OW::getPluginManager()->getPlugin('forum');
         $this->setTemplate($plugin->getCtrlViewDir() . 'search_result.html');
@@ -135,7 +210,7 @@ class FORUM_CTRL_Search extends OW_ActionController
         OW::getDocument()->setHeadingIconClass('ow_ic_forum');
         OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
     }
-    
+    */
     public function inGroup( array $params = null )
     {
         $plugin = OW::getPluginManager()->getPlugin('forum');

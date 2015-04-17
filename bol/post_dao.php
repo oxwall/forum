@@ -254,6 +254,8 @@ class FORUM_BOL_PostDao extends OW_BaseDao
         return $userTokenJoin;
     }
     
+    /*
+     * TODO: Delete me later
     public function searchInGroups( $token, $userToken, $page, $limit, $excludeGroupIdList = null, $sortBy = null )
     {
         $excludeCond = $excludeGroupIdList ? ' AND `g`.`id` NOT IN ('.implode(',', $excludeGroupIdList).') = 1' : '';
@@ -300,9 +302,9 @@ class FORUM_BOL_PostDao extends OW_BaseDao
         }
         
         return $this->dbo->queryForList($query, $params);
-    }
+    }*/
     
-    public function countFoundTopicsInGroups( $token, $userToken, $excludeGroupIdList = null )
+    /*public function countFoundTopicsInGroups( $token, $userToken, $excludeGroupIdList = null )
     {
         $excludeCond = $excludeGroupIdList ? ' AND `g`.`id` NOT IN ('.implode(',', $excludeGroupIdList).') = 1' : '';
 
@@ -336,7 +338,7 @@ class FORUM_BOL_PostDao extends OW_BaseDao
 
         return (int) $this->dbo->queryForColumn($query, $params);
     }
-
+*/
     public function searchInSection( $token, $userToken, $sectionId, $page, $limit, $excludeGroupIdList = null, $sortBy = null )
     {
         $excludeCond = $excludeGroupIdList ? ' AND `g`.`id` NOT IN ('.implode(',', $excludeGroupIdList).') = 1' : '';
