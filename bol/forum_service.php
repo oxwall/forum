@@ -1406,19 +1406,60 @@ final class FORUM_BOL_ForumService
     }
 
     /**
-     * Get count of global search in groups
+     * Process found topics
+     * 
+     * @param string $token
+     * @param array $topics
+     * @return array
+     */
+    protected function processFoundTopics( $token, array $topics )
+    {
+        $topicsIds = array();
+
+        // collect list of topics id
+        foreach($topics as $topic)
+        {
+            $topicsIds[] = $topic['entityId'];
+        }
+
+        $topics = $this->topicDao->findListByTopicIds($topicsIds);
+
+        // process topics
+        $formatter = new FORUM_CLASS_ForumSearchResultFormatter();
+
+        foreach($topics as &$topic)
+        {
+            $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
+            $postDto = $this->findTopicFirstPost($topic['id']);
+            $text = strip_tags($postDto->text);
+
+            $topic['post'] = array(
+                'postId' => $postDto->id,
+                'topicId' => $postDto->topicId,
+                'userId' => $postDto->userId,
+                'text' => $formatter->formatResult($text, array($token)) ,
+                'createStamp' => UTIL_DateTime::formatDate($postDto->createStamp),
+                'postUrl' => $this->getPostUrl($postDto->topicId, $postDto->id)
+            );
+        }
+
+        return $topics; 
+    }
+
+    /**
+     * Get count of topics into all sections
      * 
      * @param string $token
      * @param integer $userId
      * @return integer
      */
-    public function countGlobalSearchInGroups( $token, $userId )
+    public function countFindGlobalTopics( $token, $userId )
     {
-        return $this->getTextSearchService()->countGlobalSearchInGroups($token, $userId);
+        return $this->getTextSearchService()->countFindGlobalTopics($token, $userId);
     }
 
     /**
-     * Search global in groups
+     * Find topics into all sections
      * 
      * @param string $token
      * @param integer $page
@@ -1426,201 +1467,103 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return array
      */
-    public function searchGlobalInGroups( $token, $page, $sortBy = null, $userId = null )
+    public function findGlobalTopics( $token, $page, $sortBy = null, $userId = null )
     {
         $limit = $this->getTopicPerPageConfig();
         $first = ( $page - 1 ) * $limit;
 
         // make a search
         $topics = $this->getTextSearchService()->
-                searchGlobalInGroups($token, $first, $limit, $sortBy, $userId);
+                findGlobalTopics($token, $first, $limit, $sortBy, $userId);
 
         if ( $topics )
         {
-            $topicsIds = array();
-
-            // collect list of topics id
-            foreach($topics as $topic)
-            {
-                $topicsIds[] = $topic['entityId'];
-            }
-
-            $topics = $this->topicDao->findListByTopicIds($topicsIds);
-            $result = array();
-
-            // process topics
-            foreach($topics as &$topic)
-            {
-                $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
-
-            }
-
-            return $topics;
+            return $this->processFoundTopics($token, $topics);
         }
 
         return array();
     }
 
-    // TODO: Delete me later
-   /* public function searchInGroups( $token, $userToken, $page, $excludeGroupIdList = null, $sortBy = null )
+    /**
+     * Get count of topics into section
+     * 
+     * @param string $token
+     * @param integer $sectionId
+     * @param integer $userId
+     * @return integer
+     */
+    public function countFindTopicsIntoSection( $token, $sectionId, $userId )
     {
-        if ( !mb_strlen($token) && !mb_strlen($userToken) )
-        {
-            return false;
-        }
-        
-        $limit = $this->getTopicPerPageConfig();
-        $topics = $this->postDao->searchInGroups($token, $userToken, $page, $limit, $excludeGroupIdList, $sortBy);
-        
-        if ( !$topics )
-        {
-            return array();
-        }
-        
-        $highlight = mb_strlen($token) != 0;
-        
-        foreach ( $topics as &$topic )
-        {
-            $topic['title'] = $highlight ? $this->highlightSearchWords($topic['title'], $token) : $topic['title'];
-            $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
-            $posts = $this->searchPostsInTopic($token, $topic['id']);
-            
-            if ( !$posts )
-            {
-                $posts = array($this->findTopicFirstPost($topic['id']));
-            }
-            
-            foreach ( $posts as $postDto )
-            {
-                $text = strip_tags($postDto->text);
-                $formatter = new FORUM_CLASS_ForumSearchResultFormatter();
-                 
-                $postInfo = array(
-                    'postId' => $postDto->id,
-                    'topicId' => $postDto->topicId,
-                    'userId' => $postDto->userId,
-                    'text' => $formatter->formatResult($text, array($token), $highlight) ,
-                    'createStamp' => UTIL_DateTime::formatDate($postDto->createStamp),
-                    'postUrl' => $this->getPostUrl($postDto->topicId, $postDto->id)
-                );
-                
-                $topic['posts'][$postDto->id] = $postInfo;
-            }
-        }
-        
-        return $topics;
-    }*/
-    
+        return $this->getTextSearchService()->countFindTopicsIntoSection($token, $sectionId, $userId);
+    }
 
-    
-    public function searchInSection( $token, $userToken, $sectionId, $page, $excludeGroupIdList = null, $sortBy = null )
+    /**
+     * Find topics into section
+     * 
+     * @param sting $token
+     * @param integer $sectionId
+     * @param integer $page
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function findTopicsIntoSection( $token, $sectionId, $page, $sortBy = null, $userId = null )
     {
-        if ( !mb_strlen($token) && !mb_strlen($userToken) || !$sectionId )
-        {
-            return false;
-        }
-        
         $limit = $this->getTopicPerPageConfig();
-        $topics = $this->postDao->searchInSection($token, $userToken, $sectionId, $page, $limit, $excludeGroupIdList, $sortBy);
-        
-        if ( !$topics )
-        {
-            return array();
-        }
-        
-        $highlight = mb_strlen($token) != 0;
+        $first = ( $page - 1 ) * $limit;
 
-        foreach ( $topics as &$topic )
+        // make a search
+        $topics = $this->getTextSearchService()->
+                findTopicsIntoSection($token, $sectionId, $first, $limit, $sortBy, $userId);
+
+        if ( $topics )
         {
-            $topic['title'] = $highlight ? $this->highlightSearchWords($topic['title'], $token) : $topic['title'];
-            $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
-            $posts = $this->searchPostsInTopic($token, $topic['id']);
-            
-            if ( !$posts )
-            {
-                $posts = array($this->findTopicFirstPost($topic['id']));
-            }
-            
-            foreach ( $posts as $postDto )
-            {
-                $text = strip_tags($postDto->text);
-                $formatter = new FORUM_CLASS_ForumSearchResultFormatter();
-                 
-                $postInfo = array(
-                    'postId' => $postDto->id,
-                    'topicId' => $postDto->topicId,
-                    'userId' => $postDto->userId,
-                    'text' => $formatter->formatResult($text, array($token), $highlight),
-                    'createStamp' => UTIL_DateTime::formatDate($postDto->createStamp),
-                    'postUrl' => $this->getPostUrl($postDto->topicId, $postDto->id)
-                );
-                
-                $topic['posts'][$postDto->id] = $postInfo;
-            }
+            return $this->processFoundTopics($token, $topics);
         }
-        
-        return $topics;
+
+        return array();
     }
-    
-    public function countFoundTopicsInSection( $token, $userToken, $sectionId, $excludeGroupIdList = null )
+
+    /**
+     * Get count of topics into group
+     * 
+     * @param string $token
+     * @param integer $groupId
+     * @param integer $userId
+     * @return integer
+     */
+    public function countFindTopicsIntoGroup( $token, $groupId, $userId )
     {
-        return $this->postDao->countFoundTopicsInSection($token, $userToken, $sectionId, $excludeGroupIdList);
+        return $this->getTextSearchService()->countFindTopicsIntoGroup($token, $groupId, $userId);
     }
-    
-    public function searchInGroup( $token, $userToken, $page, $groupId, $isHidden = 0, $sortBy = null )
+
+    /**
+     * Find topics into group
+     * 
+     * @param sting $token
+     * @param integer $groupId
+     * @param integer $page
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function findTopicsIntoGroup( $token, $groupId, $page, $sortBy = null, $userId = null )
     {
-        if ( !mb_strlen($token) && !mb_strlen($userToken) )
-        {
-            return false;
-        }
-        
         $limit = $this->getTopicPerPageConfig();
-        $topics = $this->postDao->searchInGroup($token, $userToken, $page, $limit, $groupId, $isHidden, $sortBy);
-        
-        if ( !$topics )
-    {
-            return array();
-    }
-    
-        $highlight = mb_strlen($token) != 0;
-        
-        foreach ( $topics as &$topic )
+        $first = ( $page - 1 ) * $limit;
+
+        // make a search
+        $topics = $this->getTextSearchService()->
+                findTopicsIntoGroup($token, $groupId, $first, $limit, $sortBy, $userId);
+
+        if ( $topics )
         {
-            $topic['title'] = $highlight ? $this->highlightSearchWords($topic['title'], $token) : $topic['title'];
-            $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
-            $posts = $this->searchPostsInTopic($token, $topic['id']);
-            
-            if ( !$posts )
-            {
-                $posts = array($this->findTopicFirstPost($topic['id']));
-            }
-            
-            foreach ( $posts as $postDto )
-    {
-                $text = strip_tags($postDto->text);
-                $formatter = new FORUM_CLASS_ForumSearchResultFormatter();
-                 
-                $postInfo = array(
-                    'postId' => $postDto->id,
-                    'topicId' => $postDto->topicId,
-                    'userId' => $postDto->userId,
-                    'text' => $formatter->formatResult($text, array($token), $highlight),
-                    'createStamp' => UTIL_DateTime::formatDate($postDto->createStamp),
-                    'postUrl' => $this->getPostUrl($postDto->topicId, $postDto->id)
-                );
-                
-                $topic['posts'][$postDto->id] = $postInfo;
-            }
+            return $this->processFoundTopics($token, $topics);
         }
-        
-        return $topics;
+
+        return array();
     }
-        
-    public function countFoundTopicsInGroup( $token, $userToken, $groupId, $isHidden = 0 )
-        {
-        return $this->postDao->countFoundTopicsInGroup($token, $userToken, $groupId, $isHidden);
-        }
-        
+
     public function highlightSearchWords( $string, $token )
     {
         $token = preg_quote($token, "/");

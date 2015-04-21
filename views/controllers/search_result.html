@@ -31,6 +31,19 @@
                             <a href="{url_for_route for="forum-default"}#section-{$topic.sectionId}">{$topic.sectionName}</a>
                             &raquo; <a href="{url_for_route for="group-default:[groupId=>`$topic.groupId`]"}">{$topic.groupName}</a>
                         </div>
+                        
+                        {capture assign='info_string'}
+                            <a href="{$avatars[$topic.post.userId].url}">{$avatars[$topic.post.userId].title}</a> <span class="ow_tiny ow_ipc_date">{$topic.post.createStamp}</span>
+                        {/capture}
+
+                        {capture assign='content'}
+                            <div class="post_content">{$topic.post.text} <a href="{$topic.post.postUrl}" class="ow_lbutton">{text key='base+more'}</a></div>
+                        {/capture}
+ 
+                        {decorator name='ipc' addClass='ow_smallmargin'
+                            avatar=$avatars[$topic.post.userId]
+                            content=$content
+                            infoString=$info_string}
                     </div>
                 {/block_decorator}
             {/foreach}

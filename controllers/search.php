@@ -54,6 +54,67 @@ class FORUM_CTRL_Search extends OW_ActionController
      */
     public function inForums( array $params = array() )
     {
+        $this->searchTopics($params, 'global');
+    }
+
+   /**
+     * Search topics into group
+     * 
+     * @param array $params
+     */
+    public function inGroup( array $params = array() )
+    {
+        $groupId = (int)$params['groupId'];
+        $forumGroup = $this->forumService->findGroupById($groupId);
+        $userId = OW::getUser()->getId();
+
+        $isHidden = $this->forumService->groupIsHidden($groupId);
+
+        if ( $isHidden )
+        {
+            $forumSection = $this->forumService->findSectionById($forumGroup->sectionId);
+            $isModerator = OW::getUser()->isAuthorized($forumSection->entity);
+
+            $event = new OW_Event('forum.find_forum_caption', array('entity' => $forumSection->entity, 'entityId' => $forumGroup->entityId));
+            OW::getEventManager()->trigger($event);
+
+            $eventData = $event->getData();
+            $componentForumCaption = $eventData['component'];
+
+            $this->addComponent('componentForumCaption', $componentForumCaption);
+        }
+        else
+        {
+            $isModerator = OW::getUser()->isAuthorized('forum');
+        }
+
+        if ( $forumGroup->isPrivate )
+        {
+            if ( !$userId )
+            {
+                throw new AuthorizationException();
+            }
+            else if ( !$isModerator )
+            {
+                if ( !$this->forumService->isPrivateGroupAvailable($userId, json_decode($forumGroup->roles)) )
+                {
+                    throw new AuthorizationException();
+                }
+            }
+        }
+
+        $this->searchTopics($params, 'group');
+    }
+
+    /**
+     * Search topics
+     * 
+     * @param array $params
+     * @param string $type
+     * @return void
+     */
+    private function searchTopics(array $params, $type)
+    {
         $plugin = OW::getPluginManager()->getPlugin('forum');
         $this->setTemplate($plugin->getCtrlViewDir() . 'search_result.html');
         $lang = OW::getLanguage();
@@ -86,20 +147,68 @@ class FORUM_CTRL_Search extends OW_ActionController
             ? ($userInfo ? $userInfo->id : -1)
             : null;
 
-        // make a search
         $authors = array();
-        $total = $this->forumService->countGlobalSearchInGroups($token, $userId);
-        $topics = $total
-            ? $this->forumService->searchGlobalInGroups($token, $page, $sortBy, $userId)
-            : array();
+
+        // make a search
+        switch ( $type )
+        {
+            case 'group' :
+                $groupId = (int)$params['groupId'];
+                $sortUrl = OW::getRouter()->
+                        urlForRoute('forum_search_group', array('groupId' => $groupId)) . '?' . $tokenQuery . $userTokenQuery;
+
+                $total = $this->forumService->countFindTopicsIntoGroup($token, $groupId, $userId);
+                $topics = $total
+                    ? $this->forumService->findTopicsIntoGroup($token, $groupId, $page, $sortBy, $userId)
+                    : array();
+
+                $this->addComponent('search', new FORUM_CMP_ForumSearch(
+                    array('scope' => 'group', 'token' => $token, 'userToken' => $userToken, 'groupId' => $groupId))
+                );
+                break;
+
+            case 'section' :
+                $sectionId = (int) $params['sectionId'];
+                $sortUrl = OW::getRouter()->
+                        urlForRoute('forum_search_section', array('sectionId' => $sectionId)) . '?' . $tokenQuery . $userTokenQuery;
+
+                $total = $this->forumService->countFindTopicsIntoSection($token, $sectionId, $userId);
+                $topics = $total
+                    ? $this->forumService->findTopicsIntoSection($token, $sectionId, $page, $sortBy, $userId)
+                    : array();
+
+                $this->addComponent('search', new FORUM_CMP_ForumSearch(
+                    array('scope' => 'section', 'sectionId' => $sectionId, 'token' => $token, 'userToken' => $userToken))
+                );
+                break;
+
+            default :
+            case 'global' :
+                $sortUrl = OW::getRouter()->urlForRoute('forum_search') . '?' . $tokenQuery . $userTokenQuery;
+                $total = $this->forumService->countFindGlobalTopics($token, $userId);
+                $topics = $total
+                    ? $this->forumService->findGlobalTopics($token, $page, $sortBy, $userId)
+                    : array();
+
+                $this->addComponent('search', new FORUM_CMP_ForumSearch(
+                    array('scope' => 'all_forum', 'token' => $token, 'userToken' => $userToken))
+                );
+                break;
+        }
+
+        // collect authors 
+        foreach ( $topics as $topic )
+        {
+            if ( !in_array($topic['userId'], $authors) )
+            {
+                array_push($authors, $topic['userId']);
+            }
+        }
 
         $this->assign('topics', $topics);
         $this->assign('token', $token);
         $this->assign('userToken', $userToken);
-    
-        $this->addComponent('search', new FORUM_CMP_ForumSearch(
-            array('scope' => 'all_forum', 'token' => $token, 'userToken' => $userToken))
-        );
+        $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
 
         // paging
         $perPage = $this->forumService->getTopicPerPageConfig();
@@ -109,10 +218,8 @@ class FORUM_CTRL_Search extends OW_ActionController
 
         // sort control
         $sortCtrl = new BASE_CMP_SortControl();
-        $url = OW::getRouter()->urlForRoute('forum_search') . '?' . $tokenQuery . $userTokenQuery;
-        $sortCtrl->addItem('date', $lang->text('forum', 'sort_by_date'), $url.'&sort=date', !$sortBy || $sortBy == 'date');
-        $sortCtrl->addItem('relevance', $lang->text('forum', 'sort_by_relevance'), $url.'&sort=rel', $sortBy == 'rel');
-
+        $sortCtrl->addItem('date', $lang->text('forum', 'sort_by_date'), $sortUrl.'&sort=date', !$sortBy || $sortBy == 'date');
+        $sortCtrl->addItem('relevance', $lang->text('forum', 'sort_by_relevance'), $sortUrl.'&sort=rel', $sortBy == 'rel');
         $this->addComponent('sort', $sortCtrl);
 
         $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
@@ -122,299 +229,11 @@ class FORUM_CTRL_Search extends OW_ActionController
         OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
     }
 
-    // TODO: DLETE me later
-    /**
-     * Controller's default action
-     * 
-     * @param array $params
-     */
-   /* public function inForums( array $params = null )
-    {
-        $plugin = OW::getPluginManager()->getPlugin('forum');
-        $this->setTemplate($plugin->getCtrlViewDir() . 'search_result.html');
-
-        $lang = OW::getLanguage();
-        
-        $token = !empty($_GET['q']) && is_string($_GET['q']) ? urldecode(htmlspecialchars(trim($_GET['q']))) : null;
-        $userToken = !empty($_GET['u']) && is_string($_GET['u']) ? urldecode(htmlspecialchars(trim($_GET['u']))) : null;
-
-        if ( $token  || $userToken )
-        {
-            $this->assign('token', $token);
-            $this->assign('userToken', $userToken);
-            $tokenQuery = $token ? '&q=' . $token : null;
-            $userTokenQuery = $userToken ? '&u=' . $userToken : null;
-            $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
-            
-            if ( OW::getUser()->isAuthorized('forum') )
-            {
-                $excludeGroupIdList = array();
-            }
-            else 
-            {
-                $excludeGroupIdList = $this->forumService->getPrivateUnavailableGroupIdList(OW::getUser()->getId());
-            }
-            
-            $sortBy = !empty($_GET['sort']) && in_array($_GET['sort'], array('date', 'rel')) ? $_GET['sort'] : 'date';
-            
-            $topics = $this->forumService->searchInGroups($token, $userToken, $page, $excludeGroupIdList, $sortBy);
-            
-            $authors = array();
-            if ( $topics )
-            {
-                foreach ( $topics as &$topic )
-                {
-                    $topic['toolbar'] = array();
-                    if ( !isset($topic['posts']) )
-                    {
-                        continue;
-                    }
-                    foreach ( $topic['posts'] as $post )
-                    {
-                        if ( !in_array($post['userId'], $authors) )
-                        {
-                            array_push($authors, $post['userId']);
-                        }
-                    }
-                }
-            }
-            $this->assign('topics', $topics);
-            
-            // Paging
-            $total = $this->forumService->countFoundTopicsInGroups($token, $userToken, $excludeGroupIdList);
-            $perPage = $this->forumService->getTopicPerPageConfig();
-            $pages = (int) ceil($total / $perPage);
-            $paging = new BASE_CMP_Paging($page, $pages, $perPage);
-            $this->assign('paging', $paging->render());
-            
-            // Sort control
-            $sortCtrl = new BASE_CMP_SortControl();
-            $url = OW::getRouter()->urlForRoute('forum_search') . '?' . $tokenQuery . $userTokenQuery;
-            $sortCtrl->addItem('date', $lang->text('forum', 'sort_by_date'), $url.'&sort=date', !$sortBy || $sortBy == 'date');
-            $sortCtrl->addItem('relevance', $lang->text('forum', 'sort_by_relevance'), $url.'&sort=rel', $sortBy == 'rel');
-            
-            $this->addComponent('sort', $sortCtrl);
-            
-            $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
-        }
-        else 
-        {
-            $this->redirect(OW::getRouter()->urlForRoute('forum-default'));
-        }
-        
-        $this->addComponent('search', new FORUM_CMP_ForumSearch(
-            array('scope' => 'all_forum', 'token' => $token, 'userToken' => $userToken))
-        );
-        
-        OW::getDocument()->setHeading($lang->text('forum', 'search_page_heading'));
-        OW::getDocument()->setHeadingIconClass('ow_ic_forum');
-        OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
-    }
-    */
-    public function inGroup( array $params = null )
-    {
-        $plugin = OW::getPluginManager()->getPlugin('forum');
-        $this->setTemplate($plugin->getCtrlViewDir() . 'search_result.html');
-
-        $lang = OW::getLanguage();
-        
-        $token = !empty($_GET['q']) && is_string($_GET['q']) ? urldecode(htmlspecialchars(trim($_GET['q']))) : null;
-        $userToken = !empty($_GET['u']) && is_string($_GET['u']) ? urldecode(htmlspecialchars(trim($_GET['u']))) : null;
-        
-        if ( $token || $userToken )
-        {
-            $this->assign('token', $token);
-            $this->assign('userToken', $userToken);
-            $tokenQuery = $token ? '&q=' . $token : null;
-            $userTokenQuery = $userToken ? '&u=' . $userToken : null;
-            $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
-            
-            $groupId = (int)$params['groupId'];
-            $forumGroup = $this->forumService->findGroupById($groupId);
-            
-            $userId = OW::getUser()->getId();
-
-            $isHidden = $this->forumService->groupIsHidden($groupId);
-            
-            if ( $isHidden )
-            {
-                $forumSection = $this->forumService->findSectionById($forumGroup->sectionId);
-                $isModerator = OW::getUser()->isAuthorized($forumSection->entity);
-                
-                $event = new OW_Event('forum.find_forum_caption', array('entity' => $forumSection->entity, 'entityId' => $forumGroup->entityId));
-                OW::getEventManager()->trigger($event);
-    
-                $eventData = $event->getData();
-                $componentForumCaption = $eventData['component'];
-    
-                $this->addComponent('componentForumCaption', $componentForumCaption);
-            }
-            else
-            {
-                $isModerator = OW::getUser()->isAuthorized('forum');
-            }
-            
-            if ( $forumGroup->isPrivate )
-            {
-                if ( !$userId )
-                {
-                    throw new AuthorizationException();
-                }
-                else if ( !$isModerator )
-                {
-                    if ( !$this->forumService->isPrivateGroupAvailable($userId, json_decode($forumGroup->roles)) )
-                    {
-                        throw new AuthorizationException();
-                    }
-                }
-            }
-            
-            $sortBy = !empty($_GET['sort']) && in_array($_GET['sort'], array('date', 'rel')) ? $_GET['sort'] : 'date'; 
-            
-            $topics = $this->forumService->searchInGroup($token, $userToken, $page, $groupId, $isHidden, $sortBy);
-            
-            $authors = array();
-            if ( $topics )
-            {
-                foreach ( $topics as &$topic )
-                {
-                    if ( !in_array($topic['userId'], $authors) )
-                    {
-                        array_push($authors, $topic['userId']);
-                    }
-                        
-                    if ( !isset($topic['posts']) )
-                    {
-                        continue;
-                    }
-                    foreach ( $topic['posts'] as $post )
-                    {
-                        if ( !in_array($post['userId'], $authors) )
-                        {
-                            array_push($authors, $post['userId']);
-                        }
-                    }
-                }
-                
-                $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
-            }
-            
-            $this->assign('topics', $topics);
-            
-            // Paging
-            $total = $this->forumService->countFoundTopicsInGroup($token, $userToken, $groupId, $isHidden);
-            $perPage = $this->forumService->getTopicPerPageConfig();
-            $pages = (int) ceil($total / $perPage);
-            $paging = new BASE_CMP_Paging($page, $pages, $perPage);
-            $this->assign('paging', $paging->render());
-            
-            // Sort control
-            $sortCtrl = new BASE_CMP_SortControl();
-            $url = OW::getRouter()->urlForRoute('forum_search_group', array('groupId' => $groupId)) . '?' . $tokenQuery . $userTokenQuery;
-            $sortCtrl->addItem('date', $lang->text('forum', 'sort_by_date'), $url.'&sort=date', !$sortBy || $sortBy == 'date');
-            $sortCtrl->addItem('relevance', $lang->text('forum', 'sort_by_relevance'), $url.'&sort=rel', $sortBy == 'rel');
-            
-            $this->addComponent('sort', $sortCtrl);
-        }
-        else
-        {
-            $this->redirect(OW::getRouter()->urlForRoute('forum-default'));
-        }
-        
-        $this->addComponent('search', new FORUM_CMP_ForumSearch(
-            array('scope' => 'group', 'token' => $token, 'userToken' => $userToken, 'groupId' => $groupId))
-        );
-        
-        OW::getDocument()->setHeading($lang->text('forum', 'search_page_heading'));
-        OW::getDocument()->setHeadingIconClass('ow_ic_forum');
-        OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
-    }
-
     public function inSection( array $params = null )
     {
-        $plugin = OW::getPluginManager()->getPlugin('forum');
-        $this->setTemplate($plugin->getCtrlViewDir() . 'search_result.html');
-
-        $lang = OW::getLanguage();
-
-        $token = !empty($_GET['q']) && is_string($_GET['q']) ? urldecode(htmlspecialchars(trim($_GET['q']))) : null;
-        $userToken = !empty($_GET['u']) && is_string($_GET['u']) ? urldecode(htmlspecialchars(trim($_GET['u']))) : null;
-
-        if ( $token || $userToken )
-        {
-            $this->assign('token', $token);
-            $this->assign('userToken', $userToken);
-            $tokenQuery = $token ? '&q=' . $token : null;
-            $userTokenQuery = $userToken ? '&u=' . $userToken : null;
-
-            $sectionId = (int) $params['sectionId'];
-            $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
-
-            if ( OW::getUser()->isAuthorized('forum') )
-            {
-                $excludeGroupIdList = array();
-            }
-            else
-            {
-                $excludeGroupIdList = $this->forumService->getPrivateUnavailableGroupIdList(OW::getUser()->getId());
-            }
-
-            $sortBy = !empty($_GET['sort']) && in_array($_GET['sort'], array('date', 'rel')) ? $_GET['sort'] : 'date';
-
-            $topics = $this->forumService->searchInSection($token, $userToken, $sectionId, $page, $excludeGroupIdList, $sortBy);
-
-            $authors = array();
-            if ( $topics )
-            {
-                foreach ( $topics as &$topic )
-                {
-                    $topic['toolbar'] = array();
-                    if ( !isset($topic['posts']) )
-                    {
-                        continue;
-                    }
-                    foreach ( $topic['posts'] as $post )
-                    {
-                        if ( !in_array($post['userId'], $authors) )
-                        {
-                            array_push($authors, $post['userId']);
-                        }
-                    }
-                }
-            }
-            $this->assign('topics', $topics);
-
-            // Paging
-            $total = $this->forumService->countFoundTopicsInSection($token, $userToken, $sectionId, $excludeGroupIdList);
-            $perPage = $this->forumService->getTopicPerPageConfig();
-            $pages = (int) ceil($total / $perPage);
-            $paging = new BASE_CMP_Paging($page, $pages, $perPage);
-            $this->assign('paging', $paging->render());
-
-            // Sort control
-            $sortCtrl = new BASE_CMP_SortControl();
-            $url = OW::getRouter()->urlForRoute('forum_search_section', array('sectionId' => $params['sectionId'])) . '?' . $tokenQuery . $userTokenQuery;
-            $sortCtrl->addItem('date', $lang->text('forum', 'sort_by_date'), $url.'&sort=date', !$sortBy || $sortBy == 'date');
-            $sortCtrl->addItem('relevance', $lang->text('forum', 'sort_by_relevance'), $url.'&sort=rel', $sortBy == 'rel');
-
-            $this->addComponent('sort', $sortCtrl);
-
-            $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
-        }
-        else
-        {
-            $this->redirect(OW::getRouter()->urlForRoute('forum-default'));
-        }
-
-        $this->addComponent('search', new FORUM_CMP_ForumSearch(
-            array('scope' => 'section', 'sectionId' => $sectionId, 'token' => $token, 'userToken' => $userToken))
-        );
-        
-        OW::getDocument()->setHeading($lang->text('forum', 'search_page_heading'));
-        OW::getDocument()->setHeadingIconClass('ow_ic_forum');
-        OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
+        $this->searchTopics($params, 'section');
     }
-    
+
     public function inTopic( array $params = null )
     {
         $plugin = OW::getPluginManager()->getPlugin('forum');
@@ -424,7 +243,7 @@ class FORUM_CTRL_Search extends OW_ActionController
         
         $token = !empty($_GET['q']) && is_string($_GET['q']) ? urldecode(htmlspecialchars(trim($_GET['q']))) : null;
         $userToken = !empty($_GET['u']) && is_string($_GET['u']) ? urldecode(htmlspecialchars(trim($_GET['u']))) : null;
-        
+
         if ( $token || $userToken )
         {
             $this->assign('token', $token);

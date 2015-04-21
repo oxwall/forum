@@ -265,13 +265,13 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Count global search in groups
+     * Get count of topics into all sections
      * 
-     * @param string $text
+     * @param string $token
      * @param integer $userId
      * @return integer
      */
-    public function countGlobalSearchInGroups( $text, $userId )
+    public function countFindGlobalTopics( $text, $userId )
     {
         $tags = $userId
             ? array('forum_topic_public_user_id_' . $userId)
@@ -281,16 +281,15 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Search global in groups
+     * Find topics into all sections
      * 
-     * @param string $text
-     * @param integer $first
-     * @param integer $limit
+     * @param string $token
+     * @param integer $page
      * @param string $sortBy
      * @param integer $userId
      * @return array
      */
-    public function searchGlobalInGroups( $text, $first, $limit, $sortBy = null, $userId = null )
+    public function findGlobalTopics( $text, $first, $limit, $sortBy = null, $userId = null )
     {
         $sort =  $sortBy == 'rel' 
             ? OW_TextSearchManager::SORT_BY_RELEVANCE
@@ -299,6 +298,88 @@ class FORUM_BOL_TextSearchService
         $tags = $userId
             ? array('forum_topic_public_user_id_' . $userId)
             : array('forum_topic_public');
+
+        return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
+    }
+
+    /**
+     * Get count of topics into section
+     * 
+     * @param string $token
+     * @param integer $sectionId
+     * @param integer $userId
+     * @return integer
+     */
+    public function countFindTopicsIntoSection( $text, $sectionId, $userId )
+    {
+        $tags = $userId
+            ? array('forum_topic_section_id_' . $sectionId . '_user_id_' . $userId)
+            : array('forum_topic_section_id_' . $sectionId);
+
+        return OW::getTextSearchManager()->searchEntitiesCount($text, $tags);
+    }
+
+    /**
+     * Find topics into section
+     * 
+     * @param string $text
+     * @param integer $sectionId
+     * @param integer $first
+     * @param integer $limit
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function findTopicsIntoSection( $text, $sectionId, $first, $limit, $sortBy = null, $userId = null )
+    {
+        $sort =  $sortBy == 'rel' 
+            ? OW_TextSearchManager::SORT_BY_RELEVANCE
+            : OW_TextSearchManager::SORT_BY_DATE;
+
+        $tags = $userId
+            ? array('forum_topic_section_id_' . $sectionId . '_user_id_' . $userId)
+            : array('forum_topic_section_id_' . $sectionId);
+
+        return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
+    }
+
+    /**
+     * Get count of topics into group
+     * 
+     * @param string $token
+     * @param integer $groupId
+     * @param integer $userId
+     * @return integer
+     */
+    public function countFindTopicsIntoGroup( $text, $groupId, $userId )
+    {
+        $tags = $userId
+            ? array('forum_topic_group_id_' . $groupId . '_user_id_' . $userId)
+            : array('forum_topic_group_id_' . $groupId);
+
+        return OW::getTextSearchManager()->searchEntitiesCount($text, $tags);
+    }
+
+    /**
+     * Find topics into group
+     * 
+     * @param string $text
+     * @param integer $sectionId
+     * @param integer $first
+     * @param integer $limit
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function findTopicsIntoGroup( $text, $groupId, $first, $limit, $sortBy = null, $userId = null )
+    {
+        $sort =  $sortBy == 'rel' 
+            ? OW_TextSearchManager::SORT_BY_RELEVANCE
+            : OW_TextSearchManager::SORT_BY_DATE;
+
+        $tags = $userId
+            ? array('forum_topic_group_id_' . $groupId . '_user_id_' . $userId)
+            : array('forum_topic_group_id_' . $groupId);
 
         return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
     }

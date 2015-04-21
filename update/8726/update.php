@@ -25,3 +25,15 @@ foreach ( $sql as $query )
         Updater::getLogger()->addEntry(json_encode($e));
     }
 }
+
+// put all forum groups into the search index
+$query = 'SELECT `id` FROM `' . OW_DB_PREFIX . 'forum_group`';
+$forumGroups = Updater::getDbo()->queryForList($query);
+
+foreach ($forumGroups as $forumGroup)
+{
+    Updater::getDbo()->query('INSERT INTO `' . OW_DB_PREFIX . 'forum_update_search_index` SET `entityId` = ?, `type` = ?', array(
+        $forumGroup['id'],
+        'update_group'
+    ));
+}
