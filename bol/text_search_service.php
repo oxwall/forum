@@ -109,26 +109,19 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Rebuild topic
-     * 
-     * @param FORUM_BOL_Topic $topicDto
-     * @return void
-     */
-    public function rebuildTopic( $topicDto )
-    {
-        FORUM_BOL_UpdateSearchIndexDao::getInstance()->
-                addQueue($topicDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_TOPIC);
-    }
-
-    /**
-     * Rebuild group
+     * Save or update group
      * 
      * @param FORUM_BOL_Group $groupDto
      */
-    public function rebuildGroup( $groupDto )
+    public function saveOrUpdateGroup( $groupDto )
     {
-        FORUM_BOL_UpdateSearchIndexDao::getInstance()->
-                addQueue($groupDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_GROUP);
+        if ( !empty($groupDto->id) && 
+                (in_array('sectionId', $groupDto->getEntinyUpdatedFields()) 
+                || in_array('isPrivate', $groupDto->getEntinyUpdatedFields())) )
+        {
+            FORUM_BOL_UpdateSearchIndexDao::getInstance()->
+                    addQueue($groupDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_GROUP);
+        }
     }
 
     /**
@@ -272,6 +265,126 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
+     * Get count of topics into all sections
+     * 
+     * @param string $token
+     * @param integer $userId
+     * @return integer
+     */
+    public function countFindGlobalTopics( $text, $userId )
+    {
+        $tags = $userId
+            ? array('forum_topic_public_user_id_' . $userId)
+            : array('forum_topic_public');
+
+        return OW::getTextSearchManager()->searchEntitiesCount($text, $tags);
+    }
+
+    /**
+     * Find topics into all sections
+     * 
+     * @param string $token
+     * @param integer $page
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function findGlobalTopics( $text, $first, $limit, $sortBy = null, $userId = null )
+    {
+        $sort =  $sortBy == 'rel' 
+            ? OW_TextSearchManager::SORT_BY_RELEVANCE
+            : OW_TextSearchManager::SORT_BY_DATE;
+
+        $tags = $userId
+            ? array('forum_topic_public_user_id_' . $userId)
+            : array('forum_topic_public');
+
+        return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
+    }
+
+    /**
+     * Get count of topics into section
+     * 
+     * @param string $token
+     * @param integer $sectionId
+     * @param integer $userId
+     * @return integer
+     */
+    public function countFindTopicsIntoSection( $text, $sectionId, $userId )
+    {
+        $tags = $userId
+            ? array('forum_topic_section_id_' . $sectionId . '_user_id_' . $userId)
+            : array('forum_topic_section_id_' . $sectionId);
+
+        return OW::getTextSearchManager()->searchEntitiesCount($text, $tags);
+    }
+
+    /**
+     * Find topics into section
+     * 
+     * @param string $text
+     * @param integer $sectionId
+     * @param integer $first
+     * @param integer $limit
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function findTopicsIntoSection( $text, $sectionId, $first, $limit, $sortBy = null, $userId = null )
+    {
+        $sort =  $sortBy == 'rel' 
+            ? OW_TextSearchManager::SORT_BY_RELEVANCE
+            : OW_TextSearchManager::SORT_BY_DATE;
+
+        $tags = $userId
+            ? array('forum_topic_section_id_' . $sectionId . '_user_id_' . $userId)
+            : array('forum_topic_section_id_' . $sectionId);
+
+        return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
+    }
+
+    /**
+     * Get count of topics into group
+     * 
+     * @param string $token
+     * @param integer $groupId
+     * @param integer $userId
+     * @return integer
+     */
+    public function countFindTopicsIntoGroup( $text, $groupId, $userId )
+    {
+        $tags = $userId
+            ? array('forum_topic_group_id_' . $groupId . '_user_id_' . $userId)
+            : array('forum_topic_group_id_' . $groupId);
+
+        return OW::getTextSearchManager()->searchEntitiesCount($text, $tags);
+    }
+
+    /**
+     * Find topics into group
+     * 
+     * @param string $text
+     * @param integer $sectionId
+     * @param integer $first
+     * @param integer $limit
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function findTopicsIntoGroup( $text, $groupId, $first, $limit, $sortBy = null, $userId = null )
+    {
+        $sort =  $sortBy == 'rel' 
+            ? OW_TextSearchManager::SORT_BY_RELEVANCE
+            : OW_TextSearchManager::SORT_BY_DATE;
+
+        $tags = $userId
+            ? array('forum_topic_group_id_' . $groupId . '_user_id_' . $userId)
+            : array('forum_topic_group_id_' . $groupId);
+
+        return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
+    }
+
+    /**
      * Add topic
      * 
      * @param FORUM_BOL_Topic $topicDto
@@ -308,9 +421,10 @@ class FORUM_BOL_TextSearchService
      * Save or update topic
      * 
      * @param FORUM_BOL_Topic $topicDto
+     * @param boolean $refreshPosts
      * @return void
      */
-    public function saveOrUpdateTopic( FORUM_BOL_Topic $topicDto )
+    public function saveOrUpdateTopic( FORUM_BOL_Topic $topicDto, $refreshPosts = false )
     {
         // activate or deactivate topics and posts
         if ( in_array('status', $topicDto->getEntinyUpdatedFields()) )
@@ -329,6 +443,12 @@ class FORUM_BOL_TextSearchService
             ));
 
             $this->addTopic($topicDto);    
+        }
+
+        if ( $refreshPosts )
+        {
+            FORUM_BOL_UpdateSearchIndexDao::getInstance()->
+                addQueue($topicDto->id, FORUM_BOL_UpdateSearchIndexDao::DELETE_TOPIC);
         }
     }
 
