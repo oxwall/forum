@@ -230,62 +230,28 @@ class FORUM_BOL_PostDao extends OW_BaseDao
         
         return $this->dbo->queryForRow($sql, array('groupId' => $groupId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED));
     }
-    
-    public function getUserTokenJoinString( $userToken )
+
+    /**
+     * Returns post list by ids
+     * 
+     * @param array $postIds
+     * @return array 
+     */
+    public function findListByPostIds( array $postIds )
     {
-        $userTokenJoin = "";
-
-        if ( mb_strlen($userToken) )
+        if ( !$postIds )
         {
-            $question = OW::getConfig()->getValue('base', 'display_name_question');
-            if ( $question == 'username' )
-            {
-                $userTokenJoin = " INNER JOIN `".BOL_UserDao::getInstance()->getTableName()."` AS `u`
-                    ON (`u`.`id` = `p`.`userId` AND `u`.`username` LIKE '".$this->dbo->escapeString($userToken)."%') ";
-            }
-            else
-            {
-                $userTokenJoin = " INNER JOIN `".BOL_QuestionDataDao::getInstance()->getTableName()."` AS `qd`
-                    ON (`qd`.`userId`=`p`.`userId` AND `qd`.`questionName`='realname'
-                    AND `qd`.`textValue` LIKE '".$this->dbo->escapeString($userToken)."%') ";
-            }
+            return array();
         }
 
-        return $userTokenJoin;
-    }
+        $postsIn = $this->dbo->mergeInClause($postIds);
 
-    public function searchInTopic( $token, $userToken, $topicId, $sortBy = null )
-    {
-        $sortCond = $sortBy == 'date' ? ' `createStamp` DESC, ' : '';
-        
-        if ( !mb_strlen($token) ) // search by name only
-        {
-            $query = "SELECT `p`.*
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON(`p`.`topicId` = `t`.`id`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE `p`.`topicId` = :topicId AND `t`.`status` = :status
-                ORDER BY `createStamp` DESC";
+        $query = "
+		SELECT  *
+		FROM `" . $this->getTableName() . "`
+		WHERE id IN (" . $postsIn .") ORDER BY FIELD (id, " . $postsIn . ")";
 
-            $params = array('topicId' => $topicId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED);
-        }
-        else
-        {
-            $multiple = $this->countTokenWords($token) > 1;
-            $booleanMode = $multiple ? ' IN BOOLEAN MODE' : '';
-            $token = $booleanMode ? '"'.$token.'"' : $token;
-
-            $query = "SELECT `p`.*, MATCH (`p`.`text`) AGAINST(:token".$booleanMode.")
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON(`p`.`topicId` = `t`.`id`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE MATCH (`p`.`text`) AGAINST(:token".$booleanMode.") AND `p`.`topicId` = :topicId AND `t`.`status` = :status
-                ORDER BY ".$sortCond." MATCH (`p`.`text`) AGAINST(:token".$booleanMode.") DESC";
-        
-        $params = array('token' => $token, 'topicId' => $topicId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED);
-        }
-        
-        return $this->dbo->queryForObjectList($query, 'FORUM_BOL_Post', $params);
+        return $this->dbo->queryForList($query);
     }
 
     private function countTokenWords( $token )
