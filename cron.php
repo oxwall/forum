@@ -83,20 +83,27 @@ class FORUM_Cron extends OW_Cron
         $config = OW::getConfig();
         $cronBusyValue = (int) $config->getValue('forum', 'update_search_index_cron_busy');
 
+        // stop cron task execution
         if ( time() <  $cronBusyValue)
         {
             return;
         }
 
+        // in process
         $config->saveConfig('forum', 'update_search_index_cron_busy', time() + self::UPDATE_SEARCH_INDEX_LIFE_TIME);
-        $firstQueue = $this->getUpdateSearchIndexDao()->findFirstQueue();
+        $maxExecutionTime = time() + self::UPDATE_SEARCH_INDEX_MAX_TIME;
 
-        if ( $firstQueue )
+        while ( time() <  $maxExecutionTime )
         {
-            $result = false;
+            // do we have any queue
+            if ( null == ($firstQueue = $this->getUpdateSearchIndexDao()->findFirstQueue()) )
+            {
+                break;
+            }
 
+            // process queue
             switch ($firstQueue->type)
-             {
+            {
                  // delete topic
                  case FORUM_BOL_UpdateSearchIndexDao::DELETE_TOPIC :
                      $result = $this->deleteTopicFromSearchIndex($firstQueue->entityId);
@@ -109,7 +116,8 @@ class FORUM_Cron extends OW_Cron
 
                  // update topic posts
                  case FORUM_BOL_UpdateSearchIndexDao::UPDATE_TOPIC_POSTS :
-                     $result = $this->updateTopicPostsInSearchIndex($firstQueue->entityId, $firstQueue);
+                     $result = $this->
+                         updateTopicPostsInSearchIndex($firstQueue->entityId, $firstQueue, $maxExecutionTime);
                      break;
 
                  // delete group
@@ -119,16 +127,24 @@ class FORUM_Cron extends OW_Cron
 
                  // update group
                  case FORUM_BOL_UpdateSearchIndexDao::UPDATE_GROUP :
-                     $result = $this->updateGroupInSearchIndex($firstQueue->entityId, $firstQueue);
+                     $result = $this->
+                         updateGroupInSearchIndex($firstQueue->entityId, $firstQueue, $maxExecutionTime);
                      break;
+
+                 default :
+                     $result = true;
              }
 
-             if ( $result )
+             if ( !$result )
              {
-                $this->getUpdateSearchIndexDao()->delete($firstQueue);
+                 break;
              }
+
+            // task successfully completed 
+            $this->getUpdateSearchIndexDao()->delete($firstQueue);
         }
 
+        // finished
         $config->saveConfig('forum', 'update_search_index_cron_busy', 0);
     }
 
@@ -137,9 +153,10 @@ class FORUM_Cron extends OW_Cron
      * 
      * @param integer $groupId
      * @param FORUM_BOL_UpdateSearchIndex $firstQueue
+     * @param integer $maxExecutionTime
      * @return boolean
      */
-    private function updateGroupInSearchIndex( $groupId, FORUM_BOL_UpdateSearchIndex $firstQueue )
+    private function updateGroupInSearchIndex( $groupId, FORUM_BOL_UpdateSearchIndex $firstQueue, $maxExecutionTime )
     {
         $forumService = FORUM_BOL_ForumService::getInstance();
 
@@ -149,13 +166,13 @@ class FORUM_Cron extends OW_Cron
         if ( $group )
         {
             $topicPage = 1;
-            $maxExecutionTime = time() + self::UPDATE_SEARCH_INDEX_MAX_TIME;
+            $lastEntityId = $firstQueue->lastEntityId; 
 
             // get group's topics 
             while ( time() <  $maxExecutionTime )
             {
                 if ( null == ($topics = $forumService->
-                        getSimpleGroupTopicList($group->id, $topicPage, $firstQueue->lastEntityId)) )
+                        getSimpleGroupTopicList($group->id, $topicPage, $lastEntityId)) )
                 {
                     return true;
                 }
@@ -245,9 +262,10 @@ class FORUM_Cron extends OW_Cron
      * 
      * @param integer $topicId
      * @param FORUM_BOL_UpdateSearchIndex $firstQueue
+     * @param integer $maxExecutionTime
      * @return boolean
      */
-    private function updateTopicPostsInSearchIndex( $topicId, FORUM_BOL_UpdateSearchIndex $firstQueue )
+    private function updateTopicPostsInSearchIndex( $topicId, FORUM_BOL_UpdateSearchIndex $firstQueue, $maxExecutionTime )
     {
         $forumService = FORUM_BOL_ForumService::getInstance();
 
@@ -256,14 +274,14 @@ class FORUM_Cron extends OW_Cron
 
         if ( $topic )
         {
-            $maxExecutionTime = time() + self::UPDATE_SEARCH_INDEX_MAX_TIME;
             $postPage = 1;
+            $lastEntityId = $firstQueue->lastEntityId;
 
             // get topic's post list
             while ( time() <  $maxExecutionTime )
             {
                 if ( null == ($posts = $forumService->
-                        getSimpleTopicPostList($topic->id, $postPage, $firstQueue->lastEntityId)) )
+                        getSimpleTopicPostList($topic->id, $postPage, $lastEntityId)) )
                 {
                     return true;
                 }
@@ -329,7 +347,13 @@ class FORUM_Cron extends OW_Cron
         {
             return;
         }
-        
+ 
+        if ( !$config->getValue('forum', 'delete_search_index_cron') )
+        {
+            $this->getTextSearchService()->deleteAllEntities();
+            $config->saveConfig('forum', 'delete_search_index_cron', 1);
+        }
+
         $config->saveConfig('forum', 'uninstall_cron_busy', 1);
         
         $forumService = FORUM_BOL_ForumService::getInstance();

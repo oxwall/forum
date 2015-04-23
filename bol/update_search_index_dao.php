@@ -124,7 +124,7 @@ class FORUM_BOL_UpdateSearchIndexDao extends OW_BaseDao
     /**
      * Find first queue
      * 
-     * @return array
+     * @return FORUM_BOL_UpdateSearchIndex
      */
     public function findFirstQueue()
     {

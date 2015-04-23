@@ -104,7 +104,8 @@ class FORUM_BOL_TextSearchService
     public function deleteTopicPosts( $topicId )
     {
         OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
-            'forum_post_topic_id_' . $topicId
+            'forum_post_topic_id_' . $topicId,
+            'forum_post_duplicate_topic_id_' . $topicId 
         ));
     }
 
@@ -152,6 +153,7 @@ class FORUM_BOL_TextSearchService
                 'forum_post_section_id_' . $groupInfo->sectionId, // search into a specific section,
                 'forum_post_section_id_' . $groupInfo->sectionId . '_user_id_' . $postDto->userId, // search into a specific section and specific user
                 'forum_post_topic_id_'   . $topicInfo['id'], // search into a specific topic
+                'forum_post_topic_id_'   . $topicInfo['id'] . '_user_id_' . $postDto->userId, //  search into a specific topic and specific user
                 'forum_post_id_' . $postDto->id
             );
 
@@ -182,7 +184,7 @@ class FORUM_BOL_TextSearchService
                'forum_topic_group_id_' . $topicInfo['groupId'] . '_user_id_' . $postDto->userId, // search into a specific forum and specific user              
                'forum_topic_section_id_' . $groupInfo->sectionId, // search into a specific section
                'forum_topic_section_id_' . $groupInfo->sectionId . '_user_id_' . $postDto->userId, // search into a specific section and specific user
-               'forum_post_topic_id_'   . $topicInfo['id'], // needed for global delete
+               'forum_post_duplicate_topic_id_'   . $topicInfo['id'], // needed for global delete
                'forum_post_id_' . $postDto->id
             );
 
@@ -221,7 +223,8 @@ class FORUM_BOL_TextSearchService
 
         OW::getTextSearchManager()->setEntitiesStatusByTags(array(
             'forum_topic_id_' . $topicId,
-            'forum_post_topic_id_' . $topicId
+            'forum_post_topic_id_' . $topicId,
+            'forum_post_duplicate_topic_id_' . $topicId 
         ), $status);
     }
 
@@ -232,10 +235,8 @@ class FORUM_BOL_TextSearchService
      */
     public function activateEntities()
     {
-        OW::getTextSearchManager()->activateAllEntitiesByTags(array(
-            'forum_topic',
-            'forum_post'
-        ));
+        OW::getTextSearchManager()->activateAllEntities('forum_topic');
+        OW::getTextSearchManager()->activateAllEntities('forum_post');
     }
 
     /**
@@ -245,10 +246,8 @@ class FORUM_BOL_TextSearchService
      */
     public function deactivateEntities()
     {
-        OW::getTextSearchManager()->deactivateAllEntitiesByTags(array(
-            'forum_topic',
-            'forum_post'
-        ));
+        OW::getTextSearchManager()->deactivateAllEntities('forum_topic');
+        OW::getTextSearchManager()->deactivateAllEntities('forum_post');
     }
 
     /**
@@ -258,10 +257,8 @@ class FORUM_BOL_TextSearchService
      */
     public function deleteAllEntities()
     {
-        OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
-            'forum_topic',
-            'forum_post'
-        )); 
+        OW::getTextSearchManager()->deleteAllEntities('forum_topic');
+        OW::getTextSearchManager()->deleteAllEntities('forum_post');
     }
 
     /**
@@ -303,14 +300,14 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Get count of topics into section
+     * Get count of topics in section
      * 
      * @param string $token
      * @param integer $sectionId
      * @param integer $userId
      * @return integer
      */
-    public function countFindTopicsIntoSection( $text, $sectionId, $userId )
+    public function countFindTopicsInSection( $text, $sectionId, $userId )
     {
         $tags = $userId
             ? array('forum_topic_section_id_' . $sectionId . '_user_id_' . $userId)
@@ -320,7 +317,7 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Find topics into section
+     * Find topics in section
      * 
      * @param string $text
      * @param integer $sectionId
@@ -330,7 +327,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return array
      */
-    public function findTopicsIntoSection( $text, $sectionId, $first, $limit, $sortBy = null, $userId = null )
+    public function findTopicsInSection( $text, $sectionId, $first, $limit, $sortBy = null, $userId = null )
     {
         $sort =  $sortBy == 'rel' 
             ? OW_TextSearchManager::SORT_BY_RELEVANCE
@@ -344,14 +341,14 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Get count of topics into group
+     * Get count of topics in group
      * 
      * @param string $token
      * @param integer $groupId
      * @param integer $userId
      * @return integer
      */
-    public function countFindTopicsIntoGroup( $text, $groupId, $userId )
+    public function countFindTopicsInGroup( $text, $groupId, $userId )
     {
         $tags = $userId
             ? array('forum_topic_group_id_' . $groupId . '_user_id_' . $userId)
@@ -361,7 +358,7 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Find topics into group
+     * Find topics in group
      * 
      * @param string $text
      * @param integer $sectionId
@@ -371,7 +368,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return array
      */
-    public function findTopicsIntoGroup( $text, $groupId, $first, $limit, $sortBy = null, $userId = null )
+    public function findTopicsInGroup( $text, $groupId, $first, $limit, $sortBy = null, $userId = null )
     {
         $sort =  $sortBy == 'rel' 
             ? OW_TextSearchManager::SORT_BY_RELEVANCE
@@ -380,6 +377,47 @@ class FORUM_BOL_TextSearchService
         $tags = $userId
             ? array('forum_topic_group_id_' . $groupId . '_user_id_' . $userId)
             : array('forum_topic_group_id_' . $groupId);
+
+        return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
+    }
+
+    /**
+     * Get count of posts in topic
+     * 
+     * @param string $token
+     * @param integer $topicId
+     * @param integer $userId
+     * @return integer
+     */
+    public function countFindPostsInTopic( $text, $topicId, $userId )
+    {
+        $tags = $userId
+            ? array('forum_post_topic_id_' . $topicId . '_user_id_' . $userId)
+            : array('forum_post_topic_id_' . $topicId);
+
+        return OW::getTextSearchManager()->searchEntitiesCount($text, $tags);
+    }
+
+    /**
+     * Find posts in topic
+     * 
+     * @param string $text
+     * @param integer $topicId
+     * @param integer $first
+     * @param integer $limit
+     * @param string $sortBy
+     * @param integer $userId
+     * @return array
+     */
+    public function findPostsInTopic( $text, $topicId, $first, $limit, $sortBy = null, $userId = null )
+    {
+        $sort =  $sortBy == 'rel' 
+            ? OW_TextSearchManager::SORT_BY_RELEVANCE
+            : OW_TextSearchManager::SORT_BY_DATE;
+
+        $tags = $userId
+            ? array('forum_post_topic_id_' . $topicId . '_user_id_' . $userId)
+            : array('forum_post_topic_id_' . $topicId);
 
         return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
     }
@@ -462,7 +500,8 @@ class FORUM_BOL_TextSearchService
     {
         OW::getTextSearchManager()->deleteAllEntitiesByTags(array(
             'forum_topic_id_' . $topicId, // delete the topic
-            'forum_post_topic_id_' . $topicId, // delete all posts inside
+            'forum_post_topic_id_' . $topicId, // delete all posts inside,
+            'forum_post_duplicate_topic_id_' . $topicId 
         ));
     }
 
