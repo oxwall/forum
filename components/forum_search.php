@@ -193,6 +193,14 @@ class FORUM_CMP_ForumSearch extends OW_Component
 
         $context->addAction($action);
 
+        $action = new BASE_ContextAction();
+        $action->setKey('advanced_search');
+        $action->setParentKey('forum-search');
+        $action->setLabel(OW::getLanguage()->text('forum', 'advanced_search'));
+        $action->setUrl(OW::getRouter()->urlForRoute('forum_advanced_search'));
+
+        $context->addAction($action);
+
         return $context;
     }
     

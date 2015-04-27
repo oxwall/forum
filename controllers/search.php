@@ -107,6 +107,153 @@ class FORUM_CTRL_Search extends OW_ActionController
     }
 
     /**
+     * Advanced search result
+     */
+    public function advancedResult()
+    {
+        $lang = OW::getLanguage();
+
+        // add breadcrumb
+        $bcItems = array(
+            array(
+                'href' => OW::getRouter()->urlForRoute('forum-default'),
+                'label' => $lang->text('forum', 'forum_index')
+            ),
+            array(
+                'href' => OW::getRouter()->urlForRoute('forum_advanced_search'),
+                'label' => $lang->text('forum', 'advanced_search')
+            ),
+            array(
+                'label' => $lang->text('forum', 'advanced_search_result')
+            )
+        );
+
+        $breadCrumbCmp = new BASE_CMP_Breadcrumb($bcItems);
+        $this->addComponent('breadcrumb', $breadCrumbCmp);
+
+        // get search params
+        $keyword = !empty($_GET['keyword']) && is_string($_GET['keyword']) 
+            ? urldecode(trim($_GET['keyword'])) 
+            : null;
+
+        $userName = !empty($_GET['username']) && is_string($_GET['username']) 
+            ? urldecode(trim($_GET['username'])) 
+            : null;
+
+        $parts = !empty($_GET['parts']) && is_array($_GET['parts']) 
+            ? $_GET['parts'] 
+            : null;
+
+        $searchIn = !empty($_GET['search_in']) && is_string($_GET['search_in']) 
+            ? urldecode(trim($_GET['search_in'])) 
+            : null;
+
+        $period = !empty($_GET['period']) && is_string($_GET['period']) 
+            ? urldecode(trim($_GET['period'])) 
+            : null;
+
+        $sort = !empty($_GET['sort']) && is_string($_GET['sort']) 
+            ? urldecode(trim($_GET['sort'])) 
+            : null;
+
+        $sortDirection = !empty($_GET['sort_direction']) && is_string($_GET['sort_direction']) 
+            ? urldecode(trim($_GET['sort_direction'])) 
+            : null;
+
+        $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
+
+        if ( !mb_strlen($keyword) )
+        {
+            $this->redirect(OW::getRouter()->urlForRoute('forum_advanced_search'));
+        }
+
+        $userInfo = $userName
+            ? BOL_UserService::getInstance()->findByUsername($userName)
+            : null;
+
+        // filter by user id
+        $userId = $userName
+            ? ($userInfo ? $userInfo->id : -1)
+            : null;
+
+        // make a search
+        $searchInPosts = $searchIn == 'message' ? true : false;
+        $total = $this->forumService->
+                countAdvancedFindEntities($keyword, $userId, $parts, $period, $searchInPosts);
+
+        $topics = $total
+            ? $this->forumService->
+                advancedFindEntities($keyword, $page, $userId, $parts, $period, $sort, $sortDirection, $searchInPosts)
+            : array();
+
+        // collect authors 
+        $authors = array();
+        foreach ( $topics as $topic )
+        {
+            if ( !empty($topic['posts']) )
+            {
+                foreach ( $topic['posts'] as $post )
+                {
+                    if ( !in_array($post['userId'], $authors) )
+                    {
+                        array_push($authors, $post['userId']);
+                    }
+                }
+            }
+        }
+
+        $this->assign('topics', $topics);
+        $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
+
+        // paging
+        $perPage = $searchIn == 'title' 
+            ? $this->forumService->getTopicPerPageConfig()
+            : $this->forumService->getPostPerPageConfig();
+
+        $pages = (int) ceil($total / $perPage);
+        $paging = new BASE_CMP_Paging($page, $pages, $perPage);
+        $this->assign('paging', $paging->render());
+
+        // set page title
+        OW::getDocument()->setHeading($lang->text('forum', 'search_advanced_heading'));
+        OW::getDocument()->setHeadingIconClass('ow_ic_forum');
+        OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
+    }
+
+    /**
+     * Advanced search
+     */
+    public function advanced()
+    {
+        $lang = OW::getLanguage();
+
+        // add breadcrumb
+        $bcItems = array(
+            array(
+                'href' => OW::getRouter()->urlForRoute('forum-default'),
+                'label' => $lang->text('forum', 'forum_index')
+            ),
+            array(
+                'label' => $lang->text('forum', 'advanced_search')
+            )
+        );
+
+        $breadCrumbCmp = new BASE_CMP_Breadcrumb($bcItems);
+        $this->addComponent('breadcrumb', $breadCrumbCmp);
+
+        // get all sections and forums
+        $sections = $this->forumService->getCustomSectionGroupList();
+
+        // add form
+        $this->addForm(new FORUM_CLASS_AdvancedSearchForm("search_form", $sections));
+
+        // set page title
+        OW::getDocument()->setHeading($lang->text('forum', 'search_advanced_heading'));
+        OW::getDocument()->setHeadingIconClass('ow_ic_forum');
+        OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
+    }
+
+    /**
      * Search topics into section
      * 
      * @param array $params
@@ -131,11 +278,11 @@ class FORUM_CTRL_Search extends OW_ActionController
         $lang = OW::getLanguage();
 
         $token = !empty($_GET['q']) && is_string($_GET['q']) 
-            ? urldecode(htmlspecialchars(trim($_GET['q']))) 
+            ? urldecode(trim($_GET['q'])) 
             : null;
 
         $userToken = !empty($_GET['u']) && is_string($_GET['u']) 
-            ? urldecode(htmlspecialchars(trim($_GET['u']))) 
+            ? urldecode(trim($_GET['u'])) 
             : null;
 
         $sortBy = !empty($_GET['sort']) ? $_GET['sort'] : null; 
@@ -146,8 +293,8 @@ class FORUM_CTRL_Search extends OW_ActionController
             $this->redirect(OW::getRouter()->urlForRoute('forum-default'));
         }
 
-        $tokenQuery = '&q=' . $token;
-        $userTokenQuery = $userToken ? '&u=' . $userToken : null;
+        $tokenQuery = '&q=' . urlencode($token);
+        $userTokenQuery = $userToken ? '&u=' . urlencode($userToken) : null;
 
         $userInfo = $userToken
             ? BOL_UserService::getInstance()->findByUsername($userToken)
@@ -225,11 +372,14 @@ class FORUM_CTRL_Search extends OW_ActionController
         // collect authors 
         foreach ( $topics as $topic )
         {
-            foreach ( $topic['posts'] as $post )
+            if ( !empty($topic['posts']) )
             {
-                if ( !in_array($post['userId'], $authors) )
+                foreach ( $topic['posts'] as $post )
                 {
-                    array_push($authors, $post['userId']);
+                    if ( !in_array($post['userId'], $authors) )
+                    {
+                        array_push($authors, $post['userId']);
+                    }
                 }
             }
         }

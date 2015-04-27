@@ -1430,7 +1430,11 @@ final class FORUM_BOL_ForumService
         foreach($topics as &$topic)
         {
             $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
-            $postDto = $this->findTopicFirstPost($topic['id']);
+            if (null == ($postDto = $this->findTopicFirstPost($topic['id'])))
+            {
+                continue;
+            }
+
             $text = strip_tags($postDto->text);
 
             $topic['posts'][] = array(
@@ -1444,6 +1448,54 @@ final class FORUM_BOL_ForumService
         }
 
         return $topics; 
+    }
+    
+    /**
+     * Process found posts
+     * 
+     * @param string $token
+     * @param array $posts
+     * @return array
+     */
+    protected function processFoundPosts( $token, $posts )
+    {
+        $postsIds = array();
+
+        // collect list of posts id
+        foreach($posts as $post)
+        {
+            $postsIds[] = $post['entityId'];
+        }
+
+        // get list posts by ids
+        $posts = $this->postDao->findListByPostIds($postsIds);
+        $postList = array();
+        $formatter = new FORUM_CLASS_ForumSearchResultFormatter();
+
+        // wrap posts as a part of topic
+        foreach($posts as $post)
+        {
+            // get topic info
+            if ( empty($postList[$post['topicId']]) )
+            {
+                 $postList[$post['topicId']] = $this->topicDao->findTopicInfo($post['topicId']);
+                 $postList[$post['topicId']]['topicUrl'] = 
+                        OW::getRouter()->urlForRoute('topic-default', array('topicId' => $post['topicId']));
+            }
+
+            $text = strip_tags($post['text']);
+
+            $postList[$post['topicId']]['posts'][] = array(
+                'postId' => $post['id'],
+                'topicId' => $post['topicId'],
+                'userId' => $post['userId'],
+                'text' => $formatter->formatResult($text, array($token)) ,
+                'createStamp' => UTIL_DateTime::formatDate($post['createStamp']),
+                'postUrl' => $this->getPostUrl($post['topicId'], $post['id'])
+            );
+        }
+
+        return $postList;
     }
 
     /**
@@ -1565,6 +1617,59 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Get count of entities in advanced search
+     * 
+     * @param string $keyword
+     * @param integer $userId
+     * @param array $parts
+     * @param string $period
+     * @param boolean $searchPosts
+     * @return integer
+     */
+    public function countAdvancedFindEntities( $keyword, $userId = null, $parts = array(), $period = null, $searchPosts = true )
+    {
+        return $this->getTextSearchService()->
+                countAdvancedFindEntities($keyword, $userId, $parts, $period, $searchPosts);
+    }
+
+    /**
+     * Advanced find entites
+     * 
+     * @param string $keyword
+     * @param integer $page
+     * @param integer $userId
+     * @param array $parts
+     * @param string $period
+     * @param string $sort
+     * @param string $sortDirection
+     * @param boolean $searchPosts
+     * @return array
+     */
+    public function advancedFindEntities( $keyword, $page, $userId = null, 
+            $parts = array(), $period = null, $sort = null, $sortDirection = null, $searchPosts = true )
+    {
+        // per page
+        $limit = $searchPosts 
+            ? $this->getPostPerPageConfig()
+            : $this->getTopicPerPageConfig();
+
+        $first = ( $page - 1 ) * $limit;
+
+        $entities = $this->getTextSearchService()->
+                advancedFindEntities($keyword, $first, $limit, $userId, $parts, $period, $sort, $sortDirection, $searchPosts);
+
+        // process entities
+        if ( $entities )
+        {
+            return $searchPosts
+                ? $this->processFoundPosts($keyword, $entities)
+                : $this->processFoundTopics($keyword, $entities);
+        }
+
+        return array();
+    }
+    
+    /**
      * Get count of posts in topic
      * 
      * @param string $token
@@ -1598,49 +1703,7 @@ final class FORUM_BOL_ForumService
 
         if ( $posts )
         {
-            $postsIds = array();
-
-            // collect list of posts id
-            foreach($posts as $post)
-            {
-                $postsIds[] = $post['entityId'];
-            }
-
-            $posts = $this->postDao->findListByPostIds($postsIds);
-            $postList = array();
-            $formatter = new FORUM_CLASS_ForumSearchResultFormatter();
-
-            foreach($posts as $post)
-            {
-                $text = strip_tags($post['text']);
-
-                $postList[] = array(
-                    'postId' => $post['id'],
-                    'topicId' => $post['topicId'],
-                    'userId' => $post['userId'],
-                    'text' => $formatter->formatResult($text, array($token)) ,
-                    'createStamp' => UTIL_DateTime::formatDate($post['createStamp']),
-                    'postUrl' => $this->getPostUrl($post['topicId'], $post['id'])
-                );
-            }
-
-            $topic = $this->findTopicById($topicId);
-            $forumGroup = $this->findGroupById($topic->groupId);
-            $forumSection = $this->findSectionById($forumGroup->sectionId);
-
-            return array(
-                array(
-                    'id' => $topic->id,
-                    'groupId' => $topic->groupId,
-                    'userId' => $topic->userId,
-                    'title' => $topic->title,
-                    'sectionId' => $forumSection->id,
-                    'sectionName' => $forumSection->name,
-                    'groupName' => $forumGroup->name,
-                    'topicUrl' => OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic->id)),
-                    'posts' => $postList
-                )
-           );
+            return $this->processFoundPosts($token, $posts);
         }
 
         return array();
