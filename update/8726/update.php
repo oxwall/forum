@@ -37,3 +37,5 @@ foreach ($forumGroups as $forumGroup)
         'update_group'
     ));
 }
+
+Updater::getLanguageService()->importPrefixFromZip(dirname(__FILE__) . DS . 'langs.zip', 'forum');

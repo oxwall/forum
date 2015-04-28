@@ -161,7 +161,11 @@ class FORUM_BOL_TextSearchService
             {
                 $postTags = array_merge($postTags, array(
                     'forum_post_public', // visible everywhere
-                    'forum_post_public_user_id_' . $postDto->userId
+                    'forum_post_public_user_id_'    . $postDto->userId,
+                    'forum_post_public_section_id_' . $groupInfo->sectionId,
+                    'forum_post_public_section_id_' . $groupInfo->sectionId . '_user_id_' . $postDto->userId,
+                    'forum_post_public_group_id_'   . $topicInfo['groupId'],
+                    'forum_post_public_group_id_'   . $topicInfo['groupId'] . '_user_id_' . $postDto->userId,
                 ));
             }
 
@@ -192,7 +196,11 @@ class FORUM_BOL_TextSearchService
             {
                 $topicTags = array_merge($topicTags, array(
                     'forum_topic_public', // visible everywhere
-                    'forum_topic_public_user_id_' . $postDto->userId
+                    'forum_topic_public_user_id_' . $postDto->userId,
+                    'forum_topic_public_group_id_' . $topicInfo['groupId'],
+                    'forum_topic_public_group_id_' . $topicInfo['groupId'] . '_user_id_' . $postDto->userId,
+                    'forum_topic_public_section_id_' . $groupInfo->sectionId,
+                    'forum_topic_public_section_id_' . $groupInfo->sectionId . '_user_id_' . $postDto->userId,
                 ));
             }
 
@@ -382,6 +390,196 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
+     * Get count of entities in advanced search
+     * 
+     * @param string $keyword
+     * @param integer $userId
+     * @param array $parts
+     * @param string $period
+     * @param boolean $searchPosts
+     * @return integer
+     */
+    public function countAdvancedFindEntities( $keyword, $userId = null, $parts = array(), $period = null, $searchPosts = true )
+    {
+        // get tags list
+        $tags = $this->processAdvancedSearchTags($parts, $userId, $searchPosts);
+
+        // filter by period
+        if ( $period )
+        {
+            list($timeStart, $timeEnd) = $this->getAdvancedSearchPeriod($period);
+            return OW::getTextSearchManager()->searchEntitiesCount($keyword, $tags, $timeStart, $timeEnd); 
+        }
+
+        return OW::getTextSearchManager()->searchEntitiesCount($keyword, $tags);
+    }
+    
+    /**
+     * Advanced find entites
+     * 
+     * @param string $keyword
+     * @param integer $first
+     * @param integer $limit
+     * @param integer $userId
+     * @param array $parts
+     * @param string $period
+     * @param string $sort (relevance|date)
+     * @param string $sortDirection (decrease|increase)
+     * @param boolean $searchPosts
+     * @return array
+     */
+    public function advancedFindEntities( $keyword, $first, $limit, $userId = null, 
+            $parts = array(), $period = null, $sort = null, $sortDirection = null, $searchPosts = true )
+    {
+        // get tags list
+        $tags = $this->processAdvancedSearchTags($parts, $userId, $searchPosts);
+
+        $sort = $sort == 'relevance' 
+            ? OW_TextSearchManager::SORT_BY_RELEVANCE
+            : OW_TextSearchManager::SORT_BY_DATE;
+
+        $sortDesc = $sortDirection == 'decrease' 
+            ? true 
+            : false;
+
+        // filter by period
+        if ( $period )
+        {
+            list($timeStart, $timeEnd) = $this->getAdvancedSearchPeriod($period);
+            return OW::getTextSearchManager()->
+                    searchEntities($keyword, $first, $limit, $tags, $sort, $sortDesc, $timeStart, $timeEnd); 
+        }
+
+        return OW::getTextSearchManager()->searchEntities($keyword, $first, $limit, $tags, $sort, $sortDesc);
+    }
+
+    /**
+     * Get advanced search period
+     * 
+     * @param string $period
+     * @return array
+     */
+    protected function getAdvancedSearchPeriod($period)
+    {
+        switch ($period)
+        {
+            case 'last_six_months' :
+                return array(
+                    strtotime('first day of 6 months ago 00:00:00'),
+                    strtotime('today 23:59:59')
+                );
+
+            case 'last_three_months' :
+                return array(
+                    strtotime('first day of 3 months ago 00:00:00'),
+                    strtotime('today 23:59:59')
+                );
+
+            case 'last_two_months' :
+                return array(
+                    strtotime('first day of 2 months ago 00:00:00'),
+                    strtotime('today 23:59:59')
+                );
+
+            case 'last_month' :
+                return array(
+                    strtotime('first day of last month 00:00:00'),
+                    strtotime('today 23:59:59')
+                );
+
+            case 'last_week' :
+                return array(
+                    strtotime('monday last week'),
+                    strtotime('today 23:59:59')
+                );
+
+            case 'today' :
+            default      :
+                return array(
+                    strtotime('today'),
+                    strtotime('today 23:59:59')
+                );
+        }
+    }
+
+    /**
+     * Process advanced search tags
+     * 
+     * @param array $parts
+     * @param type $userId
+     * @param boolean $searchPosts
+     * @return array
+     */
+    protected function processAdvancedSearchTags( array $parts, $userId = null, $searchPosts = true )
+    {
+        $tags = array();
+
+        foreach($parts as $part)
+        {
+            $id = preg_replace('/[^0-9]/', '', $part);
+
+            if ( !$id )
+            {
+                continue;
+            }
+
+            // search in groups
+            if ( substr($part, 0, 5) == 'group' )
+            {
+                if ( $searchPosts )
+                {
+                    $tags[] = $userId
+                        ? 'forum_post_public_group_id_' . $id . '_user_id_' . $userId
+                        : 'forum_post_public_group_id_' . $id; 
+                }
+                else
+                {
+                    // search in topics
+                    $tags[] = $userId
+                        ? 'forum_topic_public_group_id_' . $id . '_user_id_' . $userId
+                        : 'forum_topic_public_group_id_' . $id; 
+                }
+            }
+            else
+            {
+                // search in sections
+                if ( $searchPosts )
+                {
+                    $tags[] = $userId
+                        ? 'forum_post_public_section_id_' . $id . '_user_id_' . $userId
+                        : 'forum_post_public_section_id_' . $id; 
+                }
+                else
+                {
+                    // search in topics
+                    $tags[] = $userId
+                        ? 'forum_topic_public_section_id_' . $id . '_user_id_' . $userId
+                        : 'forum_topic_public_section_id_' . $id; 
+                }
+            }
+        }
+
+        // search in anywhere
+        if ( !$tags )
+        {
+            if ( $searchPosts )
+            {
+                $tags[] = $userId
+                   ? 'forum_post_public_user_id_' . $userId
+                   : 'forum_post_public';
+            }
+            else 
+            {
+                $tags[] = $userId
+                   ? 'forum_topic_public_user_id_' . $userId
+                   : 'forum_topic_public';
+            }
+        }
+
+        return $tags;
+    }
+
+    /**
      * Get count of posts in topic
      * 
      * @param string $token
@@ -447,7 +645,11 @@ class FORUM_BOL_TextSearchService
         {
             $topicTags = array_merge($topicTags, array(
                 'forum_topic_public', // visible everywhere
-                'forum_topic_public_user_id_' . $topicDto->userId
+                'forum_topic_public_user_id_' . $topicDto->userId,
+                'forum_topic_public_group_id_' . $topicDto->groupId,
+                'forum_topic_public_group_id_' . $topicDto->groupId . '_user_id_' . $topicDto->userId,
+                'forum_topic_public_section_id_' . $groupInfo->sectionId,
+                'forum_topic_public_section_id_' . $groupInfo->sectionId . '_user_id_' . $topicDto->userId,
             ));
         }
 

@@ -44,7 +44,7 @@ class FORUM_Cron extends OW_Cron
 
     const UPDATE_SEARCH_INDEX_LIFE_TIME = 3600;
 
-    const UPDATE_SEARCH_INDEX_MAX_TIME = 15;
+    const UPDATE_SEARCH_INDEX_MAX_TIME = 10;
 
     public function __construct()
     {
@@ -142,6 +142,12 @@ class FORUM_Cron extends OW_Cron
 
             // task successfully completed 
             $this->getUpdateSearchIndexDao()->delete($firstQueue);
+        }
+
+        // check the plugin state
+        if ( !OW_PluginManager::getInstance()->isPluginActive('forum') )
+        {
+            $this->getTextSearchService()->deactivateEntities();
         }
 
         // finished
