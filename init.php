@@ -57,8 +57,8 @@ OW::getRouter()->addRoute(new OW_Route('delete-post', 'forum/deletePost/:topicId
 OW::getRouter()->addRoute(new OW_Route('forum_delete_attachment', 'forum/deleteAttachment/', 'FORUM_CTRL_Topic', 'ajaxDeleteAttachment'));
 OW::getRouter()->addRoute(new OW_Route('forum_admin_config', 'admin/plugins/forum', 'FORUM_CTRL_Admin', 'index'));
 OW::getRouter()->addRoute(new OW_Route('forum_uninstall', 'admin/forum/uninstall', 'FORUM_CTRL_Admin', 'uninstall'));
-OW::getRouter()->addRoute(new OW_Route('forum_advanced_search', 'forum/advancedSearch/', 'FORUM_CTRL_Search', 'advanced'));
-OW::getRouter()->addRoute(new OW_Route('forum_advanced_search_result', 'forum/advancedSearch/result', 'FORUM_CTRL_Search', 'advancedResult'));
+OW::getRouter()->addRoute(new OW_Route('forum_advanced_search', 'forum/advanced-search/', 'FORUM_CTRL_Search', 'advanced'));
+OW::getRouter()->addRoute(new OW_Route('forum_advanced_search_result', 'forum/advanced-search/result', 'FORUM_CTRL_Search', 'advancedResult'));
 OW::getRouter()->addRoute(new OW_Route('forum_search', 'forum/search/', 'FORUM_CTRL_Search', 'inForums'));
 OW::getRouter()->addRoute(new OW_Route('forum_search_group', 'forum/:groupId/search/', 'FORUM_CTRL_Search', 'inGroup'));
 OW::getRouter()->addRoute(new OW_Route('forum_search_section', 'forum/section/:sectionId/search/', 'FORUM_CTRL_Search', 'inSection'));

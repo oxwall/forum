@@ -167,14 +167,21 @@ class FORUM_CTRL_Search extends OW_ActionController
             $this->redirect(OW::getRouter()->urlForRoute('forum_advanced_search'));
         }
 
-        $userInfo = $userName
-            ? BOL_UserService::getInstance()->findByUsername($userName)
-            : null;
+        $userId = null;
 
         // filter by user id
-        $userId = $userName
-            ? ($userInfo ? $userInfo->id : -1)
-            : null;
+        if ( $userName )
+        {
+            $userId = -1;
+            $questionName = OW::getConfig()->getValue('base', 'display_name_question');
+            $userInfo = BOL_UserService::getInstance()->
+                    findUserIdListByQuestionValues(array($questionName => $userName), 0, 1);
+
+            if ( $userInfo )
+            {
+                $userId = array_shift($userInfo);
+            }
+        }
 
         // make a search
         $searchInPosts = $searchIn == 'message' ? true : false;
@@ -281,6 +288,7 @@ class FORUM_CTRL_Search extends OW_ActionController
             ? urldecode(trim($_GET['q'])) 
             : null;
 
+        $userId = null;
         $userToken = !empty($_GET['u']) && is_string($_GET['u']) 
             ? urldecode(trim($_GET['u'])) 
             : null;
@@ -296,14 +304,19 @@ class FORUM_CTRL_Search extends OW_ActionController
         $tokenQuery = '&q=' . urlencode($token);
         $userTokenQuery = $userToken ? '&u=' . urlencode($userToken) : null;
 
-        $userInfo = $userToken
-            ? BOL_UserService::getInstance()->findByUsername($userToken)
-            : null;
-
         // filter by user id
-        $userId = $userToken
-            ? ($userInfo ? $userInfo->id : -1)
-            : null;
+        if ( $userToken )
+        {
+            $userId = -1;
+            $questionName = OW::getConfig()->getValue('base', 'display_name_question');
+            $userInfo = BOL_UserService::getInstance()->
+                    findUserIdListByQuestionValues(array($questionName => $userToken), 0, 1);
+
+            if ( $userInfo )
+            {
+                $userId = array_shift($userInfo);
+            }
+        }
 
         $authors = array();
 
