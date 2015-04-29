@@ -94,24 +94,7 @@ class FORUM_CTRL_Section extends OW_ActionController
 
         $sectionGroupList = $this->forumService->getSectionGroupList($userId, $sectionId);
 
-        $authors = array();
-        foreach ( $sectionGroupList as $section )
-        {
-            foreach ( $section['groups'] as $group )
-            {
-                if ( !$group['lastReply'] )
-                {
-                    continue;
-                }
-                $id = $group['lastReply']['userId'];
-
-                if ( !in_array($id, $authors) )
-                {
-                    array_push($authors, $id);
-                }
-            }
-        }
-
+        $authors = $this->forumService->getSectionGroupAuthorList($sectionGroupList);
         $this->assign('sectionGroupList', $sectionGroupList);
 
         $userNames = BOL_UserService::getInstance()->getUserNamesForList($authors);

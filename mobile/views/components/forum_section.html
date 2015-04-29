@@ -1,0 +1,48 @@
+{foreach from=$sectionGroupList item='section'}
+
+    {if !$singleMode}
+        <div class="owm_dnd_widget">
+            <div class="owm_box">
+                 <div class="owm_box_cap clearfix">
+                     <h3>{$section.sectionName}</h3>
+                     <div class="owm_box_menu owm_float_right">
+                         <a class="owm_forum_nav_right" href="{$section.sectionUrl}"></a>
+                     </div>
+                 </div>
+    {/if}
+
+            {foreach from=$section.groups item='group'}
+                 <div class="owm_box_body">
+                     <div class="owm_box_body_cont">
+                         <div class="owm_box_padding">
+                             <a class="owm_forum_list_format owm_forum_list_unread" href="{$group.groupUrl}">
+                                 <div class="owm_forum_name owm_small_margin_bottom">
+                                     {$group.name}
+                                     <div class="owm_forum_counter owm_float_right">{$group.topicCount}</div>
+                                 </div>
+                                 <div class="owm_forum_description">
+                                     {$group.description}
+                                 </div>
+                             </a>
+                         </div>
+                     </div>
+                 </div>
+                 <div class="owm_box_bottom">
+                     <div class="owm_box_toolbar owm_forum_additional_info owm_forum_list_unread">
+                         <div class="owm_forum_additional_item owm_forum_additional_comments">{$group.replyCount}</div>
+                         {if !empty($group.lastReply)}
+                              <div class="owm_forum_additional_item owm_forum_additional_date">
+                                  {format_date timestamp=$group.lastReply.createStamp}
+                              </div>
+                               <span>{text key='forum+by'} <a href="{$group.lastReply.postUrl}">{$displayNames[$group.lastReply.userId]}</a></span>
+                         {/if}
+                     </div>
+                 </div>
+            {/foreach}
+        
+    {if !$singleMode}
+            </div>
+        </div>
+    {/if} 
+
+ {/foreach}

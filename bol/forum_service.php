@@ -102,6 +102,36 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Returns Sections Group List Author
+     *
+     * @param array $sectionGroupList
+     * @return array
+     */
+    public function getSectionGroupAuthorList( $sectionGroupList )
+    {
+        $authors = array();
+        foreach ( $sectionGroupList as $section )
+        {
+            foreach ( $section['groups'] as $group )
+            {
+                if ( !$group['lastReply'] )
+                {
+                    continue;
+                }
+
+                $id = $group['lastReply']['userId'];
+
+                if ( !in_array($id, $authors) )
+                {
+                    array_push($authors, $id);
+                }
+            }
+        }
+
+        return $authors;
+    }
+
+    /**
      * Returns Sections Group List
      *
      * @param int $forUserId
@@ -648,6 +678,30 @@ final class FORUM_BOL_ForumService
         }
 
         return $topicList;
+    }
+
+    /**
+     * Returns group's topic author list
+     * 
+     * @param array $topicList
+     * @apram array $topicIds
+     * @return array
+     */
+    public function getGroupTopicAuthorList( array $topicList, array &$topicIds )
+    {
+        $authors = array();
+
+        foreach ( $topicList as $topic )
+        {
+            array_push($topicIds, $topic['id']);
+ 
+            if ( isset($topic['lastPost']) && !in_array($topic['lastPost']['userId'], $authors) )
+            {
+                array_push($authors, $topic['lastPost']['userId']);
+            }
+        }
+
+        return $authors;
     }
 
     /**

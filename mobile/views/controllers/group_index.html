@@ -1,0 +1,89 @@
+<section>
+    <div class="owm_forum_page owm_forum_section">
+        <div class="owm_dnd_widget">
+            <div class="owm_box">
+                <div class="owm_box_cap clearfix">
+                    <h3>{$group->name}</h3>
+                    <div class="owm_box_menu owm_float_left">
+                        <a class="owm_forum_nav_left" href="{$sectionUrl}"></a>
+                    </div>
+                    <a href="#" class="owm_nav_left_item_add"></a>
+                </div>
+                {component class="FORUM_MCMP_ForumSearch" scope="group" id="{$group->id}"}
+ 
+                {if $stickyTopics || $stickyTopics}
+                    {if $stickyTopics}
+                        <div class="owm_topics_sticky">
+                            {foreach from=$stickyTopics item=topic}
+                                <div class="owm_box_body">
+                                    <div class="owm_box_body_cont">
+                                        <div class="owm_box_padding">
+                                            <a class="owm_topic_list_format owm_topic_list_unread owm_topic_list_locked" href="#">
+                                                <div class="owm_topic_name owm_small_margin_bottom">
+                                                    <span class="owm_topic_sticky_icon"></span>
+                                                    {if isset($attachments[$topic.id])}
+                                                        <span class="owm_topic_attach_icon"></span>
+                                                    {/if}
+                                                    {$topic.title}
+                                                    <div class="owm_forum_counter owm_float_right">
+                                                        {if $topic.replyCount}{$topic.replyCount}{else}0{/if}
+                                                    </div>
+                                                </div>
+                                                <div class="owm_forum_description">
+                                                    Author: Mark Willson
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="owm_box_bottom">
+                                    <div class="owm_box_toolbar owm_forum_additional_info owm_forum_list_unread">
+                                        <div class="owm_forum_additional_item owm_forum_additional_views">
+                                            {$topic.viewCount}
+                                        </div>
+                                        {if isset($topic.lastPost)}
+                                            <div class="owm_forum_additional_item owm_forum_additional_date">
+                                                {$topic.lastPost.createStamp}
+                                            </div>
+                                            <span>{text key='forum+by'} <a href="#">Mike Wilkinson</a></span>
+                                            <a href="{$topic.lastReply.postUrl}">{$displayNames[$group.lastReply.userId]}</a>
+                                        {/if}
+                                    </div>
+                                </div>
+                            {/foreach}
+                        </div>
+                    {/if}
+                {else}
+                    {text key='forum+no_topic'}
+                {/if}
+ 
+
+                <!-- regular topics -->
+                <div class="owm_box_body">
+                    <div class="owm_box_body_cont">
+                        <div class="owm_box_padding">
+                            <a class="owm_topic_list_format owm_topic_list_locked" href="#">
+                                <div class="owm_topic_name owm_small_margin_bottom">
+                                    <span class="owm_topic_attach_icon"></span>
+                                    Topic name #1
+                                    <div class="owm_forum_counter owm_float_right">345</div>
+                                </div>
+                                <div class="owm_forum_description">
+                                    Author: Mark Willson
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="owm_box_bottom">
+                    <div class="owm_box_toolbar owm_forum_additional_info">
+                        <div class="owm_forum_additional_item owm_forum_additional_views">921</div>
+                        <div class="owm_forum_additional_item owm_forum_additional_date">Today 16:54</div>
+                        <span>By <a href="#">Mike Wilkinson</a></span>
+                    </div>
+                </div>
+                <!-- end of regular topics -->
+            </div>
+        </div>
+    </div>
+</section>

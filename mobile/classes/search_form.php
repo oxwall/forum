@@ -1,5 +1,4 @@
 <?php
-
 /**
  * This software is intended for use with Oxwall Free Community Software http://www.oxwall.org/ and is
  * licensed under The BSD license.
@@ -29,13 +28,31 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-OW::getRouter()->addRoute(new OW_Route('forum_index', 'forum/', 'FORUM_MCTRL_Forum', 'index'));
-OW::getRouter()->addRoute(new OW_Route('section-default', 'forum/section/:sectionId', 'FORUM_MCTRL_Section', 'index'));
-OW::getRouter()->addRoute(new OW_Route('topic-default', 'forum/topic/:topicId', 'FORUM_MCTRL_Topic', 'index'));
-OW::getRouter()->addRoute(new OW_Route('group-default', 'forum/:groupId', 'FORUM_MCTRL_Group', 'index'));
-OW::getRouter()->addRoute(new OW_Route('forum_search', 'forum/search/', 'FORUM_MCTRL_Search', 'inForums'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_group', 'forum/:groupId/search/', 'FORUM_MCTRL_Search', 'inGroup'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_section', 'forum/section/:sectionId/search/', 'FORUM_MCTRL_Search', 'inSection'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_topic', 'forum/topic/:topicId/search/', 'FORUM_MCTRL_Search', 'inTopic'));
+/**
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.ow_plugins.forum.mobile
+ * @since 1.7.2
+ */
+class FORUM_MCLASS_SearchForm extends Form
+{
+    /**
+     * Class constructor
+     * 
+     * @param string $name
+     * @param string $keywordInvitation
+     * @param string $url
+     */
+    public function __construct( $name, $keywordInvitation, $url ) 
+    {
+        parent::__construct($name);
 
-FORUM_MCLASS_EventHandler::getInstance()->init();
+        $this->setMethod(self::METHOD_GET);
+        $this->setAction($url);
+
+        // keyword
+        $keywordField = new TextField('keyword');
+        $keywordField->setHasInvitation(true);
+        $keywordField->setInvitation($keywordInvitation);
+        $this->addElement($keywordField);
+    }
+}

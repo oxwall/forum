@@ -29,13 +29,35 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-OW::getRouter()->addRoute(new OW_Route('forum_index', 'forum/', 'FORUM_MCTRL_Forum', 'index'));
-OW::getRouter()->addRoute(new OW_Route('section-default', 'forum/section/:sectionId', 'FORUM_MCTRL_Section', 'index'));
-OW::getRouter()->addRoute(new OW_Route('topic-default', 'forum/topic/:topicId', 'FORUM_MCTRL_Topic', 'index'));
-OW::getRouter()->addRoute(new OW_Route('group-default', 'forum/:groupId', 'FORUM_MCTRL_Group', 'index'));
-OW::getRouter()->addRoute(new OW_Route('forum_search', 'forum/search/', 'FORUM_MCTRL_Search', 'inForums'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_group', 'forum/:groupId/search/', 'FORUM_MCTRL_Search', 'inGroup'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_section', 'forum/section/:sectionId/search/', 'FORUM_MCTRL_Search', 'inSection'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_topic', 'forum/topic/:topicId/search/', 'FORUM_MCTRL_Search', 'inTopic'));
+/**
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.plugin.forum.mobile.controllers
+ * @since 1.6.0
+ */
+abstract class FORUM_MCTRL_AbstractForum extends OW_MobileActionController
+{
+    /**
+     * Forum service
+     * 
+     * @var FORUM_BOL_ForumService 
+     */
+    protected $forumService;
 
-FORUM_MCLASS_EventHandler::getInstance()->init();
+    public function __construct()
+    {
+        parent::__construct();
+
+        // check autorization
+        $isModerator = OW::getUser()->isAuthorized('forum');
+        $viewPermissions = OW::getUser()->isAuthorized('forum', 'view');
+
+        if ( !$viewPermissions && !$isModerator )
+        {
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'view');
+            throw new AuthorizationException($status['msg']);
+        }
+
+        $this->forumService = FORUM_BOL_ForumService::getInstance();
+    }
+}
+

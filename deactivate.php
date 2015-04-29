@@ -33,3 +33,5 @@ OW::getNavigation()->deleteMenuItem('forum', 'forum');
 $widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_ForumTopicsWidget');
 $widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_LatestTopicsWidget');
 
+// Mobile deactivation
+OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');

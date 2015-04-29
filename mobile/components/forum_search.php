@@ -29,13 +29,49 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-OW::getRouter()->addRoute(new OW_Route('forum_index', 'forum/', 'FORUM_MCTRL_Forum', 'index'));
-OW::getRouter()->addRoute(new OW_Route('section-default', 'forum/section/:sectionId', 'FORUM_MCTRL_Section', 'index'));
-OW::getRouter()->addRoute(new OW_Route('topic-default', 'forum/topic/:topicId', 'FORUM_MCTRL_Topic', 'index'));
-OW::getRouter()->addRoute(new OW_Route('group-default', 'forum/:groupId', 'FORUM_MCTRL_Group', 'index'));
-OW::getRouter()->addRoute(new OW_Route('forum_search', 'forum/search/', 'FORUM_MCTRL_Search', 'inForums'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_group', 'forum/:groupId/search/', 'FORUM_MCTRL_Search', 'inGroup'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_section', 'forum/section/:sectionId/search/', 'FORUM_MCTRL_Search', 'inSection'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_topic', 'forum/topic/:topicId/search/', 'FORUM_MCTRL_Search', 'inTopic'));
+/**
+ * Forum search form class.
+ *
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.ow_plugins.forum.mobile.components
+ * @since 1.0
+ */
+class FORUM_MCMP_ForumSearch extends OW_MobileComponent
+{
+    private $scope;
+    private $id;
 
-FORUM_MCLASS_EventHandler::getInstance()->init();
+    public function __construct( array $params )
+    {
+        parent::__construct();
+
+        $this->scope = !empty($params['scope']) ? $params['scope'] : 'all_forum';
+        $this->id = !empty($params['id']) ? $params['id'] : null;
+
+        switch ( $this->scope )
+        {
+            case 'topic':
+                $location = OW::getRouter()->
+                        urlForRoute('forum_search_topic', array('topicId' => $this->id));
+                break;
+
+            case 'group':
+                $location = OW::getRouter()->
+                        urlForRoute('forum_search_group', array('groupId' => $this->id));
+                break;
+
+            case 'section':
+                $location = OW::getRouter()->
+                        urlForRoute('forum_search_section', array('sectionId' => $this->id));
+                break;
+
+            default:
+                $location = OW::getRouter()->urlForRoute('forum_search');
+                break;
+        }
+
+        // add form
+        $this->addForm(new FORUM_MCLASS_SearchForm("search_form", 
+                OW::getLanguage()->text('forum', 'search_invitation_' . $this->scope), $location));
+    }
+}

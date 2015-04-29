@@ -29,13 +29,37 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-OW::getRouter()->addRoute(new OW_Route('forum_index', 'forum/', 'FORUM_MCTRL_Forum', 'index'));
-OW::getRouter()->addRoute(new OW_Route('section-default', 'forum/section/:sectionId', 'FORUM_MCTRL_Section', 'index'));
-OW::getRouter()->addRoute(new OW_Route('topic-default', 'forum/topic/:topicId', 'FORUM_MCTRL_Topic', 'index'));
-OW::getRouter()->addRoute(new OW_Route('group-default', 'forum/:groupId', 'FORUM_MCTRL_Group', 'index'));
-OW::getRouter()->addRoute(new OW_Route('forum_search', 'forum/search/', 'FORUM_MCTRL_Search', 'inForums'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_group', 'forum/:groupId/search/', 'FORUM_MCTRL_Search', 'inGroup'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_section', 'forum/section/:sectionId/search/', 'FORUM_MCTRL_Search', 'inSection'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_topic', 'forum/topic/:topicId/search/', 'FORUM_MCTRL_Search', 'inTopic'));
+/**
+ * Forum section class.
+ *
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.ow_plugins.forum.mobile.components
+ * @since 1.0
+ */
+class FORUM_MCMP_ForumSection extends OW_MobileComponent
+{
+    /**
+     * Class constructor
+     * 
+     * @param array $params
+     */
+    public function __construct(array $params = array())
+    {
+        parent::__construct();
 
-FORUM_MCLASS_EventHandler::getInstance()->init();
+        $sectionId = !empty($params['sectionId']) 
+            ? (int) $params['sectionId'] 
+            : null;
+
+        $forumService = FORUM_BOL_ForumService::getInstance();
+        $userId = OW::getUser()->getId();
+
+        $sectionGroupList = $forumService->getSectionGroupList($userId, $sectionId);
+        $authors = $forumService->getSectionGroupAuthorList($sectionGroupList);
+
+        // assign view variables
+        $this->assign('singleMode', null != $sectionId);
+        $this->assign('sectionGroupList', $sectionGroupList);
+        $this->assign('displayNames', BOL_UserService::getInstance()->getDisplayNamesForList($authors));
+    }
+}
