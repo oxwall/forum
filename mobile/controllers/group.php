@@ -57,6 +57,7 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
 
         $userId = OW::getUser()->getId();
         $isModerator = OW::getUser()->isAuthorized('forum');
+        $canEdit = OW::getUser()->isAuthorized('forum', 'edit') || $isModerator ? true : false;
 
         // check permissions
         if ( $groupInfo->isPrivate )
@@ -78,31 +79,35 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
         $topicIds = array();
         $authors = $this->forumService->getGroupTopicAuthorList($topicList, $topicIds);
 
-        // process topics
         $stickyTopics = array();
         $regularTopics = array();
 
+        // process topics
         foreach ($topicList as $topic)
         {
+            // collect topics authors
+            if ( !in_array($topic['userId'], $authors) )
+            {
+                array_push($authors, $topic['userId']);
+            }
+
             $topic['sticky'] 
                 ? $stickyTopics[] = $topic : $regularTopics[] = $topic;
         }
 
         // assign view variables
+        $this->assign('canEdit', $canEdit);
         $this->assign('stickyTopics', $stickyTopics);
         $this->assign('regularTopics', $regularTopics);
         $this->assign('displayNames', BOL_UserService::getInstance()->getDisplayNamesForList($authors));
         $this->assign('group',   $groupInfo);
-        $this->assign('sectionUrl', OW::getRouter()->
-                urlForRoute('section-default', array('sectionId' => $groupInfo->sectionId)));
-
         $this->assign('attachments', FORUM_BOL_PostAttachmentService::getInstance()->
                 getAttachmentsCountByTopicIdList($topicIds));
 
         // paginate
         $perPage = $this->forumService->getTopicPerPageConfig();
         $pageCount = ($topicCount) ? ceil($topicCount / $perPage) : 1;
-        $paging = new BASE_CMP_Paging($page, $pageCount, $perPage);
+        $paging = new BASE_CMP_PagingMobile($page, $pageCount, $perPage);
         $this->assign('paging', $paging->render());
 
         OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));

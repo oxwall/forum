@@ -56,7 +56,6 @@ class FORUM_MCTRL_Section extends FORUM_MCTRL_AbstractForum
         }
 
         // assign view variables
-        $this->assign('homeUrl', OW::getRouter()->urlForRoute('forum_index'));
         $this->assign('section', $forumSection);
 
         OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
