@@ -55,6 +55,15 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
             throw new Redirect404Exception();
         }
 
+        $forumSection = $groupInfo 
+            ? $this->forumService->findSectionById($groupInfo->sectionId)
+            : null;
+
+        if ( $forumSection->isHidden )
+        {
+            throw new Redirect404Exception();
+        }
+    
         $userId = OW::getUser()->getId();
         $isModerator = OW::getUser()->isAuthorized('forum');
         $canEdit = OW::getUser()->isAuthorized('forum', 'edit') || $isModerator ? true : false;

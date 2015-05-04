@@ -46,7 +46,7 @@ class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
      */
     public function index( array $params = null )
     {
-        /*if ( !OW::getUser()->isAuthenticated() )
+        if ( !OW::getUser()->isAuthenticated() )
         {
             throw new AuthenticateException();
         }
@@ -58,23 +58,46 @@ class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
             throw new AuthorizationException($status['msg']);
         }
 
-        $groupId = isset($params['groupId']) && (int) $params['groupId'] 
+        $backGroupId = isset($params['groupId']) && (int) $params['groupId'] 
             ? (int) $params['groupId'] 
             : -1;
 
-        $forumGroup = $this->forumService->getGroupInfo($groupId);
-        $forumSection = $forumGroup 
-            ? $this->forumService->findSectionById($forumGroup->sectionId)
-            : null;
+        $userId = OW::getUser()->getId();
 
-        // you cannot add new topics in hidden sections
-        if ( !$forumGroup || $forumSection->isHidden )
+        $form = new FORUM_CLASS_TopicForm(
+            "topic_form", 
+            uniqid(), 
+            $this->forumService->getGroupSelectList(0, false, $userId), 
+            $backGroupId, 
+            true
+        );
+
+        // validate the form
+        if ( OW::getRequest()->isPost() && $form->isValid($_POST) )
         {
-            throw new Redirect404Exception();
+            $data = $form->getValues();
+
+            $forumGroupId = !empty($data['group']) ? $data['group'] : -1;
+            $forumGroup   = $this->forumService->getGroupInfo($forumGroupId);
+            $forumSection = $forumGroup 
+                ? $this->forumService->findSectionById($forumGroup->sectionId)
+                : null;
+
+            // you cannot add new topics in hidden sections
+            if ( !$forumGroup || $forumSection->isHidden )
+            {
+                throw new Redirect404Exception();
+            }
+
+            $isHidden = $forumSection->isHidden ? true : false;            
+            $topicDto = $this->forumService->addTopic($forumGroup, $isHidden, $userId, $data);
+
+            $this->redirect(OW::getRouter()->
+                        urlForRoute('topic-default', array('topicId' => $topicDto->id)));
         }
 
-        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
-        OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'meta_title_add_topic'));
-        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'meta_title_add_topic'));*/
+        // an error occured
+        $this->redirect(OW::getRouter()->
+                        urlForRoute('group-default', array('groupId' => $backGroupId)));
     }
 }

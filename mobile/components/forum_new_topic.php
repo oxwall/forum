@@ -29,19 +29,61 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-$plugin = OW::getPluginManager()->getPlugin('forum');
+/**
+ * Forum group class.
+ *
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.ow_plugins.forum.mobile.components
+ * @since 1.0
+ */
+class FORUM_MCMP_ForumNewTopic extends OW_MobileComponent
+{
+    /**
+     * Class constructor
+     * 
+     * @param array $params
+     *      integer groupId
+     */
+    public function __construct(array $params = array())
+    {
+        parent::__construct();
 
-OW::getAutoloader()->addClass('ForumSelectBox', $plugin->getRootDir() . 'classes' . DS . 'forum_select_box.php');
-OW::getAutoloader()->addClass('ForumStringValidator', $plugin->getRootDir() . 'classes' . DS . 'forum_string_validator.php');
+        $groupId = !empty($params['groupId']) 
+            ? $params['groupId'] 
+            : null;
 
-OW::getRouter()->addRoute(new OW_Route('forum_index', 'forum/', 'FORUM_MCTRL_Forum', 'index'));
-OW::getRouter()->addRoute(new OW_Route('section-default', 'forum/section/:sectionId', 'FORUM_MCTRL_Section', 'index'));
-OW::getRouter()->addRoute(new OW_Route('topic-default', 'forum/topic/:topicId', 'FORUM_MCTRL_Topic', 'index'));
-OW::getRouter()->addRoute(new OW_Route('group-default', 'forum/:groupId', 'FORUM_MCTRL_Group', 'index'));
-OW::getRouter()->addRoute(new OW_Route('forum_search', 'forum/search/', 'FORUM_MCTRL_Search', 'inForums'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_group', 'forum/:groupId/search/', 'FORUM_MCTRL_Search', 'inGroup'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_section', 'forum/section/:sectionId/search/', 'FORUM_MCTRL_Search', 'inSection'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_topic', 'forum/topic/:topicId/search/', 'FORUM_MCTRL_Search', 'inTopic'));
-OW::getRouter()->addRoute(new OW_Route('add-topic', 'forum/addTopic/:groupId', 'FORUM_MCTRL_AddTopic', 'index'));
+        $forumService = FORUM_BOL_ForumService::getInstance();
+        $userId = OW::getUser()->getId();
+        $attachmentUid = uniqid();
+        $groupList = $forumService->getGroupSelectList(0, false, $userId);
 
-FORUM_MCLASS_EventHandler::getInstance()->init();
+        // register js langs
+        OW::getLanguage()->addKeyForJs('forum', 'new_topic_btn');
+
+        // get a form instance
+        $form = new FORUM_CLASS_TopicForm(
+                "topic_form", 
+                $attachmentUid, 
+                $groupList, 
+                $groupId, 
+                true
+        );
+
+        $form->setTitleInvitation(OW::getLanguage()->text('forum', 'new_topic_subject'));
+        $form->setAction(OW::getRouter()->urlForRoute('add-topic', array(
+            'groupId' => $groupId
+        )));
+
+        $this->addForm($form);
+
+        // attachments
+        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
+        if ( $enableAttachments )
+        {
+            $attachmentCmp = new BASE_CLASS_FileAttachment('forum', $attachmentUid);
+            $this->addComponent('attachments', $attachmentCmp);
+        }
+
+        $this->assign('enableAttachments', $enableAttachments);
+    }
+}
