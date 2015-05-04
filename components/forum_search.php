@@ -188,7 +188,7 @@ class FORUM_CMP_ForumSearch extends OW_Component
         $action = new BASE_ContextAction();
         $action->setKey('filter_by_user');
         $action->setParentKey('forum-search');
-        $action->setLabel('Filter by user');
+        $action->setLabel(OW::getLanguage()->text('forum', 'forms_search_username_field_label'));
         $action->setId('btn-filter-by-user');
 
         $context->addAction($action);
