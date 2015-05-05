@@ -87,7 +87,6 @@ class FORUM_CLASS_TopicForm extends Form
         // attachments
         $attachmentUidField = new HiddenField('attachmentUid');
         $attachmentUidField->setValue($attachmentUid);
-        $attachmentUidField->setRequired(true);
         $this->addElement($attachmentUidField);
 
         // title

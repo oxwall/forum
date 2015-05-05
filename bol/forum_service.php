@@ -973,7 +973,6 @@ final class FORUM_BOL_ForumService
          $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($data['text'], array('form', 'input', 'button'), null, true));
          $postDto->createStamp = time();
 
-         $this->topicDao->save($topicDto);
          $this->saveOrUpdatePost($postDto);
          $topicDto->lastPostId = $postDto->getId();
 

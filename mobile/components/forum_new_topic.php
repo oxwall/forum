@@ -59,6 +59,8 @@ class FORUM_MCMP_ForumNewTopic extends OW_MobileComponent
 
         // register js langs
         OW::getLanguage()->addKeyForJs('forum', 'new_topic_btn');
+        OW::getLanguage()->addKeyForJs('forum', 'attached_files');
+        OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
 
         // get a form instance
         $form = new FORUM_CLASS_TopicForm(
@@ -84,6 +86,8 @@ class FORUM_MCMP_ForumNewTopic extends OW_MobileComponent
             $this->addComponent('attachments', $attachmentCmp);
         }
 
+        // assign view variables
         $this->assign('enableAttachments', $enableAttachments);
+        $this->assign('attachmentUid', $attachmentUid);
     }
 }
