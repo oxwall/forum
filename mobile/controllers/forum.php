@@ -29,19 +29,21 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-$plugin = OW::getPluginManager()->getPlugin('forum');
+/**
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.plugin.forum.mobile.controllers
+ * @since 1.6.0
+ */
+class FORUM_MCTRL_Forum extends FORUM_MCTRL_AbstractForum
+{
+    /**
+     * Forum index
+     */
+    public function index()
+    {
+        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+        OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_index'));
+        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_index'));
+    }
+}
 
-OW::getAutoloader()->addClass('ForumSelectBox', $plugin->getRootDir() . 'classes' . DS . 'forum_select_box.php');
-OW::getAutoloader()->addClass('ForumStringValidator', $plugin->getRootDir() . 'classes' . DS . 'forum_string_validator.php');
-
-OW::getRouter()->addRoute(new OW_Route('forum_index', 'forum/', 'FORUM_MCTRL_Forum', 'index'));
-OW::getRouter()->addRoute(new OW_Route('section-default', 'forum/section/:sectionId', 'FORUM_MCTRL_Section', 'index'));
-OW::getRouter()->addRoute(new OW_Route('topic-default', 'forum/topic/:topicId', 'FORUM_MCTRL_Topic', 'index'));
-OW::getRouter()->addRoute(new OW_Route('group-default', 'forum/:groupId', 'FORUM_MCTRL_Group', 'index'));
-OW::getRouter()->addRoute(new OW_Route('forum_search', 'forum/search/', 'FORUM_MCTRL_Search', 'inForums'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_group', 'forum/:groupId/search/', 'FORUM_MCTRL_Search', 'inGroup'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_section', 'forum/section/:sectionId/search/', 'FORUM_MCTRL_Search', 'inSection'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_topic', 'forum/topic/:topicId/search/', 'FORUM_MCTRL_Search', 'inTopic'));
-OW::getRouter()->addRoute(new OW_Route('add-topic', 'forum/addTopic/:groupId', 'FORUM_MCTRL_AddTopic', 'index'));
-
-FORUM_MCLASS_EventHandler::getInstance()->init();

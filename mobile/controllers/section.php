@@ -29,19 +29,37 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-$plugin = OW::getPluginManager()->getPlugin('forum');
+/**
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.plugin.forum.mobile.controllers
+ * @since 1.6.0
+ */
+class FORUM_MCTRL_Section extends FORUM_MCTRL_AbstractForum
+{
+    /**
+     * Section index
+     * 
+     * @param array $params
+     */
+    public function index( array $params )
+    {
+        if ( !isset($params['sectionId']) || !($sectionId = (int) $params['sectionId']) )
+        {
+            throw new Redirect404Exception();
+        }
 
-OW::getAutoloader()->addClass('ForumSelectBox', $plugin->getRootDir() . 'classes' . DS . 'forum_select_box.php');
-OW::getAutoloader()->addClass('ForumStringValidator', $plugin->getRootDir() . 'classes' . DS . 'forum_string_validator.php');
+        // get the section info
+        $forumSection = $this->forumService->findSectionById($sectionId);
+        if ( !$forumSection || $forumSection->isHidden )
+        {
+            throw new Redirect404Exception();
+        }
 
-OW::getRouter()->addRoute(new OW_Route('forum_index', 'forum/', 'FORUM_MCTRL_Forum', 'index'));
-OW::getRouter()->addRoute(new OW_Route('section-default', 'forum/section/:sectionId', 'FORUM_MCTRL_Section', 'index'));
-OW::getRouter()->addRoute(new OW_Route('topic-default', 'forum/topic/:topicId', 'FORUM_MCTRL_Topic', 'index'));
-OW::getRouter()->addRoute(new OW_Route('group-default', 'forum/:groupId', 'FORUM_MCTRL_Group', 'index'));
-OW::getRouter()->addRoute(new OW_Route('forum_search', 'forum/search/', 'FORUM_MCTRL_Search', 'inForums'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_group', 'forum/:groupId/search/', 'FORUM_MCTRL_Search', 'inGroup'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_section', 'forum/section/:sectionId/search/', 'FORUM_MCTRL_Search', 'inSection'));
-OW::getRouter()->addRoute(new OW_Route('forum_search_topic', 'forum/topic/:topicId/search/', 'FORUM_MCTRL_Search', 'inTopic'));
-OW::getRouter()->addRoute(new OW_Route('add-topic', 'forum/addTopic/:groupId', 'FORUM_MCTRL_AddTopic', 'index'));
+        // assign view variables
+        $this->assign('section', $forumSection);
 
-FORUM_MCLASS_EventHandler::getInstance()->init();
+        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+        OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_section'));
+        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_section'));
+    }
+}
