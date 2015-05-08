@@ -84,7 +84,7 @@ class FORUM_CTRL_Group extends OW_ActionController
         }
 
         // remember the last forum page
-        OW::getSession()->set('last_forum_page', '/' . OW::getRequest()->getRequestUri());
+        OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
         $this->addComponent('groupCmp', new FORUM_CMP_ForumGroup(array('groupId' => $params['groupId'], 'caption' => true)));
     }
 }

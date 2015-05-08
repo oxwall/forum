@@ -123,7 +123,7 @@ class FORUM_CTRL_Section extends OW_ActionController
         $this->addComponent('search', new FORUM_CMP_ForumSearch(array('scope' => 'section', 'sectionId' => $sectionId)));
 
         // remember the last forum page
-        OW::getSession()->set('last_forum_page', '/' . OW::getRequest()->getRequestUri());
+        OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
 
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum'));
         OW::getDocument()->setHeadingIconClass('ow_ic_forum');

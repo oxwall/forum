@@ -455,7 +455,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
         $this->assign('canMoveToHidden', $canMoveToHidden);
 
         // remember the last forum page
-        OW::getSession()->set('last_forum_page', '/' . OW::getRequest()->getRequestUri());
+        OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
 
         OW::getDocument()->setTitle($topicInfo['title']);
         OW::getDocument()->setDescription($firstPostText);
