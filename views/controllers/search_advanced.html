@@ -1,11 +1,32 @@
 {style}
-    .ow_forum_advanced_search .ow_multiselect {
-        width: 100%;
-        height:200px;
-    }
+    {literal}
+        .ow_forum_advanced_search .ow_multiselect {
+            width: 100%;
+            height:200px;
+        }
+
+        .ow_forum_advanced_search #search_usage_example_wrapper {
+            padding-top:10px;
+        }
+
+        #forum_manage_buttons .ow_forum_breadcrumb_wrapper .ow_box_empty {
+            margin:0
+        }
+    {/literal}
 {/style}
 
-{$breadcrumb}
+
+<div style="display: table; width: 100%; margin-bottom: 16px;" id="forum_manage_buttons">
+    <div class="ow_forum_breadcrumb_wrapper" style="display: table-cell; vertical-align: bottom; width: 50%;">
+        {$breadcrumb}
+    </div>
+    <div class="ow_txtright ow_btn_delimiter" style="display: table-cell; vertical-align: bottom;">
+        {block_decorator name='button'
+            langLabel="forum+back_forum"
+            class="ow_ic_left_arrow ow_forum_back"}
+        {/block_decorator}
+    </div>
+</div>
 
 {form name="search_form"}
 
@@ -16,7 +37,11 @@
             </tr>
             <tr class="ow_alt1">
                 <td colspan="2" class="ow_txtleft ow_small">
-                    {input name="keyword"}
+                    {input name="keyword" class="ow_smallmargin"}
+                    <a id="search_usage_example" href="#">{text key="forum+search_example_usage"}</a>
+                    <div id="search_usage_example_wrapper" style="display:none">
+                        {text key="forum+search_example_usage_text"} 
+                    </div>
                 </td>
             </tr>
             <tr class="ow_alt1">
@@ -83,3 +108,14 @@
     </div>
 
 {/form}
+
+{script}
+    $("#search_usage_example").click(function(e) {
+        e.preventDefault();
+        $("#search_usage_example_wrapper").toggle("slow");
+    });
+
+    $("#forum_manage_buttons .ow_forum_back").bind("click", function(e){
+        location.href="{$backUrl}";
+    });
+{/script}
