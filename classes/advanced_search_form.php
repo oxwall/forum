@@ -48,25 +48,10 @@ class FORUM_CLASS_AdvancedSearchForm extends Form
         $this->setMethod(self::METHOD_GET);
         $this->setAction(OW::getRouter()->urlForRoute('forum_advanced_search_result'));
 
-        $h= <<<HTML
-
-Examples of usage:<br />
-<b>apple banana</b> - Find rows that contain at least one of the two words. <br />
-<b>+apple +juice</b> - Find rows that contain both words. <br />
-<b>+apple macintosh</b> - Find rows that contain the word “apple”, but rank rows higher if they also contain “macintosh”. <br />
-<b>+apple -macintosh</b> - Find rows that contain the word “apple” but not “macintosh”. <br />
-<b>+apple ~macintosh</b> - Find rows that contain the word “apple”, but if the row also contains the word “macintosh”, rate it lower than if row does not. <br />
-<b>+apple +(&#x3E;turnover &#x3C;strudel)</b> - Find rows that contain the words “apple” and “turnover”, or “apple” and “strudel” (in any order), but rank “apple turnover” higher than “apple strudel”. <br />
-<b>apple*</b> - Find rows that contain words such as “apple”, “apples”, “applesauce”, or “applet”. <br />
-<b>"some words"</b> - Find rows that contain the exact phrase “some words” (for example, rows that contain “some words of wisdom” but not “some noise words”). Note that the “"” characters that enclose the phrase are operator characters that delimit the phrase. They are not the quotation marks that enclose the search string itself. 
-HTML;
-        
-    
         // keyword
         $keywordField = new TextField('keyword');
         $keywordField->setHasInvitation(true);
         $keywordField->setInvitation(OW::getLanguage()->text('forum', 'forms_search_keyword_field_invitation'));
-        $keywordField->setDescription($h);
         $this->addElement($keywordField);
 
         // username
