@@ -44,6 +44,15 @@ class FORUM_CTRL_Search extends OW_ActionController
     {
         parent::__construct();
         
+        $isModerator = OW::getUser()->isAuthorized('forum');
+        $viewPermissions = OW::getUser()->isAuthorized('forum', 'view');
+
+        if ( !$viewPermissions && !$isModerator )
+        {
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'view');
+            throw new AuthorizationException($status['msg']);
+        }
+
         $this->forumService = FORUM_BOL_ForumService::getInstance();
     }
 
@@ -164,6 +173,7 @@ class FORUM_CTRL_Search extends OW_ActionController
 
         if ( !mb_strlen($keyword) )
         {
+            OW::getFeedback()->info(OW::getLanguage()->text('forum', 'please_enter_keyword'));
             $this->redirect(OW::getRouter()->urlForRoute('forum_advanced_search'));
         }
 
@@ -221,6 +231,10 @@ class FORUM_CTRL_Search extends OW_ActionController
         $paging = new BASE_CMP_Paging($page, $pages, $perPage);
         $this->assign('paging', $paging->render());
 
+        // get back url
+        $backUrl = OW::getSession()->get('last_forum_page');
+        $this->assign('backUrl', ($backUrl ? $backUrl : OW::getRouter()->urlForRoute('forum-default')));
+
         // set page title
         OW::getDocument()->setHeading($lang->text('forum', 'search_advanced_heading'));
         OW::getDocument()->setHeadingIconClass('ow_ic_forum');
@@ -253,6 +267,10 @@ class FORUM_CTRL_Search extends OW_ActionController
 
         // add form
         $this->addForm(new FORUM_CLASS_AdvancedSearchForm("search_form", $sections));
+
+        // get back url
+        $backUrl = OW::getSession()->get('last_forum_page');
+        $this->assign('backUrl', ($backUrl ? $backUrl : OW::getRouter()->urlForRoute('forum-default')));
 
         // set page title
         OW::getDocument()->setHeading($lang->text('forum', 'search_advanced_heading'));
@@ -298,6 +316,7 @@ class FORUM_CTRL_Search extends OW_ActionController
 
         if ( !mb_strlen($token) )
         {
+            OW::getFeedback()->info(OW::getLanguage()->text('forum', 'please_enter_keyword'));
             $this->redirect(OW::getRouter()->urlForRoute('forum-default'));
         }
 
@@ -336,6 +355,10 @@ class FORUM_CTRL_Search extends OW_ActionController
                 $this->addComponent('search', new FORUM_CMP_ForumSearch(
                     array('scope' => 'topic', 'token' => $token, 'userToken' => $userToken, 'topicId' => $topicId))
                 );
+ 
+                $this->assign('backUrl', OW::getRouter()->urlForRoute('topic-default', array(
+                    'topicId' => $topicId
+                )));
                 break;
 
             case 'group' :
@@ -351,6 +374,10 @@ class FORUM_CTRL_Search extends OW_ActionController
                 $this->addComponent('search', new FORUM_CMP_ForumSearch(
                     array('scope' => 'group', 'token' => $token, 'userToken' => $userToken, 'groupId' => $groupId))
                 );
+
+                $this->assign('backUrl', OW::getRouter()->urlForRoute('group-default', array(
+                    'groupId' => $groupId
+                )));
                 break;
 
             case 'section' :
@@ -366,6 +393,10 @@ class FORUM_CTRL_Search extends OW_ActionController
                 $this->addComponent('search', new FORUM_CMP_ForumSearch(
                     array('scope' => 'section', 'sectionId' => $sectionId, 'token' => $token, 'userToken' => $userToken))
                 );
+
+                $this->assign('backUrl', OW::getRouter()->urlForRoute('section-default', array(
+                    'sectionId' => $sectionId
+                )));
                 break;
 
             default :
@@ -379,6 +410,8 @@ class FORUM_CTRL_Search extends OW_ActionController
                 $this->addComponent('search', new FORUM_CMP_ForumSearch(
                     array('scope' => 'all_forum', 'token' => $token, 'userToken' => $userToken))
                 );
+
+                $this->assign('backUrl', OW::getRouter()->urlForRoute('forum-default'));
                 break;
         }
 
@@ -413,6 +446,17 @@ class FORUM_CTRL_Search extends OW_ActionController
         $sortCtrl->addItem('date', $lang->text('forum', 'sort_by_date'), $sortUrl.'&sort=date', !$sortBy || $sortBy == 'date');
         $sortCtrl->addItem('relevance', $lang->text('forum', 'sort_by_relevance'), $sortUrl.'&sort=rel', $sortBy == 'rel');
         $this->addComponent('sort', $sortCtrl);
+
+        // add breadcrumb
+        $bcItems = array(
+            array(
+                'href' => OW::getRouter()->urlForRoute('forum-default'),
+                'label' => $lang->text('forum', 'forum_index')
+            )
+        );
+
+        $breadCrumbCmp = new BASE_CMP_Breadcrumb($bcItems);
+        $this->addComponent('breadcrumb', $breadCrumbCmp);
 
         $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
 

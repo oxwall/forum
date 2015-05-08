@@ -26,6 +26,13 @@ foreach ( $sql as $query )
     }
 }
 
+// add a new config
+$config = Updater::getConfigService();
+if ( !$config->configExists('forum', 'update_search_index_cron_busy') )
+{
+    $config->addConfig('forum', 'update_search_index_cron_busy', 0, 'Update search index queue is busy');
+}
+
 // put all forum groups into the search index
 $query = 'SELECT `id` FROM `' . OW_DB_PREFIX . 'forum_group`';
 $forumGroups = Updater::getDbo()->queryForList($query);
