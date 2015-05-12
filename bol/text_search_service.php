@@ -270,13 +270,13 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Get count of topics into all sections
+     * Get count of topics in all sections
      * 
      * @param string $token
      * @param integer $userId
      * @return integer
      */
-    public function countFindGlobalTopics( $text, $userId )
+    public function countGlobalTopics( $text, $userId )
     {
         $tags = $userId
             ? array('forum_topic_public_user_id_' . $userId)
@@ -286,7 +286,7 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
-     * Find topics into all sections
+     * Find topics in all sections
      * 
      * @param string $token
      * @param integer $page
@@ -308,6 +308,37 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
+     * Get count of topics in all sections
+     * 
+     * @param integer $userId
+     * @return integer
+     */
+    public function countGlobalTopicsByUser( $userId )
+    {
+        return OW::getTextSearchManager()->searchEntitiesCountByTags(array(
+            'forum_topic_public_user_id_' . $userId
+        ));
+    }
+
+    /**
+     * Find topics in all sections
+     * 
+     * @param integer $userId
+     * @param integer $page
+     * @param string $sortBy
+     * @return array
+     */
+    public function findGlobalTopicsByUser( $userId, $first, $limit, $sortBy = null )
+    {
+        // we can only sort by date here
+        $sort = OW_TextSearchManager::SORT_BY_DATE;
+
+        return OW::getTextSearchManager()->searchEntitiesByTags(array(
+            'forum_topic_public_user_id_' . $userId
+        ), $first, $limit, $sort);
+    }
+
+    /**
      * Get count of topics in section
      * 
      * @param string $token
@@ -315,7 +346,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countFindTopicsInSection( $text, $sectionId, $userId )
+    public function countTopicsInSection( $text, $sectionId, $userId )
     {
         $tags = $userId
             ? array('forum_topic_section_id_' . $sectionId . '_user_id_' . $userId)
@@ -349,6 +380,40 @@ class FORUM_BOL_TextSearchService
     }
 
     /**
+     * Get count of topics in section
+     * 
+     * @param integer $userId
+     * @param integer $sectionId
+     * @return integer
+     */
+    public function countTopicsInSectionByUser( $userId, $sectionId )
+    {
+        return OW::getTextSearchManager()->searchEntitiesCountByTags(array(
+            'forum_topic_section_id_' . $sectionId . '_user_id_' . $userId
+        ));
+    }
+
+    /**
+     * Find topics in section
+     * 
+     * @param integer $userId
+     * @param integer $sectionId
+     * @param integer $first
+     * @param integer $limit
+     * @param string $sortBy
+     * @return array
+     */
+    public function findTopicsInSectionByUser( $userId, $sectionId, $first, $limit, $sortBy = null )
+    {
+        // we can only sort by date here
+        $sort =  OW_TextSearchManager::SORT_BY_DATE;
+
+        return OW::getTextSearchManager()->searchEntitiesByTags( array(
+            'forum_topic_section_id_' . $sectionId . '_user_id_' . $userId
+        ), $first, $limit, $sort);
+    }
+
+    /**
      * Get count of topics in group
      * 
      * @param string $token
@@ -356,7 +421,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countFindTopicsInGroup( $text, $groupId, $userId )
+    public function countTopicsInGroup( $text, $groupId, $userId )
     {
         $tags = $userId
             ? array('forum_topic_group_id_' . $groupId . '_user_id_' . $userId)
@@ -387,6 +452,40 @@ class FORUM_BOL_TextSearchService
             : array('forum_topic_group_id_' . $groupId);
 
         return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
+    }
+
+    /**
+     * Get count of topics in group
+     * 
+     * @param integer $userId
+     * @param integer $groupId
+     * @return integer
+     */
+    public function countTopicsInGroupByUser( $userId, $groupId )
+    {
+        return OW::getTextSearchManager()->searchEntitiesCountByTags(array(
+            'forum_topic_group_id_' . $groupId . '_user_id_' . $userId
+        ));
+    }
+
+    /**
+     * Find topics in group
+     * 
+     * @param integer $userId
+     * @param integer $sectionId
+     * @param integer $first
+     * @param integer $limit
+     * @param string $sortBy
+     * @return array
+     */
+    public function findTopicsInGroupByUser( $userId, $groupId, $first, $limit, $sortBy = null )
+    {
+        // we can only sort by date here
+        $sort =  OW_TextSearchManager::SORT_BY_DATE;
+
+        return OW::getTextSearchManager()->searchEntitiesByTags( array(
+            'forum_topic_group_id_' . $groupId . '_user_id_' . $userId
+        ), $first, $limit, $sort);
     }
 
     /**
@@ -451,6 +550,67 @@ class FORUM_BOL_TextSearchService
         }
 
         return OW::getTextSearchManager()->searchEntities($keyword, $first, $limit, $tags, $sort, $sortDesc);
+    }
+
+    /**
+     * Get count of entities in advanced search
+     * 
+     * @param integer $userId
+     * @param array $parts
+     * @param string $period
+     * @param boolean $searchPosts
+     * @return integer
+     */
+    public function countAdvancedFindEntitiesByUser( $userId = null, $parts = array(), $period = null, $searchPosts = true )
+    {
+        // get tags list
+        $tags = $this->processAdvancedSearchTags($parts, $userId, $searchPosts);
+
+        // filter by period
+        if ( $period )
+        {
+            list($timeStart, $timeEnd) = $this->getAdvancedSearchPeriod($period);
+            return OW::getTextSearchManager()->searchEntitiesCountByTags($tags, $timeStart, $timeEnd); 
+        }
+
+        return OW::getTextSearchManager()->searchEntitiesCountByTags($tags);
+    }
+  
+    /**
+     * Advanced find entites
+     * 
+     * @param integer $userId
+     * @param integer $first
+     * @param integer $limit
+     * @param array $parts
+     * @param string $period
+     * @param string $sort (relevance|date)
+     * @param string $sortDirection (decrease|increase)
+     * @param boolean $searchPosts
+     * @return array
+     */
+    public function advancedFindEntitiesByUser( $userId, $first, $limit,  
+            $parts = array(), $period = null, $sort = null, $sortDirection = null, $searchPosts = true )
+    {
+        // get tags list
+        $tags = $this->processAdvancedSearchTags($parts, $userId, $searchPosts);
+
+        // we can sort here only by date
+        $sort = OW_TextSearchManager::SORT_BY_DATE;
+
+        $sortDesc = $sortDirection == 'decrease' 
+            ? true 
+            : false;
+
+        // filter by period
+        if ( $period )
+        {
+            list($timeStart, $timeEnd) = $this->getAdvancedSearchPeriod($period);
+            return OW::getTextSearchManager()->
+                    searchEntitiesByTags($tags, $first, $limit, $sort, $sortDesc, $timeStart, $timeEnd); 
+        }
+
+        return OW::getTextSearchManager()->searchEntitiesByTags($tags, $first, $limit, $sort, $sortDesc);
     }
 
     /**
@@ -587,7 +747,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countFindPostsInTopic( $text, $topicId, $userId )
+    public function countPostsInTopic( $text, $topicId, $userId )
     {
         $tags = $userId
             ? array('forum_post_topic_id_' . $topicId . '_user_id_' . $userId)
@@ -618,6 +778,40 @@ class FORUM_BOL_TextSearchService
             : array('forum_post_topic_id_' . $topicId);
 
         return OW::getTextSearchManager()->searchEntities( $text, $first, $limit, $tags, $sort);
+    }
+
+    /**
+     * Get count of posts in topic
+     * 
+     * @param integer $userId
+     * @param integer $topicId
+     * @return integer
+     */
+    public function countPostsInTopicByUser( $userId, $topicId )
+    {
+        return OW::getTextSearchManager()->searchEntitiesCountByTags(array(
+            'forum_post_topic_id_' . $topicId . '_user_id_' . $userId
+        ));
+    }
+
+    /**
+     * Find posts in topic
+     * 
+     * @param integer $userId
+     * @param integer $topicId
+     * @param integer $first
+     * @param integer $limit
+     * @param string $sortBy
+     * @return array
+     */
+    public function findPostsInTopicByUser( $userId, $topicId, $first, $limit, $sortBy = null )
+    {
+        // we can sort here only by date
+        $sort = OW_TextSearchManager::SORT_BY_DATE;
+
+        return OW::getTextSearchManager()->searchEntitiesByTags( array(
+            'forum_post_topic_id_' . $topicId . '_user_id_' . $userId
+        ), $first, $limit, $sort);
     }
 
     /**

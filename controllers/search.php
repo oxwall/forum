@@ -171,9 +171,9 @@ class FORUM_CTRL_Search extends OW_ActionController
 
         $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
 
-        if ( !mb_strlen($keyword) )
+        if ( !mb_strlen($keyword) && !mb_strlen($userName) )
         {
-            OW::getFeedback()->info(OW::getLanguage()->text('forum', 'please_enter_keyword'));
+            OW::getFeedback()->info(OW::getLanguage()->text('forum', 'please_enter_keyword_or_user_name'));
             $this->redirect(OW::getRouter()->urlForRoute('forum_advanced_search'));
         }
 
@@ -195,13 +195,27 @@ class FORUM_CTRL_Search extends OW_ActionController
 
         // make a search
         $searchInPosts = $searchIn == 'message' ? true : false;
-        $total = $this->forumService->
-                countAdvancedFindEntities($keyword, $userId, $parts, $period, $searchInPosts);
 
-        $topics = $total
-            ? $this->forumService->
-                advancedFindEntities($keyword, $page, $userId, $parts, $period, $sort, $sortDirection, $searchInPosts)
-            : array();
+        // search by keyword
+        if ( $keyword ) {
+            $total = $this->forumService->
+                    countAdvancedFindEntities($keyword, $userId, $parts, $period, $searchInPosts);
+
+            $topics = $total
+                ? $this->forumService->
+                    advancedFindEntities($keyword, $page, $userId, $parts, $period, $sort, $sortDirection, $searchInPosts)
+                : array();
+        }
+        else {
+            // search by user
+            $total = $this->forumService->
+                    countAdvancedFindEntitiesByUser($userId, $parts, $period, $searchInPosts);
+
+            $topics = $total
+                ? $this->forumService->
+                    advancedFindEntitiesByUser($userId, $page, $parts, $period, $sort, $sortDirection, $searchInPosts)
+                : array();
+        }
 
         // collect authors 
         $authors = array();
@@ -314,9 +328,9 @@ class FORUM_CTRL_Search extends OW_ActionController
         $sortBy = !empty($_GET['sort']) ? $_GET['sort'] : null; 
         $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
 
-        if ( !mb_strlen($token) )
+        if ( !mb_strlen($token) && !mb_strlen($userToken) )
         {
-            OW::getFeedback()->info(OW::getLanguage()->text('forum', 'please_enter_keyword'));
+            OW::getFeedback()->info(OW::getLanguage()->text('forum', 'please_enter_keyword_or_user_name'));
             $this->redirect(OW::getRouter()->urlForRoute('forum-default'));
         }
 
@@ -347,10 +361,20 @@ class FORUM_CTRL_Search extends OW_ActionController
                 $sortUrl = OW::getRouter()->
                         urlForRoute('forum_search_topic', array('topicId' => $topicId)) . '?' . $tokenQuery . $userTokenQuery;
 
-                $total = $this->forumService->countFindPostsInTopic($token, $topicId, $userId);
-                $topics = $total
-                    ? $this->forumService->findPostsInTopic($token, $topicId, $page, $sortBy, $userId)
-                    : array();
+                // search by keyword
+                if ( $token ) {
+                    $total = $this->forumService->countPostsInTopic($token, $topicId, $userId);
+                    $topics = $total
+                        ? $this->forumService->findPostsInTopic($token, $topicId, $page, $sortBy, $userId)
+                        : array();
+                }
+                else {
+                    // search by user name
+                    $total = $this->forumService->countPostsInTopicByUser($userId, $topicId);
+                    $topics = $total
+                        ? $this->forumService->findPostsInTopicByUser($userId, $topicId, $page, $sortBy)
+                        : array();
+                }
 
                 $this->addComponent('search', new FORUM_CMP_ForumSearch(
                     array('scope' => 'topic', 'token' => $token, 'userToken' => $userToken, 'topicId' => $topicId))
@@ -366,10 +390,20 @@ class FORUM_CTRL_Search extends OW_ActionController
                 $sortUrl = OW::getRouter()->
                         urlForRoute('forum_search_group', array('groupId' => $groupId)) . '?' . $tokenQuery . $userTokenQuery;
 
-                $total = $this->forumService->countFindTopicsInGroup($token, $groupId, $userId);
-                $topics = $total
-                    ? $this->forumService->findTopicsInGroup($token, $groupId, $page, $sortBy, $userId)
-                    : array();
+                // search by keyword
+                if ( $token ) {
+                    $total = $this->forumService->countTopicsInGroup($token, $groupId, $userId);
+                    $topics = $total
+                        ? $this->forumService->findTopicsInGroup($token, $groupId, $page, $sortBy, $userId)
+                        : array();
+                }
+                else {
+                    // search by user name
+                    $total = $this->forumService->countTopicsInGroupByUser($userId, $groupId);
+                    $topics = $total
+                        ? $this->forumService->findTopicsInGroupByUser($userId, $groupId, $page, $sortBy)
+                        : array();
+                }
 
                 $this->addComponent('search', new FORUM_CMP_ForumSearch(
                     array('scope' => 'group', 'token' => $token, 'userToken' => $userToken, 'groupId' => $groupId))
@@ -385,10 +419,20 @@ class FORUM_CTRL_Search extends OW_ActionController
                 $sortUrl = OW::getRouter()->
                         urlForRoute('forum_search_section', array('sectionId' => $sectionId)) . '?' . $tokenQuery . $userTokenQuery;
 
-                $total = $this->forumService->countFindTopicsInSection($token, $sectionId, $userId);
-                $topics = $total
-                    ? $this->forumService->findTopicsInSection($token, $sectionId, $page, $sortBy, $userId)
-                    : array();
+                // search by keyword
+                if ( $token ) {
+                    $total = $this->forumService->countTopicsInSection($token, $sectionId, $userId);
+                    $topics = $total
+                        ? $this->forumService->findTopicsInSection($token, $sectionId, $page, $sortBy, $userId)
+                        : array();
+                }
+                else {
+                    // search by user name
+                    $total = $this->forumService->countTopicsInSectionByUser($userId, $sectionId);
+                    $topics = $total
+                        ? $this->forumService->findTopicsInSectionByUser($userId, $sectionId, $page, $sortBy)
+                        : array();
+                }
 
                 $this->addComponent('search', new FORUM_CMP_ForumSearch(
                     array('scope' => 'section', 'sectionId' => $sectionId, 'token' => $token, 'userToken' => $userToken))
@@ -402,10 +446,21 @@ class FORUM_CTRL_Search extends OW_ActionController
             default :
             case 'global' :
                 $sortUrl = OW::getRouter()->urlForRoute('forum_search') . '?' . $tokenQuery . $userTokenQuery;
-                $total = $this->forumService->countFindGlobalTopics($token, $userId);
-                $topics = $total
-                    ? $this->forumService->findGlobalTopics($token, $page, $sortBy, $userId)
-                    : array();
+
+                // search by keyword
+                if ( $token ) {
+                    $total = $this->forumService->countGlobalTopics($token, $userId);
+                    $topics = $total
+                        ? $this->forumService->findGlobalTopics($token, $page, $sortBy, $userId)
+                        : array();
+                }
+                else {
+                    // search by user name
+                    $total = $this->forumService->countGlobalTopicsByUser($userId);
+                    $topics = $total
+                        ? $this->forumService->findGlobalTopicsByUser($userId, $page, $sortBy)
+                        : array();
+                }
 
                 $this->addComponent('search', new FORUM_CMP_ForumSearch(
                     array('scope' => 'all_forum', 'token' => $token, 'userToken' => $userToken))
