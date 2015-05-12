@@ -1408,11 +1408,11 @@ final class FORUM_BOL_ForumService
     /**
      * Process found topics
      * 
-     * @param string $token
      * @param array $topics
+     * @param string $token
      * @return array
      */
-    protected function processFoundTopics( $token, array $topics )
+    protected function processFoundTopics( array $topics, $token = null )
     {
         $topicsIds = array();
 
@@ -1441,7 +1441,7 @@ final class FORUM_BOL_ForumService
                 'postId' => $postDto->id,
                 'topicId' => $postDto->topicId,
                 'userId' => $postDto->userId,
-                'text' => $formatter->formatResult($text, array($token)) ,
+                'text' => $token ? $formatter->formatResult($text, array($token)) : $text,
                 'createStamp' => UTIL_DateTime::formatDate($postDto->createStamp),
                 'postUrl' => $this->getPostUrl($postDto->topicId, $postDto->id)
             );
@@ -1449,15 +1449,15 @@ final class FORUM_BOL_ForumService
 
         return $topics; 
     }
-    
+
     /**
      * Process found posts
      * 
-     * @param string $token
      * @param array $posts
+     * @param string $token
      * @return array
      */
-    protected function processFoundPosts( $token, $posts )
+    protected function processFoundPosts( $posts, $token = null  )
     {
         $postsIds = array();
 
@@ -1489,7 +1489,7 @@ final class FORUM_BOL_ForumService
                 'postId' => $post['id'],
                 'topicId' => $post['topicId'],
                 'userId' => $post['userId'],
-                'text' => $formatter->formatResult($text, array($token)) ,
+                'text' => $token ? $formatter->formatResult($text, array($token)) : $text,
                 'createStamp' => UTIL_DateTime::formatDate($post['createStamp']),
                 'postUrl' => $this->getPostUrl($post['topicId'], $post['id'])
             );
@@ -1499,7 +1499,7 @@ final class FORUM_BOL_ForumService
     }
 
     /**
-     * Get count of topics into all sections
+     * Get count of topics in all sections
      * 
      * @param string $token
      * @param integer $userId
@@ -1511,7 +1511,7 @@ final class FORUM_BOL_ForumService
     }
 
     /**
-     * Find topics into all sections
+     * Find topics in all sections
      * 
      * @param string $token
      * @param integer $page
@@ -1530,7 +1530,43 @@ final class FORUM_BOL_ForumService
 
         if ( $topics )
         {
-            return $this->processFoundTopics($token, $topics);
+            return $this->processFoundTopics($topics, $token);
+        }
+
+        return array();
+    }
+
+    /**
+     * Get count of topics in all sections
+     * 
+     * @param integer $userId
+     * @return integer
+     */
+    public function countFindGlobalTopicsByUser( $userId )
+    {
+        return $this->getTextSearchService()->countFindGlobalTopicsByUser($userId);
+    }
+
+    /**
+     * Find topics in all sections
+     * 
+     * @param integer $userId
+     * @param integer $page
+     * @param string $sortBy
+     * @return array
+     */
+    public function findGlobalTopicsByUser( $userId, $page, $sortBy = null )
+    {
+        $limit = $this->getTopicPerPageConfig();
+        $first = ( $page - 1 ) * $limit;
+
+        // make a search
+        $topics = $this->getTextSearchService()->
+                findGlobalTopicsByUser($userId, $first, $limit, $sortBy);
+
+        if ( $topics )
+        {
+            return $this->processFoundTopics($topics);
         }
 
         return array();
@@ -1570,7 +1606,45 @@ final class FORUM_BOL_ForumService
 
         if ( $topics )
         {
-            return $this->processFoundTopics($token, $topics);
+            return $this->processFoundTopics($topics, $token);
+        }
+
+        return array();
+    }
+
+    /**
+     * Get count of topics in section
+     * 
+     * @param integer $userId
+     * @param integer $sectionId     
+     * @return integer
+     */
+    public function countFindTopicsInSectionByUser( $userId, $sectionId )
+    {
+        return $this->getTextSearchService()->countFindTopicsInSectionByUser($userId, $sectionId);
+    }
+
+    /**
+     * Find topics in section
+     * 
+     * @param integer $userId
+     * @param integer $sectionId
+     * @param integer $page
+     * @param string $sortBy
+     * @return array
+     */
+    public function findTopicsInSectionByUser( $userId, $sectionId, $page, $sortBy = null )
+    {
+        $limit = $this->getTopicPerPageConfig();
+        $first = ( $page - 1 ) * $limit;
+
+        // make a search
+        $topics = $this->getTextSearchService()->
+                findTopicsInSectionByUser($userId, $sectionId, $first, $limit, $sortBy);
+
+        if ( $topics )
+        {
+            return $this->processFoundTopics($topics);
         }
 
         return array();
@@ -1610,7 +1684,45 @@ final class FORUM_BOL_ForumService
 
         if ( $topics )
         {
-            return $this->processFoundTopics($token, $topics);
+            return $this->processFoundTopics($topics, $token);
+        }
+
+        return array();
+    }
+
+    /**
+     * Get count of topics in group
+     *
+     * @param integer $userId
+     * @param integer $groupId
+     * @return integer
+     */
+    public function countFindTopicsInGroupByUser( $userId, $groupId )
+    {
+        return $this->getTextSearchService()->countFindTopicsInGroupByUser($userId, $groupId);
+    }
+
+    /**
+     * Find topics in group
+     * 
+     * @param integer $userId
+     * @param integer $groupId
+     * @param integer $page
+     * @param string $sortBy
+     * @return array
+     */
+    public function findTopicsInGroupByUser( $userId, $groupId, $page, $sortBy = null )
+    {
+        $limit = $this->getTopicPerPageConfig();
+        $first = ( $page - 1 ) * $limit;
+
+        // make a search
+        $topics = $this->getTextSearchService()->
+                findTopicsInGroupByUser($userId, $groupId, $first, $limit, $sortBy);
+
+        if ( $topics )
+        {
+            return $this->processFoundTopics($topics);
         }
 
         return array();
@@ -1662,13 +1774,65 @@ final class FORUM_BOL_ForumService
         if ( $entities )
         {
             return $searchPosts
-                ? $this->processFoundPosts($keyword, $entities)
-                : $this->processFoundTopics($keyword, $entities);
+                ? $this->processFoundPosts($entities, $keyword)
+                : $this->processFoundTopics($entities, $keyword);
         }
 
         return array();
     }
-    
+
+    /**
+     * Get count of entities in advanced search
+     * 
+     * @param integer $userId
+     * @param array $parts
+     * @param string $period
+     * @param boolean $searchPosts
+     * @return integer
+     */
+    public function countAdvancedFindEntitiesByUser( $userId, $parts = array(), $period = null, $searchPosts = true )
+    {
+        return $this->getTextSearchService()->
+                countAdvancedFindEntitiesByUser($userId, $parts, $period, $searchPosts);
+    }
+
+    /**
+     * Advanced find entites
+     * 
+     * @param integer $userId    
+     * @param integer $page
+     * @param array $parts
+     * @param string $period
+     * @param string $sort
+     * @param string $sortDirection
+     * @param boolean $searchPosts
+     * @return array
+     */
+    public function advancedFindEntitiesByUser( $userId, $page, 
+            $parts = array(), $period = null, $sort = null, $sortDirection = null, $searchPosts = true )
+    {
+        // per page
+        $limit = $searchPosts 
+            ? $this->getPostPerPageConfig()
+            : $this->getTopicPerPageConfig();
+
+        $first = ( $page - 1 ) * $limit;
+
+        $entities = $this->getTextSearchService()->
+                advancedFindEntitiesByUser($userId, $first, $limit, $parts, $period, $sort, $sortDirection, $searchPosts);
+
+        
+        // process entities
+        if ( $entities )
+        {
+            return $searchPosts
+                ? $this->processFoundPosts($entities)
+                : $this->processFoundTopics($entities);
+        }
+
+        return array();
+    }
+
     /**
      * Get count of posts in topic
      * 
@@ -1703,7 +1867,45 @@ final class FORUM_BOL_ForumService
 
         if ( $posts )
         {
-            return $this->processFoundPosts($token, $posts);
+            return $this->processFoundPosts($posts, $token);
+        }
+
+        return array();
+    }
+
+    /**
+     * Get count of posts in topic
+     * 
+     * @param integer $userId
+     * @param integer $topicId
+     * @return integer
+     */
+    public function countFindPostsInTopicByUser( $userId, $topicId )
+    {
+        return $this->getTextSearchService()->countFindPostsInTopicByUser($userId, $topicId);
+    }
+
+    /**
+     * Find posts in topic
+     * 
+     * @param integer $userId
+     * @param integer $topicId
+     * @param integer $page
+     * @param string $sortBy
+     * @return array
+     */
+    public function findPostsInTopicByUser( $userId, $topicId, $page, $sortBy = null )
+    {
+        $limit = $this->getTopicPerPageConfig();
+        $first = ( $page - 1 ) * $limit;
+
+        // make a search
+        $posts = $this->getTextSearchService()->
+                findPostsInTopicByUser($userId, $topicId, $first, $limit, $sortBy);
+
+        if ( $posts )
+        {
+            return $this->processFoundPosts($posts);
         }
 
         return array();
