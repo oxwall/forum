@@ -363,14 +363,14 @@ class FORUM_CTRL_Search extends OW_ActionController
 
                 // search by keyword
                 if ( $token ) {
-                    $total = $this->forumService->countFindPostsInTopic($token, $topicId, $userId);
+                    $total = $this->forumService->countPostsInTopic($token, $topicId, $userId);
                     $topics = $total
                         ? $this->forumService->findPostsInTopic($token, $topicId, $page, $sortBy, $userId)
                         : array();
                 }
                 else {
                     // search by user name
-                    $total = $this->forumService->countFindPostsInTopicByUser($userId, $topicId);
+                    $total = $this->forumService->countPostsInTopicByUser($userId, $topicId);
                     $topics = $total
                         ? $this->forumService->findPostsInTopicByUser($userId, $topicId, $page, $sortBy)
                         : array();
@@ -392,14 +392,14 @@ class FORUM_CTRL_Search extends OW_ActionController
 
                 // search by keyword
                 if ( $token ) {
-                    $total = $this->forumService->countFindTopicsInGroup($token, $groupId, $userId);
+                    $total = $this->forumService->countTopicsInGroup($token, $groupId, $userId);
                     $topics = $total
                         ? $this->forumService->findTopicsInGroup($token, $groupId, $page, $sortBy, $userId)
                         : array();
                 }
                 else {
                     // search by user name
-                    $total = $this->forumService->countFindTopicsInGroupByUser($userId, $groupId);
+                    $total = $this->forumService->countTopicsInGroupByUser($userId, $groupId);
                     $topics = $total
                         ? $this->forumService->findTopicsInGroupByUser($userId, $groupId, $page, $sortBy)
                         : array();
@@ -421,14 +421,14 @@ class FORUM_CTRL_Search extends OW_ActionController
 
                 // search by keyword
                 if ( $token ) {
-                    $total = $this->forumService->countFindTopicsInSection($token, $sectionId, $userId);
+                    $total = $this->forumService->countTopicsInSection($token, $sectionId, $userId);
                     $topics = $total
                         ? $this->forumService->findTopicsInSection($token, $sectionId, $page, $sortBy, $userId)
                         : array();
                 }
                 else {
                     // search by user name
-                    $total = $this->forumService->countFindTopicsInSectionByUser($userId, $sectionId);
+                    $total = $this->forumService->countTopicsInSectionByUser($userId, $sectionId);
                     $topics = $total
                         ? $this->forumService->findTopicsInSectionByUser($userId, $sectionId, $page, $sortBy)
                         : array();
@@ -449,14 +449,14 @@ class FORUM_CTRL_Search extends OW_ActionController
 
                 // search by keyword
                 if ( $token ) {
-                    $total = $this->forumService->countFindGlobalTopics($token, $userId);
+                    $total = $this->forumService->countGlobalTopics($token, $userId);
                     $topics = $total
                         ? $this->forumService->findGlobalTopics($token, $page, $sortBy, $userId)
                         : array();
                 }
                 else {
                     // search by user name
-                    $total = $this->forumService->countFindGlobalTopicsByUser($userId);
+                    $total = $this->forumService->countGlobalTopicsByUser($userId);
                     $topics = $total
                         ? $this->forumService->findGlobalTopicsByUser($userId, $page, $sortBy)
                         : array();

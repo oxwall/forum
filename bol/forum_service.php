@@ -1505,9 +1505,9 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countFindGlobalTopics( $token, $userId )
+    public function countGlobalTopics( $token, $userId )
     {
-        return $this->getTextSearchService()->countFindGlobalTopics($token, $userId);
+        return $this->getTextSearchService()->countGlobalTopics($token, $userId);
     }
 
     /**
@@ -1542,9 +1542,9 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countFindGlobalTopicsByUser( $userId )
+    public function countGlobalTopicsByUser( $userId )
     {
-        return $this->getTextSearchService()->countFindGlobalTopicsByUser($userId);
+        return $this->getTextSearchService()->countGlobalTopicsByUser($userId);
     }
 
     /**
@@ -1580,9 +1580,9 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countFindTopicsInSection( $token, $sectionId, $userId )
+    public function countTopicsInSection( $token, $sectionId, $userId )
     {
-        return $this->getTextSearchService()->countFindTopicsInSection($token, $sectionId, $userId);
+        return $this->getTextSearchService()->countTopicsInSection($token, $sectionId, $userId);
     }
 
     /**
@@ -1619,9 +1619,9 @@ final class FORUM_BOL_ForumService
      * @param integer $sectionId     
      * @return integer
      */
-    public function countFindTopicsInSectionByUser( $userId, $sectionId )
+    public function countTopicsInSectionByUser( $userId, $sectionId )
     {
-        return $this->getTextSearchService()->countFindTopicsInSectionByUser($userId, $sectionId);
+        return $this->getTextSearchService()->countTopicsInSectionByUser($userId, $sectionId);
     }
 
     /**
@@ -1658,9 +1658,9 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countFindTopicsInGroup( $token, $groupId, $userId )
+    public function countTopicsInGroup( $token, $groupId, $userId )
     {
-        return $this->getTextSearchService()->countFindTopicsInGroup($token, $groupId, $userId);
+        return $this->getTextSearchService()->countTopicsInGroup($token, $groupId, $userId);
     }
 
     /**
@@ -1697,9 +1697,9 @@ final class FORUM_BOL_ForumService
      * @param integer $groupId
      * @return integer
      */
-    public function countFindTopicsInGroupByUser( $userId, $groupId )
+    public function countTopicsInGroupByUser( $userId, $groupId )
     {
-        return $this->getTextSearchService()->countFindTopicsInGroupByUser($userId, $groupId);
+        return $this->getTextSearchService()->countTopicsInGroupByUser($userId, $groupId);
     }
 
     /**
@@ -1841,9 +1841,9 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countFindPostsInTopic( $token, $topicId, $userId )
+    public function countPostsInTopic( $token, $topicId, $userId )
     {
-        return $this->getTextSearchService()->countFindPostsInTopic($token, $topicId, $userId);
+        return $this->getTextSearchService()->countPostsInTopic($token, $topicId, $userId);
     }
 
     /**
@@ -1880,9 +1880,9 @@ final class FORUM_BOL_ForumService
      * @param integer $topicId
      * @return integer
      */
-    public function countFindPostsInTopicByUser( $userId, $topicId )
+    public function countPostsInTopicByUser( $userId, $topicId )
     {
-        return $this->getTextSearchService()->countFindPostsInTopicByUser($userId, $topicId);
+        return $this->getTextSearchService()->countPostsInTopicByUser($userId, $topicId);
     }
 
     /**

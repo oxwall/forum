@@ -276,7 +276,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countFindGlobalTopics( $text, $userId )
+    public function countGlobalTopics( $text, $userId )
     {
         $tags = $userId
             ? array('forum_topic_public_user_id_' . $userId)
@@ -313,7 +313,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countFindGlobalTopicsByUser( $userId )
+    public function countGlobalTopicsByUser( $userId )
     {
         return OW::getTextSearchManager()->searchEntitiesCountByTags(array(
             'forum_topic_public_user_id_' . $userId
@@ -346,7 +346,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countFindTopicsInSection( $text, $sectionId, $userId )
+    public function countTopicsInSection( $text, $sectionId, $userId )
     {
         $tags = $userId
             ? array('forum_topic_section_id_' . $sectionId . '_user_id_' . $userId)
@@ -386,7 +386,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $sectionId
      * @return integer
      */
-    public function countFindTopicsInSectionByUser( $userId, $sectionId )
+    public function countTopicsInSectionByUser( $userId, $sectionId )
     {
         return OW::getTextSearchManager()->searchEntitiesCountByTags(array(
             'forum_topic_section_id_' . $sectionId . '_user_id_' . $userId
@@ -421,7 +421,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countFindTopicsInGroup( $text, $groupId, $userId )
+    public function countTopicsInGroup( $text, $groupId, $userId )
     {
         $tags = $userId
             ? array('forum_topic_group_id_' . $groupId . '_user_id_' . $userId)
@@ -461,7 +461,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $groupId
      * @return integer
      */
-    public function countFindTopicsInGroupByUser( $userId, $groupId )
+    public function countTopicsInGroupByUser( $userId, $groupId )
     {
         return OW::getTextSearchManager()->searchEntitiesCountByTags(array(
             'forum_topic_group_id_' . $groupId . '_user_id_' . $userId
@@ -747,7 +747,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countFindPostsInTopic( $text, $topicId, $userId )
+    public function countPostsInTopic( $text, $topicId, $userId )
     {
         $tags = $userId
             ? array('forum_post_topic_id_' . $topicId . '_user_id_' . $userId)
@@ -787,7 +787,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $topicId
      * @return integer
      */
-    public function countFindPostsInTopicByUser( $userId, $topicId )
+    public function countPostsInTopicByUser( $userId, $topicId )
     {
         return OW::getTextSearchManager()->searchEntitiesCountByTags(array(
             'forum_post_topic_id_' . $topicId . '_user_id_' . $userId
