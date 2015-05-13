@@ -1269,7 +1269,7 @@ final class FORUM_BOL_ForumService
      */
     public function getPostPerPageConfig()
     {
-        return 20; // TODO: get config
+        return 10; // TODO: get config
     }
 
     /**

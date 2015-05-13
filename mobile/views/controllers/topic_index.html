@@ -1,0 +1,115 @@
+<div class="owm_forum_page owm_forum_section">
+    <div class="owm_dnd_widget">
+        <div class="owm_box">
+
+            <div class="owm_box_cap clearfix">
+                <h3>{$topicInfo.title}</h3>
+                <div class="owm_box_menu owm_float_left">
+                    <a class="owm_forum_nav_left" href="{url_for_route for="group-default:[groupId=>`$topicInfo.groupId`]"}"></a>
+                </div>
+
+                {if $canEdit}
+                    <div class="owm_view_more owm_float_right">
+                        {component 
+                            class="FORUM_MCMP_ForumTopicContextMenu" 
+                            topicInfo=$topicInfo 
+                            canEdit=$canEdit 
+                            canLock=$canLock 
+                            canSticky=$canSticky 
+                            canSubscribe=$canSubscribe
+                            isSubscribed=$isSubscribed
+                        }
+                    </div>
+                {/if}
+            </div>
+
+            {component class="FORUM_MCMP_ForumSearch" scope="topic" id="{$topicInfo.id}"}
+
+            {foreach from=$postList item=post}
+                <div class="{if $firstTopic->id == $post.id}owm_forum_topic owm_forum_topic_view{else}owm_forum_reply{/if}">
+                    <div class="owm_card clearfix">
+                        <div class="owm_card_cap owm_padding">
+                            <div class="owm_card_date">#{$post.number} {$post.createStamp}</div>
+                        </div>
+                        <div class="owm_card_content">
+                            <div class="owm_card_header owm_bg_color_3 clearfix">
+                                <div class="owm_card_user owm_card_user_context owm_padding">
+                                    <div class="owm_card_user_pic">
+                                        {decorator name="avatar_item" data=$avatars[$post.userId]}
+                                    </div>
+                                    <div class="owm_card_user_info">
+                                        <div class="owm_card_user_name">
+                                            <a href="{$avatars[$post.userId].url}">
+                                                <b>{$avatars[$post.userId].title}</b>
+                                            </a>
+                                            {if !empty($onlineUsers[$post.userId])}
+                                                <div class="owm_profile_online"></div>
+                                            {/if}
+                                            <div class="owm_card_user_cont">
+                                                <span class="owm_remark">&nbsp;</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="owm_card_body owm_bg_color_1">
+                                <div class="owm_post_content">
+                                    <p>{$post.text}</p>
+                                </div>
+                                {if $enableAttachments && isset($attachments[$post.id])}
+                                    <div class="owm_attachments owm_border owm_padding">
+                                        {foreach from=$attachments[$post.id] item='attm'}
+                                            <div class="owm_attach_info clearfix">
+                                                <label class="owm_attach_label owm_attach_icon">{$attm.fileName} <span>({$attm.fileSize}KB)</span></label>
+                                                <a href="{$attm.downloadUrl}" class="owm_attach_download owm_float_right"></a>
+                                            </div>
+                                        {/foreach}
+                                    </div>
+                                {/if}
+                            </div>
+                            {if !empty($post.edited) }
+                                <div class="owm_card_footer owm_bg_color_1">
+                                    <div class="owm_post_action owm_padding owm_remark">
+                                        {text key='forum+post_edited'}
+                                        <a href="{$avatars[$post.edited.userId].url}">{$avatars[$post.edited.userId].title}</a> {$post.edited.editStamp}
+                                    </div>
+                                </div>
+                            {/if}
+                        </div>
+                        <div class="owm_card_toolbar">
+                            <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix">
+                                <li class="owm_card_toolbar_quote"><a href="#">Quote</a></li>
+                                <li class="owm_card_toolbar_flag"><a href="#">Flag</a></li>
+                                <li class="owm_card_toolbar_share"><a href="#">Share</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            {/foreach}
+ 
+            {if isset($paging)}{$paging}{/if}
+
+            {if $canEdit}
+                <!-- new topic form -->
+                <div style="display: none">
+                    <div id="owm_forum_new_topic_form">
+                        {component class="FORUM_MCMP_ForumNewTopic" groupId="{$topicInfo.groupId}"} 
+                    </div>
+                </div>
+
+                {script}
+                    $("#forum_new_topic").bind("click", function(e){
+                        e.preventDefault();
+
+                        // show the form
+                        OWM.FloatBox({
+                            "title" : OWM.getLanguageText("forum", "new_topic_btn"),
+                            "content": $("#owm_forum_new_topic_form")
+                        });
+                    });
+                {/script}
+                <!-- end of new topic -->
+            {/if}
+        </div>
+    </div>
+</div>
