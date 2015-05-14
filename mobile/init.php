@@ -43,5 +43,9 @@ OW::getRouter()->addRoute(new OW_Route('forum_search_group', 'forum/:groupId/sea
 OW::getRouter()->addRoute(new OW_Route('forum_search_section', 'forum/section/:sectionId/search/', 'FORUM_MCTRL_Search', 'inSection'));
 OW::getRouter()->addRoute(new OW_Route('forum_search_topic', 'forum/topic/:topicId/search/', 'FORUM_MCTRL_Search', 'inTopic'));
 OW::getRouter()->addRoute(new OW_Route('add-topic', 'forum/addTopic/:groupId', 'FORUM_MCTRL_AddTopic', 'index'));
+OW::getRouter()->addRoute(new OW_Route('add-post', 'forum/addPost/:topicId', 'FORUM_MCTRL_AddPost', 'index'));
+OW::getRouter()->addRoute(new OW_Route('lock-topic', 'forum/ajaxLockTopic/:topicId', 'FORUM_MCTRL_Topic', 'ajaxLockTopic'));
+OW::getRouter()->addRoute(new OW_Route('sticky-topic', 'forum/ajaxStickyTopic/:topicId', 'FORUM_MCTRL_Topic', 'ajaxStickyTopic'));
+OW::getRouter()->addRoute(new OW_Route('subscribe-topic', 'forum/ajaxSubscribeTopic/:topicId', 'FORUM_MCTRL_Topic', 'ajaxSubscribeTopic'));
 
 FORUM_MCLASS_EventHandler::getInstance()->init();

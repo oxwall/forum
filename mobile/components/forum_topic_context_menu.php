@@ -107,6 +107,31 @@ class FORUM_MCMP_ForumTopicContextMenu extends OW_MobileComponent
     }
 
     /**
+     * Get multi actions label
+     * 
+     * @param array $actions
+     *      string id
+     *      string label
+     *      boolean hidden
+     * @return string
+     */
+    protected function getMultiActionsLabel(array $actions)
+    {
+        $actionLabel = null;
+
+        foreach($actions as $action)
+        {
+            $hidden = $action['hidden']
+                ? 'style="display:none" ' 
+                : null;
+
+            $actionLabel .= '<span ' . $hidden . 'id="' . $action['id'] . '">'   . $action['label']. '</span>';
+        }
+
+        return $actionLabel;
+    }
+
+    /**
      * Render component
      * 
      * @return type
@@ -130,56 +155,67 @@ class FORUM_MCMP_ForumTopicContextMenu extends OW_MobileComponent
 
         if ( $this->canLock )
         {
-            $topicLocked = !empty($this->topicInfo['locked']);
-
             $items[] = array(
                 "group" => 'forum',
-                'label' => $topicLocked 
+                'label' => !empty($this->topicInfo['locked'])
                     ? OW::getLanguage()->text('forum', 'unlock_topic')
                     : OW::getLanguage()->text('forum', 'lock_topic'),
                 'order' => 2,
                 'class' => null,
                 'url' => null,
-                'id' => $topicLocked
-                    ? 'forum_unlock_topic'
-                    : 'forum_lock_topic',
-                'attributes' => array()
+                'id' => !empty($this->topicInfo['locked']) 
+                    ? 'unlock_topic' 
+                    : 'lock_topic'
             );
         }
 
         if ( $this->canSticky )
         {
-            $topicSticky = !empty($this->topicInfo['sticky']);
+            $label = $this->getMultiActionsLabel(array(
+                array(
+                    'id' => 'sticky_topic',
+                    'label' => OW::getLanguage()->text('forum', 'sticky_topic'),
+                    'hidden' => !empty($this->topicInfo['sticky'])
+                ),
+                array(
+                    'id' => 'unsticky_topic',
+                    'label' => OW::getLanguage()->text('forum', 'unsticky_topic'),
+                    'hidden' => empty($this->topicInfo['sticky'])
+                )
+            ));
 
             $items[] = array(
                 "group" => 'forum',
-                'label' => $topicSticky 
-                    ? OW::getLanguage()->text('forum', 'unsticky_topic')
-                    : OW::getLanguage()->text('forum', 'sticky_topic'),
+                'label' => $label,
                 'order' => 3,
                 'class' => null,
                 'url' => null,
-                'id' => $topicSticky
-                    ? 'forum_unsticky_topic'
-                    : 'forum_sticky_topic',
-                'attributes' => array()
+                'id' => null
             );
         }
 
         if ( $this->canSubscribe )
         {
+            $label = $this->getMultiActionsLabel(array(
+                array(
+                    'id' => 'subscribe_topic',
+                    'label' => OW::getLanguage()->text('forum', 'subscribe'),
+                    'hidden' => $this->isSubscribed
+                ),
+                array(
+                    'id' => 'unsubscribe_topic',
+                    'label' => OW::getLanguage()->text('forum', 'unsubscribe'),
+                    'hidden' => !$this->isSubscribed
+                )
+            ));
+
             $items[] = array(
                 "group" => 'forum',
-                'label' => $this->isSubscribed 
-                    ? OW::getLanguage()->text('forum', 'unsubscribe')
-                    : OW::getLanguage()->text('forum', 'subscribe'),
+                'label' => $label,
                 'order' => 4,
                 'class' => null,
                 'url' => null,
-                'id' => $this->isSubscribed
-                    ? 'forum_unsubscribe_topic'
-                    : 'forum_subscribe_topic',
-                'attributes' => array()
+                'id' => null
             );
         }
 

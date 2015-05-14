@@ -85,95 +85,129 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         //update user read info
         $this->forumService->setTopicRead($topicDto->id, $userId);
 
-        $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
-
         $topicInfo = $this->forumService->getTopicInfo($topicDto->id);
-        $postCount = $this->forumService->findTopicPostCount($topicDto->id);
-        $postList  = $postCount 
-            ? $this->forumService->getTopicPostList($topicDto->id, $page)
-            : array();
-
-        OW::getEventManager()->trigger(new OW_Event('forum.topic_post_list', array('list' => $postList)));
-
-        if ( !$postList )
-        {
-            throw new Redirect404Exception();
-        }
-
-        // process list of posts
-        $iteration = 0;
-        $userIds = array();
-        $postIds = array();
-
-        foreach ( $postList as &$post)
-        {
-            $post['text'] = UTIL_HtmlTag::autoLink($post['text']);
-            $post['permalink'] = $this->forumService->getPostUrl($post['topicId'], $post['id'], true, $page);
-            $post['number'] = ($page - 1) * $this->forumService->getPostPerPageConfig() + $iteration + 1;
-
-            // get list of users
-            if ( !in_array($post['userId'], $userIds) )
-            {
-                $userIds[$post['userId']] = $post['userId'];
-            }
-
-            if ( count($post['edited']) && !in_array($post['edited']['userId'], $userIds) )
-            {
-                $userIds[$post['edited']['userId']] = $post['edited']['userId'];
-            }
-
-            $iteration++;
-            array_push($postIds, $post['id']);
-        }
-
+        $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
         $canEdit = OW::getUser()->isAuthorized('forum', 'edit') || $isModerator ? true : false;
-        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
-
-        // paginate
-        $perPage = $this->forumService->getPostPerPageConfig();
-        $pageCount = ($postCount) ? ceil($postCount / $perPage) : 1;
-        $paging = new BASE_CMP_PagingMobile($page, $pageCount, $perPage);
-
-        //printVar($avatars);exit;
-        //printVar($postList);exit;
-        //printVar($this->forumService->findTopicFirstPost($topicDto->id));
-        //printVar($topicInfo);
 
         // assign view variables
         $this->assign('topicInfo', $topicInfo);
-        $this->assign('postList', $postList);
-        $this->assign('onlineUsers', BOL_UserService::getInstance()->findOnlineStatusForUserList($userIds));
-        $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($userIds));
-        $this->assign('enableAttachments', $enableAttachments);        
-        $this->assign('paging', $paging->render());
-        $this->assign('firstTopic', $this->forumService->findTopicFirstPost($topicDto->id));
+        $this->assign('page', $page);
         $this->assign('canEdit', $canEdit);
+        $this->assign('canPost', $canEdit);
         $this->assign('canLock', $isModerator);
         $this->assign('canSticky', $isModerator);
         $this->assign('canSubscribe', OW::getUser()->isAuthorized('forum', 'subscribe'));
-        $this->assign('isSubscribed', $userId && FORUM_BOL_SubscriptionService::getInstance()->isUserSubscribed($userId, $topicDto->id));
+        $this->assign('isSubscribed', $userId 
+                && FORUM_BOL_SubscriptionService::getInstance()->isUserSubscribed($userId, $topicDto->id));
 
-//$this->assign('canPost', OW::getUser()->isAuthorized('forum', 'edit'));
-        //$this->assign('isModerator', $isModerator);
-        
-
-        if ( $enableAttachments )
-        {
-            $this->assign('attachments', 
-                    FORUM_BOL_PostAttachmentService::getInstance()->findAttachmentsByPostIdList($postIds));
-        }
-
+        // set current page settings
         OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_topic'));
         OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_topic'));
     }
-}
 
-        
-        /*
-                $isOwner = ( $topicDto->userId == $userId ) ? true : false;
-        $canEdit = $isOwner || $isModerator;
-        $canPost = OW::getUser()->isAuthorized('forum', 'edit');
-        $canMoveToHidden = BOL_AuthorizationService::getInstance()->isActionAuthorized('forum', 'move_topic_to_hidden') && $isModerator;
-        $canLock = $canSticky = $isModerator;
-*/
+    /**
+     * This action subscribe or unsubscribe the topic
+     *
+     * @param array $params
+     */
+    public function ajaxSubscribeTopic( array $params )
+    {
+        $result  = false;
+        $topicId = !empty($params['topicId']) ? (int) $params['topicId'] : -1;
+        $userId = OW::getUser()->getId();
+
+        if ( OW::getRequest()->isPost() ) 
+        {
+            $subscribeService = FORUM_BOL_SubscriptionService::getInstance();
+            $topicDto = $this->forumService->findTopicById($topicId);
+
+            if ( $topicDto )
+            {
+                if ( OW::getUser()->isAuthorized('forum', 'subscribe') )
+                {
+                    if ( !$subscribeService->isUserSubscribed($userId, $topicId) )
+                    {
+                        $subscription = new FORUM_BOL_Subscription;
+                        $subscription->userId = $userId;
+                        $subscription->topicId = $topicId;
+
+                        $subscribeService->addSubscription($subscription);
+                    }
+                    else
+                    {
+                        $subscribeService->deleteSubscription($userId, $topicId);
+                    }
+
+                    $result = true;
+                }
+            }
+        }
+
+        die(json_encode(array(
+            'result' => $result 
+        )));
+    }
+
+    /**
+     * This action locks or unlocks the topic
+     *
+     * @param array $params
+     */
+    public function ajaxLockTopic( array $params )
+    {
+        $result  = false;
+        $topicId = !empty($params['topicId']) ? (int) $params['topicId'] : -1;
+
+        if ( OW::getRequest()->isPost() ) 
+        {
+            $isModerator = OW::getUser()->isAuthorized('forum');
+            $topicDto = $this->forumService->findTopicById($topicId);
+
+            if ( $topicDto )
+            {
+                if ( $isModerator )
+                {
+                    $topicDto->locked = ($topicDto->locked) ? 0 : 1;
+                    $this->forumService->saveOrUpdateTopic($topicDto);
+                    $result = true;
+                }
+            }
+        }
+
+        die(json_encode(array(
+            'result' => $result 
+        )));
+    }
+
+    /**
+     * This action sticky or unsticky the topic
+     *
+     * @param array $params
+     */
+    public function ajaxStickyTopic( array $params )
+    {
+        $result  = false;
+        $topicId = !empty($params['topicId']) ? (int) $params['topicId'] : -1;
+
+        if ( OW::getRequest()->isPost() ) 
+        {
+            $isModerator = OW::getUser()->isAuthorized('forum');
+            $topicDto = $this->forumService->findTopicById($topicId);
+
+            if ( $topicDto )
+            {
+                if ( $isModerator )
+                {
+                    $topicDto->sticky = ($topicDto->sticky) ? 0 : 1;
+                    $this->forumService->saveOrUpdateTopic($topicDto);
+                    $result = true;
+                }
+            }
+        }
+
+        die(json_encode(array(
+            'result' => $result 
+        )));
+    }
+}

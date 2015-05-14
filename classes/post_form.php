@@ -33,93 +33,52 @@
  * @package ow.ow_plugins.forum
  * @since 1.7.2
  */
-class FORUM_CLASS_TopicForm extends Form
+class FORUM_CLASS_PostForm extends Form
 {
     /**
-     * Min title length
+     * Min text length
      */
-    const MIN_TITLE_LENGTH = 1;
+    const MIN_TEXT_LENGTH = 1;
 
     /**
-     * Max title length
+     * Max text length
      */
-    const MAX_TITLE_LENGTH = 255;
+    const MAX_TEXT_LENGTH = 65535;
 
     /**
-     * Min post length
-     */
-    const MIN_POST_LENGTH = 1;
-
-    /**
-     * Max post length
-     */
-    const MAX_POST_LENGTH = 65535;
-
-    /**
-     * Title invitation
+     * Text invitation
      * @var string
      */
-    protected $titleInvitation;
+    protected $textInvitation;
 
     /**
      * Class constructor
      * 
      * @param string $name
      * @param string $attachmentUid
-     * @param array $groupSelect
-     * @param integer $groupId
+     * @param integer $topicId
      * @param boolean $mobileWysiwyg
-     * @param boolean $isSectionHidden
      */
     public function __construct(
-            $name, $attachmentUid, 
-            array $groupSelect, 
-            $groupId = null, 
-            $mobileWysiwyg = false, 
-            $isSectionHidden  = false
+            $name, 
+            $attachmentUid, 
+            $topicId, 
+            $mobileWysiwyg = false
     ) {
 
         parent::__construct($name);
         $lang = OW::getLanguage();
+
+        $topicIdField = new HiddenField('topic');
+        $topicIdField->setValue($topicId);
+        $this->addElement($topicIdField);
 
         // attachments
         $attachmentUidField = new HiddenField('attachmentUid');
         $attachmentUidField->setValue($attachmentUid);
         $this->addElement($attachmentUidField);
 
-        // title
-        $titleField = new TextField('title');
-        $titleField->setRequired(true);
-        $sValidator = new StringValidator(self::MIN_TITLE_LENGTH, self::MAX_TITLE_LENGTH);
-        $sValidator->setErrorMessage($lang->
-                text('forum', 'chars_limit_exceeded', array('limit' => self::MAX_TITLE_LENGTH)));
-
-        $titleField->addValidator($sValidator);
-        $this->addElement($titleField);
-
-        // group
-        if ( $isSectionHidden )
-        {
-            $groupField = new HiddenField('group');
-            $groupField->setValue($groupId);
-        }
-        else
-        {
-            $groupField = new ForumSelectBox('group');
-            $groupField->setOptions($groupSelect);
-
-            if ( $groupId )
-            {
-                $groupField->setValue($groupId);
-            }
-
-            $groupField->setRequired(true);
-            $groupField->addValidator(new IntValidator());
-        }
-
-        $this->addElement($groupField);
-
-        // post
+        // text
         if ( $mobileWysiwyg )
         {
             $textField = new Textarea('text');
@@ -133,31 +92,25 @@ class FORUM_CLASS_TopicForm extends Form
         }
 
         $textField->setRequired(true);
-        $sValidator = new StringValidator(self::MIN_POST_LENGTH, self::MAX_POST_LENGTH);
-        $sValidator->setErrorMessage($lang->text('forum', 'chars_limit_exceeded', array('limit' => self::MAX_POST_LENGTH)));
+        $sValidator = new StringValidator(self::MIN_TEXT_LENGTH, self::MAX_TEXT_LENGTH);
+        $sValidator->setErrorMessage($lang->text('forum', 'chars_limit_exceeded', array('limit' => self::MAX_TEXT_LENGTH)));
         $textField->addValidator($sValidator);
         $this->addElement($textField);
 
-        // subscribe
-        $subscribeField = new CheckboxField('subscribe');
-        $subscribeField->setLabel($lang->text('forum', 'subscribe'));
-        $subscribeField->setValue(true);
-        $this->addElement($subscribeField);
-
         // submit
-        $submit = new Submit('post');
+        $submit = new Submit('submit');
         $submit->setValue($lang->text('forum', 'add_post_btn'));
         $this->addElement($submit);
     }
 
     /**
-     * Set title invitation
+     * Set text invitation
      * 
      * @param string $invitation
      * @return void
      */
-    public function setTitleInvitation($invitation)
+    public function setTextInvitation($invitation)
     {
-        $this->getElement('title')->setHasInvitation(true)->setInvitation($invitation);
+        $this->getElement('text')->setHasInvitation(true)->setInvitation($invitation);
     }
 }

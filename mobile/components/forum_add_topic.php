@@ -30,13 +30,13 @@
  */
 
 /**
- * Forum group class.
+ * Forum add topic class.
  *
  * @author Alex Ermashev <alexermashev@gmail.com>
  * @package ow.ow_plugins.forum.mobile.components
  * @since 1.0
  */
-class FORUM_MCMP_ForumNewTopic extends OW_MobileComponent
+class FORUM_MCMP_ForumAddTopic extends OW_MobileComponent
 {
     /**
      * Class constructor
@@ -89,5 +89,9 @@ class FORUM_MCMP_ForumNewTopic extends OW_MobileComponent
         // assign view variables
         $this->assign('enableAttachments', $enableAttachments);
         $this->assign('attachmentUid', $attachmentUid);
+
+        // include js files
+        OW::getDocument()->addScript(OW::
+                getPluginManager()->getPlugin('forum')->getStaticJsUrl() . 'mobile_attachment.js');
     }
 }

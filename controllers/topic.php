@@ -551,74 +551,8 @@ class FORUM_CTRL_Topic extends OW_ActionController
                     throw new AuthenticateException();
                 }
 
-                $postDto = new FORUM_BOL_Post();
-                $postDto->topicId = $data['topic'];
-                $postDto->userId = OW::getUser()->getId();
-                $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($data['text'], array('form', 'input', 'button'), null, true));
-
-                $postDto->createStamp = time();
-                $this->forumService->saveOrUpdatePost($postDto);
-
-                $topicDto->lastPostId = $postDto->getId();
-                $this->forumService->saveOrUpdateTopic($topicDto);
-
-                $this->forumService->deleteByTopicId($topicId);
-
-                $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
-
-                if ( $enableAttachments )
-                {
-                    $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $data['attachmentUid']);
-
-                    if ( $filesArray )
-                    {
-                        $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
-                        $skipped = 0;
-
-                        foreach ( $filesArray as $file )
-                        {
-                            $attachmentDto = new FORUM_BOL_PostAttachment();
-                            $attachmentDto->postId = $postDto->id;
-                            $attachmentDto->fileName = $file['dto']->origFileName;
-                            $attachmentDto->fileNameClean = $file['dto']->fileName;
-                            $attachmentDto->fileSize = $file['dto']->size * 1024;
-                            $attachmentDto->hash = uniqid();
-
-                            $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
-
-                            if ( !$added )
-                            {
-                                $skipped++;
-                            }
-                        }
-
-                        BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
-
-                        if ( $skipped )
-                        {
-                            OW::getFeedback()->warning(OW::getLanguage()->text('forum', 'not_all_attachments_added'));
-                        }
-                    }
-                }
-
-                $postUrl = $this->forumService->getPostUrl($topicId, $postDto->id);
-
-                $event = new OW_Event('forum.add_post', array('postId' => $postDto->id, 'topicId' => $topicId, 'userId' => $postDto->userId));
-                OW::getEventManager()->trigger($event);
-
-                $forumGroup = $this->forumService->findGroupById($topicDto->groupId);
-                if ( $forumGroup )
-                {
-                    $forumSection = $this->forumService->findSectionById($forumGroup->sectionId);
-                    if ( $forumSection )
-                    {
-                        $pluginKey = $forumSection->isHidden ? $forumSection->entity : 'forum';
-                        $action = $forumSection->isHidden ? 'add_topic' : 'edit';
-                        BOL_AuthorizationService::getInstance()->trackAction($pluginKey, $action);
-                    }
-                }
-
-                $this->redirect($postUrl);
+                $postDto = $this->forumService->addPost($topicDto, $data);
+                $this->redirect($this->forumService->getPostUrl($topicId, $postDto->id));
             }
         }
         else
@@ -979,35 +913,17 @@ class FORUM_CTRL_Topic extends OW_ActionController
      */
     private function generateAddPostForm( $topicId, $uid )
     {
-        $form = new Form('add-post-form');
-        $form->setEnctype('multipart/form-data');
+        $form = new FORUM_CLASS_PostForm(
+            'add-post-form', 
+            $uid, 
+            $topicId,
+            false
+        );
 
-        $lang = OW::getLanguage();
+        $form->setAction(OW::getRouter()->
+                urlForRoute('add-post', array('topicId' => $topicId, 'uid' => $uid)));
 
-        $addPostUrl = OW::getRouter()->urlForRoute('add-post', array('topicId' => $topicId, 'uid' => $uid));
-        $form->setAction($addPostUrl);
-
-        $topicIdField = new HiddenField('topic');
-        $topicIdField->setValue($topicId);
-        $form->addElement($topicIdField);
-
-        $attachmentUid = new HiddenField('attachmentUid');
-        $attachmentUid->setValue($uid);
-        $attachmentUid->setRequired(true);
-        $form->addElement($attachmentUid);
-
-        $btnSet = array(BOL_TextFormatService::WS_BTN_IMAGE, BOL_TextFormatService::WS_BTN_VIDEO, BOL_TextFormatService::WS_BTN_HTML);
-        $postText = new WysiwygTextarea('text', $btnSet);
-        $postText->setRequired(true);
-        $sValidator = new StringValidator(1, 50000);
-        $sValidator->setErrorMessage($lang->text('forum', 'chars_limit_exceeded', array('limit' => 50000)));
-        $postText->addValidator($sValidator);
-        $form->addElement($postText);
-
-        $submit = new Submit('submit');
-        $submit->setValue($lang->text('forum', 'add_post_btn'));
-        $form->addElement($submit);
-
+        $this->addForm($form);
         return $form;
     }
 

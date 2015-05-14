@@ -30,13 +30,13 @@
  */
 
 /**
- * Forum add topic controller
+ * Forum add post controller
  *
  * @author Alex Ermashev <alexermashev@gmail.com>
  * @package ow.ow_plugins.forum.mobile.controllers
  * @since 1.0
  */
-class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
+class FORUM_MCTRL_AddPost extends FORUM_MCTRL_AbstractForum
 {
     /**
      * Controller's default action
@@ -46,6 +46,11 @@ class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
      */
     public function index( array $params = null )
     {
+        if ( !isset($params['topicId']) || !($topicId = (int) $params['topicId']) )
+        {
+            throw new Redirect404Exception();
+        }
+
         if ( !OW::getUser()->isAuthenticated() )
         {
             throw new AuthenticateException();
@@ -58,17 +63,19 @@ class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
             throw new AuthorizationException($status['msg']);
         }
 
-        $backGroupId = isset($params['groupId']) && (int) $params['groupId'] 
-            ? (int) $params['groupId'] 
-            : -1;
+        // get topic info
+        $topicDto = $this->forumService->findTopicById($topicId);
 
-        $userId = OW::getUser()->getId();
-
-        $form = new FORUM_CLASS_TopicForm(
-            "topic_form", 
+        if ( !$topicDto )
+        {
+            throw new Redirect404Exception();
+        }
+        
+        // get a form instance
+        $form = new FORUM_CLASS_PostForm(
+            'post_form', 
             uniqid(), 
-            $this->forumService->getGroupSelectList(0, false, $userId), 
-            $backGroupId, 
+            $topicDto->id, 
             true
         );
 
@@ -77,30 +84,17 @@ class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
         {
             $data = $form->getValues();
 
-            $forumGroupId = !empty($data['group']) ? $data['group'] : -1;
-            $forumGroup   = $this->forumService->getGroupInfo($forumGroupId);
-            $forumSection = $forumGroup 
-                ? $this->forumService->findSectionById($forumGroup->sectionId)
-                : null;
-
-            // you cannot add new topics in hidden sections
-            if ( !$forumGroup || $forumSection->isHidden )
+            if ( $data['topic'] && $data['topic'] == $topicDto->id && !$topicDto->locked )
             {
-                throw new Redirect404Exception();
+                $postDto = $this->forumService->addPost($topicDto, $data);
+                return $this->redirect($this->forumService->getPostUrl($topicDto->id, $postDto->id));
             }
-
-            $isHidden = $forumSection->isHidden ? true : false;            
-            $topicDto = $this->forumService->addTopic($forumGroup, $isHidden, $userId, $data);
-
-            $this->redirect(OW::getRouter()->
-                        urlForRoute('topic-default', array('topicId' => $topicDto->id)));
         }
 
         OW::getFeedback()->
                 error(OW::getLanguage()->text('base', 'form_validate_common_error_message'));
 
-        // an error occured
         $this->redirect(OW::getRouter()->
-                        urlForRoute('group-default', array('groupId' => $backGroupId)));
+                        urlForRoute('topic-default', array('topicId' => $topicDto->id)));
     }
 }

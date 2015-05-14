@@ -30,8 +30,8 @@
 
             {if $canEdit}
                 <div style="display: none">
-                    <div id="owm_forum_new_topic_form">
-                        {component class="FORUM_MCMP_ForumNewTopic" groupId="{$group->id}"} 
+                    <div id="forum_new_topic_form">
+                        {component class="FORUM_MCMP_ForumAddTopic" groupId="{$group->id}"} 
                     </div>
                 </div>
             {/if}
@@ -47,7 +47,7 @@
             // show the form
             OWM.FloatBox({
                 "title" : OWM.getLanguageText("forum", "new_topic_btn"),
-                "content": $("#owm_forum_new_topic_form")
+                "content": $("#forum_new_topic_form")
             });
         });
     {/script}

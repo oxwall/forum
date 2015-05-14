@@ -946,12 +946,91 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Add post
+     * 
+     * @param FORUM_BOL_TopicDto $topicDto
+     * @param array $data
+     *      string text
+     *      string attachmentUid
+     * @return FORUM_BOL_Post
+     */
+    public function addPost($topicDto, array $data)
+    {
+        $postDto = new FORUM_BOL_Post();
+        $postDto->topicId = $topicDto->id;
+        $postDto->userId = OW::getUser()->getId();
+        $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($data['text'], array('form', 'input', 'button'), null, true));
+
+        $postDto->createStamp = time();
+        $this->saveOrUpdatePost($postDto);
+
+        $topicDto->lastPostId = $postDto->getId();
+        $this->saveOrUpdateTopic($topicDto);
+
+        $this->deleteByTopicId($topicDto->id);
+
+        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
+
+        if ( $enableAttachments )
+        {
+            $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $data['attachmentUid']);
+
+            if ( $filesArray )
+            {
+                $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
+                $skipped = 0;
+
+                foreach ( $filesArray as $file )
+                {
+                    $attachmentDto = new FORUM_BOL_PostAttachment();
+                    $attachmentDto->postId = $postDto->id;
+                    $attachmentDto->fileName = $file['dto']->origFileName;
+                    $attachmentDto->fileNameClean = $file['dto']->fileName;
+                    $attachmentDto->fileSize = $file['dto']->size * 1024;
+                    $attachmentDto->hash = uniqid();
+
+                    $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
+
+                    if ( !$added )
+                    {
+                        $skipped++;
+                    }
+                }
+
+                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
+            }
+        }
+
+        $event = new OW_Event('forum.add_post', array('postId' => $postDto->id, 'topicId' => $topicDto->id, 'userId' => $postDto->userId));
+        OW::getEventManager()->trigger($event);
+
+        $forumGroup = $this->findGroupById($topicDto->groupId);
+        if ( $forumGroup )
+        {
+            $forumSection = $this->findSectionById($forumGroup->sectionId);
+            if ( $forumSection )
+            {
+                $pluginKey = $forumSection->isHidden ? $forumSection->entity : 'forum';
+                $action = $forumSection->isHidden ? 'add_topic' : 'edit';
+                BOL_AuthorizationService::getInstance()->trackAction($pluginKey, $action);
+            }
+        }
+
+        return $postDto;
+    }
+
+    /**
      * Add topic 
      * 
      * @param FORUM_BOL_Group $forumGroup
      * @param boolean $isHidden
      * @param integer $userId
      * @param array $data
+     *      integer group
+     *      string title
+     *      string text
+     *      string attachmentUid
+     *      integer subscribe
      * @param object $forumSection
      * @return FORUM_BOL_Topic
      */
@@ -1269,7 +1348,7 @@ final class FORUM_BOL_ForumService
      */
     public function getPostPerPageConfig()
     {
-        return 10; // TODO: get config
+        return 20; // TODO: get config
     }
 
     /**
