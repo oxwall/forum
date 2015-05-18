@@ -53,6 +53,14 @@ class FORUM_MCMP_ForumPost extends OW_MobileComponent
         $page           = !empty($params['page']) ? $params['page'] : 1;
         $topicInfo      = !empty($params['topicInfo']) ? $params['topicInfo'] : array();
 
+        $canEdit = !empty($params['canEdit'])     
+            ? (bool) $params['canEdit'] 
+            : false;
+
+        $canPost = !empty($params['canPost'])     
+            ? (bool) $params['canPost'] 
+            : false;
+
         $postCount = $forumService->findTopicPostCount($topicInfo['id']);
         $postList  = $postCount 
             ? $forumService->getTopicPostList($topicInfo['id'], $page)
@@ -106,6 +114,8 @@ class FORUM_MCMP_ForumPost extends OW_MobileComponent
         $this->assign('enableAttachments', $enableAttachments);        
         $this->assign('paging', $paging->render());
         $this->assign('firstTopic', $forumService->findTopicFirstPost($topicInfo['id']));
+        $this->assign('canEdit', $canEdit);
+        $this->assign('canPost', $canPost);
 
         if ( $enableAttachments )
         {

@@ -1,5 +1,8 @@
+{assign var="canQuote" value=!$topicInfo.locked && ($canEdit || $canPost)}
+
 {foreach from=$postList item=post}
     <div class="{if $firstTopic->id == $post.id}owm_forum_topic owm_forum_topic_view{else}owm_forum_reply{/if}" id="post-{$post.id}">
+        {add_content key="forum.before_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
         <div class="owm_card clearfix">
             <div class="owm_card_cap owm_padding">
                 <div class="owm_card_date">#{$post.number} {$post.createStamp}</div>
@@ -51,13 +54,35 @@
             </div>
             <div class="owm_card_toolbar">
                 <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix">
-                    <li class="owm_card_toolbar_quote"><a href="#">Quote</a></li>
+                    {if $canQuote }
+                        <li class="owm_card_toolbar_quote" data-id="{$post.id}"><a href="#">Quote</a></li>
+                    {/if}
                     <li class="owm_card_toolbar_flag"><a href="#">Flag</a></li>
                     <li class="owm_card_toolbar_share"><a href="#">Share</a></li>
                 </ul>
             </div>
+            {add_content key="forum.after_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
+ 
+            {if $firstTopic->id == $post.id}
+                {add_content key='forum.topic.content.after_first_post'}
+            {/if}
         </div>
     </div>
 {/foreach}
 
 {if isset($paging)}{$paging}{/if}
+
+{if $canQuote }
+    {script}
+        $(document).ready(function(){
+            $(".owm_card_toolbar_quote").bind("click", function(e){
+                e.preventDefault();
+ 
+                // show the post form
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id}, "postId" : $(this).attr("data-id") }], {
+                    "title" : "{text key='forum+add_post_title'}"
+                });
+            })
+        });
+    {/script}
+{/if}

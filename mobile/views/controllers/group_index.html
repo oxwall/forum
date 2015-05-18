@@ -27,14 +27,6 @@
             {else}
                 {text key='forum+no_topic'}
             {/if}
-
-            {if $canEdit}
-                <div style="display: none">
-                    <div id="forum_new_topic_form">
-                        {component class="FORUM_MCMP_ForumAddTopic" groupId="{$group->id}"} 
-                    </div>
-                </div>
-            {/if}
         </div>
     </div>
 </div>
@@ -44,10 +36,9 @@
         $("#owm_forum_new_topic_link").bind("click", function(e){
             e.preventDefault();
  
-            // show the form
-            OWM.FloatBox({
-                "title" : OWM.getLanguageText("forum", "new_topic_btn"),
-                "content": $("#forum_new_topic_form")
+            // show the topic form
+            OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [{ "groupId" : {$group->id} }], {
+                "title" : "{text key='forum+add_post_title'}"
             });
         });
     {/script}

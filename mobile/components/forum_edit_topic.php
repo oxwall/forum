@@ -30,73 +30,113 @@
  */
 
 /**
- * Forum add post class.
+ * Forum edit topic class.
  *
  * @author Alex Ermashev <alexermashev@gmail.com>
  * @package ow.ow_plugins.forum.mobile.components
  * @since 1.0
  */
-class FORUM_MCMP_ForumAddPost extends OW_MobileComponent
+class FORUM_MCMP_ForumEditTopic extends OW_MobileComponent
 {
     /**
      * Class constructor
      * 
      * @param array $params
      *      integer topicId
-     *      integer postId optional
+     * @throws Redirect404Exception
      */
     public function __construct(array $params = array())
     {
         parent::__construct();
 
+        $forumService = FORUM_BOL_ForumService::getInstance();
         $topicId = !empty($params['topicId']) 
             ? $params['topicId'] 
             : null;
 
-        $postId = !empty($params['postId']) 
-            ? $params['postId'] 
-            : null;
+        $topicDto = $forumService->findTopicById($topicId);
 
+        if ( !$topicDto )
+        {
+            throw new Redirect404Exception();
+        }
+
+        $forumGroup = $forumService->getGroupInfo($topicDto->groupId);
+        $forumSection = $forumService->findSectionById($forumGroup->sectionId);
+        $isHidden = $forumSection->isHidden;
+        $userId = OW::getUser()->getId();
+
+        // check access permissions
+        if ( $isHidden )
+        {
+            throw new Redirect404Exception();
+        }
+
+        $isModerator = OW::getUser()->isAuthorized('forum');
+        $canEdit = OW::getUser()->isAuthorized('forum', 'edit') && $userId == $topicDto->userId;
+
+        if ( !$canEdit && !$isModerator )
+        {
+            throw new AuthorizationException();
+        }
+
+        // first topic's post
+        $postDto = $forumService->findTopicFirstPost($topicId);
         $attachmentUid = uniqid();
 
         // get a form instance
-        $form = new FORUM_CLASS_PostForm(
-            'post_form', 
-            $attachmentUid, 
-            $topicId, 
+        $form = new FORUM_CLASS_TopicEditForm(
+            'topic_edit_form', 
+            $attachmentUid,
+            $topicDto,
+            $postDto,
             true
         );
 
-        $form->setTextInvitation(OW::getLanguage()->text('forum', 'write_reply'));
-        $form->setAction(OW::getRouter()->urlForRoute('add-post', array(
-            'topicId' => $topicId
+        $form->setAction(OW::getRouter()->urlForRoute('edit-topic', array(
+            'id' => $topicDto->id
         )));
 
         $this->addForm($form);
 
         // attachments
         $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
-
         if ( $enableAttachments )
         {
+            $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
+            $attachmentList = $attachmentService->findAttachmentsByPostIdList(array($postDto->id));
+            $attachments = array();
+
+            // process attachments
+            if ( $attachmentList ) 
+            {
+                $attachmentList = array_shift($attachmentList);
+
+                $index = 0;
+                foreach($attachmentList as $attachment)
+                {
+                    $attachments[$index] = array(
+                        'id' => $index, 
+                        'name' => $attachment['fileName'], 
+                        'size' => $attachment['fileSize'],
+                        'dbId' => $attachment['id']
+                    );
+
+                    $index++;
+                }
+
+                $attachments = json_encode($attachments);
+            }
+
+            $this->assign('attachments', $attachments);           
             $attachmentCmp = new BASE_CLASS_FileAttachment('forum', $attachmentUid);
-            $this->addComponent('attachments', $attachmentCmp);
+            $this->addComponent('attachmentsCmp', $attachmentCmp);
         }
 
         // assign view variables
         $this->assign('enableAttachments', $enableAttachments);
         $this->assign('attachmentUid', $attachmentUid);
-
-        // add a quote text
-        if ( $postId )
-        {
-            $postQuote = new FORUM_MCMP_ForumPostQuote(array(
-                'quoteId' => $postId
-            ));
-
-            $this->assign('quoteText', $postQuote->render());
-            $this->assign('quoteId', $postId);
-        }
+        $this->assign('topicId', $topicId);
 
         // include js files
         OW::getDocument()->addScript(OW::

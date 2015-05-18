@@ -104,6 +104,10 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
                 ? $stickyTopics[] = $topic : $regularTopics[] = $topic;
         }
 
+        // include js translations
+        OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
+        OW::getLanguage()->addKeyForJs('forum', 'attached_files');
+
         // assign view variables
         $this->assign('canEdit', $canEdit);
         $this->assign('stickyTopics', $stickyTopics);

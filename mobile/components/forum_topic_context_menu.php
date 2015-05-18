@@ -75,6 +75,18 @@ class FORUM_MCMP_ForumTopicContextMenu extends OW_MobileComponent
     protected $isSubscribed;
 
     /**
+     * Is owner
+     * @var boolean
+     */
+    protected $isOwner;
+
+    /**
+     * Is moderator
+     * @var boolean
+     */
+    protected $isModerator;
+
+    /**
      * Class constructor
      */
     public function __construct( array $params = array() )
@@ -103,6 +115,14 @@ class FORUM_MCMP_ForumTopicContextMenu extends OW_MobileComponent
 
         $this->isSubscribed = !empty($params['isSubscribed']) 
             ? (bool) $params['isSubscribed'] 
+            : false;
+
+        $this->isOwner = !empty($params['isOwner']) 
+            ? (bool) $params['isOwner'] 
+            : false;
+
+        $this->isModerator = !empty($params['isModerator']) 
+            ? (bool) $params['isModerator'] 
             : false;
     }
 
@@ -142,6 +162,7 @@ class FORUM_MCMP_ForumTopicContextMenu extends OW_MobileComponent
 
         if ( $this->canEdit )
         {
+            // edit action
             $items[] = array(
                 "group" => 'forum',
                 'label' => OW::getLanguage()->text('forum', 'new_topic_btn'),
@@ -155,6 +176,7 @@ class FORUM_MCMP_ForumTopicContextMenu extends OW_MobileComponent
 
         if ( $this->canLock )
         {
+            // lock/unlock action
             $items[] = array(
                 "group" => 'forum',
                 'label' => !empty($this->topicInfo['locked'])
@@ -184,6 +206,7 @@ class FORUM_MCMP_ForumTopicContextMenu extends OW_MobileComponent
                 )
             ));
 
+            // sticky/unsticky action
             $items[] = array(
                 "group" => 'forum',
                 'label' => $label,
@@ -209,6 +232,7 @@ class FORUM_MCMP_ForumTopicContextMenu extends OW_MobileComponent
                 )
             ));
 
+            // subscribe/unsubscribe
             $items[] = array(
                 "group" => 'forum',
                 'label' => $label,
@@ -216,6 +240,31 @@ class FORUM_MCMP_ForumTopicContextMenu extends OW_MobileComponent
                 'class' => null,
                 'url' => null,
                 'id' => null
+            );
+        }
+
+        if ( $this->canEdit && ($this->isOwner || $this->isModerator) )
+        {
+            // edit action
+            $items[] = array(
+                "group" => 'forum',
+                'label' => OW::getLanguage()->text('forum', 'edit'),
+                'order' => 5,
+                'class' => null,
+                'url' => null,
+                'id' => 'forum_edit_topic',
+                'attributes' => array()
+            );
+
+            // delete action
+            $items[] = array(
+                "group" => 'forum',
+                'label' => OW::getLanguage()->text('forum', 'delete'),
+                'order' => 6,
+                'class' => null,
+                'url' => null,
+                'id' => 'forum_delete_topic',
+                'attributes' => array()
             );
         }
 

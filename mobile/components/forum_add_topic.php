@@ -57,18 +57,13 @@ class FORUM_MCMP_ForumAddTopic extends OW_MobileComponent
         $attachmentUid = uniqid();
         $groupList = $forumService->getGroupSelectList(0, false, $userId);
 
-        // register js langs
-        OW::getLanguage()->addKeyForJs('forum', 'new_topic_btn');
-        OW::getLanguage()->addKeyForJs('forum', 'attached_files');
-        OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
-
         // get a form instance
-        $form = new FORUM_CLASS_TopicForm(
-                "topic_form", 
-                $attachmentUid, 
-                $groupList, 
-                $groupId, 
-                true
+        $form = new FORUM_CLASS_TopicAddForm(
+            'topic_add_form', 
+            $attachmentUid, 
+            $groupList, 
+            $groupId, 
+            true
         );
 
         $form->setTitleInvitation(OW::getLanguage()->text('forum', 'new_topic_subject'));

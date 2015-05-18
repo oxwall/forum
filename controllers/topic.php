@@ -769,14 +769,11 @@ class FORUM_CTRL_Topic extends OW_ActionController
         {
             if ( OW::getRequest()->isAjax() )
             {
-                $postDto = $this->forumService->findPostById($postId);
+                 $postQuote = new FORUM_CMP_ForumPostQuote(array(
+                     'quoteId' => $postId
+                 ));
 
-                $post = array(
-                    'from' => BOL_UserService::getInstance()->getDisplayName($postDto->userId),
-                    'text' => $postDto->text
-                );
-
-                echo json_encode($post);
+                 echo json_encode($postQuote->render());
             }
             else
             {

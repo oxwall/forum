@@ -30,22 +30,27 @@
  */
 
 /**
- * Forum add topic controller
+ * Forum edit topic controller
  *
  * @author Alex Ermashev <alexermashev@gmail.com>
  * @package ow.ow_plugins.forum.mobile.controllers
  * @since 1.0
  */
-class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
+class FORUM_MCTRL_EditTopic extends FORUM_MCTRL_AbstractForum
 {
     /**
      * Controller's default action
      *
      * @param array $params
-     * @throws AuthorizationException
+     * @throws AuthorizationException|Redirect404Exception|AuthenticateException
      */
     public function index( array $params = null )
     {
+        if ( !isset($params['id']) || !($topicId = (int) $params['id']) )
+        {
+            throw new Redirect404Exception();
+        }
+
         if ( !OW::getUser()->isAuthenticated() )
         {
             throw new AuthenticateException();
@@ -58,17 +63,40 @@ class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
             throw new AuthorizationException($status['msg']);
         }
 
-        $backGroupId = isset($params['groupId']) && (int) $params['groupId'] 
-            ? (int) $params['groupId'] 
-            : -1;
+        $forumService = FORUM_BOL_ForumService::getInstance();
+        $topicDto = $forumService->findTopicById($topicId);
+        $postDto = $forumService->findTopicFirstPost($topicId);
+
+        if ( !$topicDto || !$postDto )
+        {
+            throw new Redirect404Exception();
+        }
+
+        $forumGroup = $forumService->getGroupInfo($topicDto->groupId);
+        $forumSection = $forumService->findSectionById($forumGroup->sectionId);
+
+        if ( $forumSection->isHidden )
+        {
+            throw new Redirect404Exception();
+        }
 
         $userId = OW::getUser()->getId();
+        $isModerator = OW::getUser()->isAuthorized('forum');
+        $canEdit = OW::getUser()->isAuthorized('forum', 'edit') && $userId == $topicDto->userId;
 
-        $form = new FORUM_CLASS_TopicAddForm(
-            "topic_form", 
-            uniqid(), 
-            $this->forumService->getGroupSelectList(0, false, $userId), 
-            $backGroupId, 
+        if ( !$canEdit && !$isModerator )
+        {
+            throw new AuthorizationException();
+        }
+
+        $attachmentUid = uniqid();
+
+        // get a form instance
+        $form = new FORUM_CLASS_TopicEditForm(
+            'topic_edit_form', 
+            $attachmentUid,
+            $topicDto,
+            $postDto,
             true
         );
 
@@ -77,23 +105,12 @@ class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
         {
             $data = $form->getValues();
 
-            $forumGroupId = !empty($data['group']) ? $data['group'] : -1;
-            $forumGroup   = $this->forumService->getGroupInfo($forumGroupId);
-            $forumSection = $forumGroup 
-                ? $this->forumService->findSectionById($forumGroup->sectionId)
-                : null;
-
-            // you cannot add new topics in hidden sections
-            if ( !$forumGroup || $forumSection->isHidden )
-            {
-                throw new Redirect404Exception();
-            }
-
-            $isHidden = $forumSection->isHidden ? true : false;            
-            $topicDto = $this->forumService->addTopic($forumGroup, $isHidden, $userId, $data);
+            // update the topic
+            $this->forumService->
+                    editTopic($userId, $data, $topicDto, $postDto, $forumSection, $forumGroup);
 
             $this->redirect(OW::getRouter()->
-                        urlForRoute('topic-default', array('topicId' => $topicDto->id)));
+                    urlForRoute('topic-default', array('topicId' => $topicId)));
         }
 
         OW::getFeedback()->
@@ -101,6 +118,6 @@ class FORUM_MCTRL_AddTopic extends FORUM_MCTRL_AbstractForum
 
         // an error occured
         $this->redirect(OW::getRouter()->
-                        urlForRoute('group-default', array('groupId' => $backGroupId)));
+                        urlForRoute('topic-default', array('topicId' => $topicId)));
     }
 }

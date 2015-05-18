@@ -18,7 +18,9 @@
                 {if $canEdit || $canLock || $canSticky || $canSubscribe}
                     <div class="owm_view_more owm_float_right">
                         {component 
-                            class="FORUM_MCMP_ForumTopicContextMenu" 
+                            class="FORUM_MCMP_ForumTopicContextMenu"
+                            isOwner=$isOwner
+                            isModerator=$isModerator
                             topicInfo=$topicInfo 
                             canEdit=$canEdit 
                             canLock=$canLock 
@@ -30,8 +32,19 @@
                 {/if}
             </div>
 
-            {component class="FORUM_MCMP_ForumSearch" scope="topic" id="{$topicInfo.id}"}
-            {component class="FORUM_MCMP_ForumPost" page=$page topicInfo=$topicInfo}
+            {component 
+                class="FORUM_MCMP_ForumSearch" 
+                scope="topic" 
+                id="{$topicInfo.id}"
+            }
+
+            {component 
+                class="FORUM_MCMP_ForumPost" 
+                page=$page 
+                topicInfo=$topicInfo
+                canEdit=$canEdit
+                canPost=$canPost
+            }
  
             {if $canSubscribe}
                 <!-- subscribe/unsubscribe topic -->
@@ -104,16 +117,11 @@
                         });
                     });
                 {/script}
-                <!-- end of lock/unlock topic -->
+                <!-- end of lock/unlock topic -->               
             {/if}
 
             {if $canEdit}
                 <!-- topic form -->
-                <div style="display: none">
-                    <div id="forum_add_topic_form">
-                        {component class="FORUM_MCMP_ForumAddTopic" groupId="{$topicInfo.groupId}"} 
-                    </div>
-                </div>
                 {script}
                     /**
                      * Show a new topic form
@@ -121,34 +129,54 @@
                     $("#forum_new_topic").bind("click", function(e){
                         e.preventDefault();
 
-                        // show the form
-                        OWM.FloatBox({
-                            "title" : OWM.getLanguageText("forum", "new_topic_btn"),
-                            "content": $("#forum_add_topic_form")
+                        // show the topic form
+                        OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [{ "groupId" : {$topicInfo.groupId} }], {
+                            "title" : "{text key='forum+new_topic_btn'}"
                         });
                     });
                 {/script}
                 <!-- end of topic form -->
+
+                {if $isOwner || $isModerator}
+                    <!-- edit topic -->
+                    {script}
+                        $("#forum_edit_topic").bind("click", function(e)
+                        {
+                            // show the edit topic form
+                            OWM.ajaxFloatBox("FORUM_MCMP_ForumEditTopic", [{ "topicId" : {$topicInfo.id} }], {
+                                "title" : "{text key='forum+edit_topic'}"
+                            });
+                         });
+                    {/script}
+                    <!-- end of edit topic -->
+
+                    <!-- delete topic -->
+                    {script}
+                        $("#forum_delete_topic").bind("click", function(e)
+                        {
+                            e.preventDefault();
+
+                            topicAction("{text key='forum+delete_topic_confirm'}", "{url_for_route for="delete-topic:[topicId=>`$topicInfo.id`]"}", function(){
+                                location.href = "{url_for_route for="group-default:[groupId=>`$topicInfo.groupId`]"}";
+                            });
+                        });
+                    {/script}
+                    <!-- end of delete topic -->
+                {/if}
             {/if}
 
             {if $canPost}
                 {if !$topicInfo.locked}
                     <!-- post form -->
-                    <div style="display: none">
-                        <div id="forum_add_post_form">
-                            {component class="FORUM_MCMP_ForumAddPost" topicId="{$topicInfo.id}"} 
-                        </div>
-                    </div>
                     <textarea id="forum_new_post_wrappper" class="invitation" readonly="readonly">{text key='forum+write_reply'}</textarea>
                     {script}
                         /**
                          * Show a new post form
                          */
-                        $("#forum_new_post_wrappper").focus(function() {
-                            // show the form
-                            OWM.FloatBox({
-                                "title" : OWM.getLanguageText("forum", "add_post_title"),
-                                "content": $("#forum_add_post_form")
+                        $("#forum_new_post_wrappper").focus(function() {                           
+                            // show the post form
+                            OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id} }], {
+                                "title" : "{text key='forum+add_post_title'}"
                             });
                         });
                     {/script}

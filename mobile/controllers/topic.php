@@ -61,6 +61,7 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
 
         $userId = OW::getUser()->getId();
         $isModerator = OW::getUser()->isAuthorized('forum');
+        $isOwner = ( $topicDto->userId == $userId ) ? true : false;
 
         // check the permission for private topic
         if ( $forumGroup->isPrivate )
@@ -89,9 +90,15 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
         $canEdit = OW::getUser()->isAuthorized('forum', 'edit') || $isModerator ? true : false;
 
+        // include js translations
+        OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
+        OW::getLanguage()->addKeyForJs('forum', 'attached_files');
+
         // assign view variables
         $this->assign('topicInfo', $topicInfo);
         $this->assign('page', $page);
+        $this->assign('isOwner', $isOwner);
+        $this->assign('isModerator', $isModerator);
         $this->assign('canEdit', $canEdit);
         $this->assign('canPost', $canEdit);
         $this->assign('canLock', $isModerator);
@@ -104,6 +111,78 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_topic'));
         OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_topic'));
+    }
+
+    /**
+     * Delete attachment
+     */
+    public function ajaxDeleteAttachment()
+    {
+        $result  = false;
+        $attachmentId = !empty($_POST['id']) ? (int) $_POST['id'] : 0;
+
+        if ( OW::getRequest()->isPost() && $attachmentId ) 
+        {
+            $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
+            $attachment = $attachmentService->findPostAttachmentById($attachmentId);
+
+            if ( $attachment ) 
+            {
+                $forumService = FORUM_BOL_ForumService::getInstance();
+                $post = $forumService->findPostById($attachment->postId);
+
+                if ( $post )
+                {
+                    $userId = OW::getUser()->getId();
+
+                    // check the ownership
+                    if ( OW::getUser()->isAuthorized('forum') || $post->userId == $userId )
+                    {
+                        $attachmentService->deleteAttachment($attachment->id);
+                        $result = true;
+                    }
+                }
+            }
+        }
+
+        die(json_encode(array(
+            'result' => $result 
+        )));
+    }
+
+    /**
+     * This action deletes the topic
+     *
+     * @param array $params
+     */
+    public function ajaxDeleteTopic( array $params )
+    {
+        $result  = false;
+        $topicId = !empty($params['topicId']) ? (int) $params['topicId'] : -1;
+        $userId = OW::getUser()->getId();
+
+        if ( OW::getRequest()->isPost() ) 
+        {
+            $topicDto = $this->forumService->findTopicById($topicId);
+
+            if ( $topicDto )
+            {
+                $isModerator = OW::getUser()->isAuthorized('forum');
+                $forumGroup = $this->forumService->findGroupById($topicDto->groupId);
+                $forumSection = $this->forumService->findSectionById($forumGroup->sectionId);
+
+                if ( !$forumSection->isHidden 
+                        && ($isModerator || $userId == $topicDto->userId))
+                {
+                    $this->forumService->deleteTopic($topicId);
+                    $result = true;
+                }
+            }
+        }
+
+        die(json_encode(array(
+            'result' => $result 
+        )));
     }
 
     /**

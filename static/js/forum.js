@@ -461,18 +461,10 @@ var ForumTopic = {
 		textarea.htmlareaFocus();
 		
 		var url = this.getPostUrl.replace('postId', postId);
-		this.ajaxCall(url, function(post) {
-			var quoted = selText != '' ? selText : post.text;
-
-
-			var text = '<blockquote class="ow_quote"><span class="ow_quote_header"><span class="ow_author">'
-				+ OW.getLanguageText('forum', 'forum_quote') + ' ' + OW.getLanguageText('forum', 'forum_quote_from') + ' <b>'
-				+ post.from + '</b></span></span>\n<span class="ow_quote_cont_wrap"><span class="ow_quote_cont">' + quoted + '</span></span>\n</blockquote>';
-
-
+		this.ajaxCall(url, function(quote) {
 			var areaObj = self.$add_post_input.get(0).jhtmlareaObject;
 			areaObj.pasteHTML("<br />");
-			areaObj.pasteHTML(text);
+			areaObj.pasteHTML(quote);
 			areaObj.pasteHTML("<br />");
 		});		
 	},

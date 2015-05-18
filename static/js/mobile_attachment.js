@@ -16,16 +16,18 @@ ForumAttachments = function(settings)
     * @var array
     */
    var attachmentsSettings = {
-       'attachmentUid'      : '',
-       'attachmentsWrapper' : $([]),
-       'attachDefaultTitle' : $([]),
-       'firstAttachName'    : $([]),
-       'clearFiles'         : $([]),
-       'attachNewFiles'     : $([]),
-       'attachNewFile'      : $([])
+       'attachmentUid'       : '',
+       'attachmentsWrapper'  : $([]),
+       'attachDefaultTitle'  : $([]),
+       'firstAttachName'     : $([]),
+       'clearFiles'          : $([]),
+       'attachNewFiles'      : $([]),
+       'attachNewFile'       : $([])
    };
 
    attachmentsSettings = $.extend(attachmentsSettings, settings);
+
+   //--private functions --//
 
    /**
     * Get attached files name
@@ -54,7 +56,7 @@ ForumAttachments = function(settings)
    //-- bind events --//
 
    //  listen to upload a new file or show the files list
-   $(attachmentsSettings.attachNewFile).bind("click", function(e)
+   $(attachmentsSettings.attachNewFile).unbind().bind("click", function(e)
    {
        e.preventDefault();
 
@@ -74,13 +76,13 @@ ForumAttachments = function(settings)
    });
 
    // listen to attach new files event
-   attachmentsSettings.attachNewFiles.bind("click", function()
+   attachmentsSettings.attachNewFiles.unbind().bind("click", function()
    {
        $(attachmentsSettings.attachmentsWrapper).find(".mlt_file_input").trigger("click");
    });
 
    // listen to clear all attached files event
-   $(attachmentsSettings.clearFiles).bind("click", function()
+   $(attachmentsSettings.clearFiles).unbind().bind("click", function()
    {
        owFileAttachments[attachmentsSettings.attachmentUid].reset(attachmentsSettings.attachmentUid);
 
@@ -140,4 +142,18 @@ ForumAttachments = function(settings)
        // update the first attach file name
        attachmentsSettings.firstAttachName.text(getAttachedFilesName()).show();
    });
+
+    //-- public functions --//
+
+    /**
+     * Render uploaded attachments
+     * 
+     * @param object attachedFiles
+     * @param string deleteUrl
+     * @return void
+     */
+    this.renderUploadedAttachments = function( attachedFiles, deleteUrl )
+    {
+        owFileAttachments[attachmentsSettings.attachmentUid].renderUploaded(attachedFiles, deleteUrl);
+    }
 }

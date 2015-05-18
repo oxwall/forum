@@ -47,5 +47,8 @@ OW::getRouter()->addRoute(new OW_Route('add-post', 'forum/addPost/:topicId', 'FO
 OW::getRouter()->addRoute(new OW_Route('lock-topic', 'forum/ajaxLockTopic/:topicId', 'FORUM_MCTRL_Topic', 'ajaxLockTopic'));
 OW::getRouter()->addRoute(new OW_Route('sticky-topic', 'forum/ajaxStickyTopic/:topicId', 'FORUM_MCTRL_Topic', 'ajaxStickyTopic'));
 OW::getRouter()->addRoute(new OW_Route('subscribe-topic', 'forum/ajaxSubscribeTopic/:topicId', 'FORUM_MCTRL_Topic', 'ajaxSubscribeTopic'));
+OW::getRouter()->addRoute(new OW_Route('delete-topic', 'forum/ajaxDeleteTopic/:topicId', 'FORUM_MCTRL_Topic', 'ajaxDeleteTopic'));
+OW::getRouter()->addRoute(new OW_Route('forum_delete_attachment', 'forum/deleteAttachment/', 'FORUM_MCTRL_Topic', 'ajaxDeleteAttachment'));
+OW::getRouter()->addRoute(new OW_Route('edit-topic', 'forum/edit-topic/:id', 'FORUM_MCTRL_EditTopic', 'index'));
 
 FORUM_MCLASS_EventHandler::getInstance()->init();

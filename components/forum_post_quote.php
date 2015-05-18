@@ -30,76 +30,38 @@
  */
 
 /**
- * Forum add post class.
+ * Forum post quote class.
  *
  * @author Alex Ermashev <alexermashev@gmail.com>
- * @package ow.ow_plugins.forum.mobile.components
+ * @package ow.ow_plugins.forum.components
  * @since 1.0
  */
-class FORUM_MCMP_ForumAddPost extends OW_MobileComponent
+class FORUM_CMP_ForumPostQuote extends OW_Component
 {
     /**
      * Class constructor
      * 
      * @param array $params
-     *      integer topicId
-     *      integer postId optional
+     *      integer quoteId
      */
     public function __construct(array $params = array())
     {
         parent::__construct();
 
-        $topicId = !empty($params['topicId']) 
-            ? $params['topicId'] 
+        $quoteId = !empty($params['quoteId']) 
+            ? $params['quoteId'] 
             : null;
 
-        $postId = !empty($params['postId']) 
-            ? $params['postId'] 
-            : null;
+        $postDto = FORUM_BOL_ForumService::getInstance()->findPostById($quoteId);
 
-        $attachmentUid = uniqid();
-
-        // get a form instance
-        $form = new FORUM_CLASS_PostForm(
-            'post_form', 
-            $attachmentUid, 
-            $topicId, 
-            true
-        );
-
-        $form->setTextInvitation(OW::getLanguage()->text('forum', 'write_reply'));
-        $form->setAction(OW::getRouter()->urlForRoute('add-post', array(
-            'topicId' => $topicId
-        )));
-
-        $this->addForm($form);
-
-        // attachments
-        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
-
-        if ( $enableAttachments )
+        if (!$postDto) 
         {
-            $attachmentCmp = new BASE_CLASS_FileAttachment('forum', $attachmentUid);
-            $this->addComponent('attachments', $attachmentCmp);
+            $this->setVisible(false);
+            return;
         }
 
         // assign view variables
-        $this->assign('enableAttachments', $enableAttachments);
-        $this->assign('attachmentUid', $attachmentUid);
-
-        // add a quote text
-        if ( $postId )
-        {
-            $postQuote = new FORUM_MCMP_ForumPostQuote(array(
-                'quoteId' => $postId
-            ));
-
-            $this->assign('quoteText', $postQuote->render());
-            $this->assign('quoteId', $postId);
-        }
-
-        // include js files
-        OW::getDocument()->addScript(OW::
-                getPluginManager()->getPlugin('forum')->getStaticJsUrl() . 'mobile_attachment.js');
+        $this->assign('postFrom', BOL_UserService::getInstance()->getDisplayName($postDto->userId));
+        $this->assign('postText', $postDto->text);
     }
 }

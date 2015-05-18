@@ -86,6 +86,18 @@ class FORUM_MCTRL_AddPost extends FORUM_MCTRL_AbstractForum
 
             if ( $data['topic'] && $data['topic'] == $topicDto->id && !$topicDto->locked )
             {
+                $quoteId = !empty($_POST['quoteId']) ? (int) $_POST['quoteId'] : null;
+
+                // add a quote to the text
+                if ( $quoteId )
+                {
+                    $postQuote = new FORUM_MCMP_ForumPostQuote(array(
+                        'quoteId' => $quoteId
+                    ));
+
+                    $data['text'] = $postQuote->render() . $data['text'];
+                }
+
                 $postDto = $this->forumService->addPost($topicDto, $data);
                 return $this->redirect($this->forumService->getPostUrl($topicDto->id, $postDto->id));
             }
