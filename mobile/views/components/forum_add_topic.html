@@ -1,0 +1,96 @@
+<div class="owm_padding owm_bg_color_1">
+    {form name="topic_add_form"}
+        <div class="owm_forum_topic owm_forum_topic_reply">
+            <div class="owm_forum_topic_nav">
+                <div class="owm_forum_topic_title owm_bg_color_1">
+                    {input name="title"}
+                    <div class="owm_error_txt">
+                        {error name="title"}
+                    </div>
+                </div>
+                <div class="owm_forum_name_select owm_bg_color_1">
+                    <div class="owm_select_wrap">
+                        <div class="ow_inline owm_inline">
+                            {input name="group"}
+                            <div class="owm_error_txt">
+                                {error name="group"}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="owm_forum_topic_subscribe owm_bg_color_1">
+                    <div class="owm_checkbox_wrap">
+                        <ul class="ow_checkbox_group clearfix">
+                            <li>
+                                {input name="subscribe"}
+                                {label name="subscribe"}
+                                <div class="owm_error_txt">
+                                    {error name="subscribe"}
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="owm_forum_name_select owm_bg_color_1">
+                    <div class="owm_select_wrap">
+                        <div class="ow_inline owm_inline">
+                            {input name="text"}
+                        </div>
+                    </div>
+                    <div class="owm_error_txt">
+                        {error name="text"}
+                    </div>
+                </div>
+                <div class="owm_forum_topic_bottom owm_forum_topic_submit owm_padding owm_bg_color_1 clearfix">
+                    {if $enableAttachments}
+                        <div class="owm_forum_topic_attach_info owm_float_left">
+                            <label id="forum_add_topic_attach_file" class="owm_attach_label owm_topic_attach_icon">
+                                <span id="forum_add_topic_attach_default_title">{text key='forum+attach_files'}</span>
+                                <span id="forum_add_topic_first_attach_name" style="display: none"></span>
+                            </label>
+                        </div>
+                    {/if}
+                    <div class="owm_float_right owm_forum_topic_submit">
+                        <span class="ow_button">
+                            {submit name="post"}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {/form}
+</div>
+
+{if $enableAttachments}
+    <div style="display: none">
+        <div id="forum_topic_attachments" class="owm_attach_win owm_forum_attach_win owm_padding">
+            {$attachments}
+            <div class="owm_padding owm_btn_wrap">
+                <span class="ow_button">
+                    <span class="ow_button">
+                        <input type="button" id="forum_add_topic_clear_files" value="{text key='forum+clear_all'}">
+                    </span>
+                </span>
+                <span class="ow_button">
+                    <span class="ow_button">
+                        <input type="button" id="forum_add_topic_attach_files" value="{text key='forum+add_files'}">
+                    </span>
+                </span>
+            </div>
+        </div>
+    </div>
+    {script}
+        $( document ).ready(function() 
+        {
+            var forumAddTopicAttachments = new ForumAttachments({
+                "attachmentUid"      : "{$attachmentUid}",
+                "attachmentsWrapper" : $('#forum_topic_attachments'),
+                "attachDefaultTitle" : $("#forum_add_topic_attach_default_title"),
+                "firstAttachName"    : $("#forum_add_topic_first_attach_name"),
+                "clearFiles"         : $("#forum_add_topic_clear_files"),
+                "attachNewFiles"     : $("#forum_add_topic_attach_files"),
+                "attachNewFile"      : $("#forum_add_topic_attach_file")
+            });
+        });
+    {/script}
+{/if}

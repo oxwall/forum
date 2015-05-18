@@ -33,7 +33,7 @@
  * @package ow.ow_plugins.forum
  * @since 1.7.2
  */
-class FORUM_CLASS_TopicForm extends Form
+class FORUM_CLASS_TopicAddForm extends Form
 {
     /**
      * Min title length
@@ -71,17 +71,11 @@ class FORUM_CLASS_TopicForm extends Form
      * @param boolean $mobileWysiwyg
      * @param boolean $isSectionHidden
      */
-    public function __construct(
-            $name, $attachmentUid, 
-            array $groupSelect, 
-            $groupId = null, 
-            $mobileWysiwyg = false, 
-            $isSectionHidden  = false
-    ) {
+    public function __construct($name, $attachmentUid, 
+            array $groupSelect, $groupId = null, $mobileWysiwyg = false, $isSectionHidden  = false) 
+    {
 
         parent::__construct($name);
-
-        $form = new Form('add-topic-form');
         $lang = OW::getLanguage();
 
         // attachments

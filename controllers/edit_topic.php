@@ -141,98 +141,9 @@ class FORUM_CTRL_EditTopic extends OW_ActionController
         {
             $values = $editTopicForm->getValues();
             
-            $topicId = (int) $values['topic-id'];
-            $postId = (int) $values['post-id'];
-            $title = trim($values['title']);
-            $text = trim($values['text']);
-
-            $topicDto = $forumService->findTopicById($topicId);
-            $postDto = $forumService->findPostById($postId);
-
-            if ( $topicDto === null || $postDto === null || ($topicDto->userId != $userId && !$isModerator) )
-            {
-                exit();
-            }
-
-            //save topic
-            $topicDto->title = strip_tags($title);
-            $forumService->saveOrUpdateTopic($topicDto);
-
-            //save post
-            $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($text, array('form', 'input', 'button'), null, true));
-            $forumService->saveOrUpdatePost($postDto);
-
-            //save post edit info
-            $editPostDto = $forumService->findEditPost($postId);
-
-            if ( $editPostDto === null )
-            {
-                $editPostDto = new FORUM_BOL_EditPost();
-            }
-
-            $editPostDto->postId = $postId;
-            $editPostDto->userId = $userId;
-            $editPostDto->editStamp = time();
-            $forumService->saveOrUpdateEditPost($editPostDto);
-
-            if ( $enableAttachments )
-            {
-                $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $values['attachmentUid']);
-
-                if ( $filesArray )
-                {
-                    $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
-                    $skipped = 0;
-
-                    foreach ( $filesArray as $file )
-                    {
-                        $attachmentDto = new FORUM_BOL_PostAttachment();
-                        $attachmentDto->postId = $postDto->id;
-                        $attachmentDto->fileName = $file['dto']->origFileName;
-                        $attachmentDto->fileNameClean = $file['dto']->fileName;
-                        $attachmentDto->fileSize = $file['dto']->size * 1024;
-                        $attachmentDto->hash = uniqid();
-
-                        $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
-
-                        if ( !$added )
-                        {
-                            $skipped++;
-                        }
-                    }
-
-                    BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $values['attachmentUid']);
-                    
-                    if ( $skipped )
-                    {
-                        OW::getFeedback()->warning(OW::getLanguage()->text('forum', 'not_all_attachments_added'));
-                    }
-                }
-            }
-            
-            $params = array(
-                'topicId' => $topicDto->id,
-                'entity' => $forumSection->entity ? $forumSection->entity : NULL,
-                'entityId' => $forumGroup->entityId ? $forumGroup->entityId : NULL,
-                'userId' => $topicDto->userId,
-                'topicUrl' => $topicUrl,
-                'topicTitle' => $topicDto->title,
-                'postText' => $postDto->text
-            );
-            $event = new OW_Event('forum.topic_add', $params);
-            OW::getEventManager()->trigger($event);
-
-            OW::getEventManager()->trigger(new OW_Event('feed.action', array(
-                'pluginKey' => 'forum',
-                'entityType' => 'forum-topic',
-                'entityId' => $topicDto->id,
-                'userId' => $topicDto->userId,
-                'time' => $postDto->createStamp
-            )));
-
-            OW::getEventManager()->trigger(new OW_Event(FORUM_BOL_ForumService::EVENT_AFTER_TOPIC_EDIT, array(
-                'topicId' => $topicDto->id
-            )));
+            // update the topic
+            $forumService->editTopic($userId, 
+                    $values, $topicDto, $postDto, $forumSection, $forumGroup);
 
             $this->redirect($topicUrl);
         }
@@ -306,52 +217,21 @@ class FORUM_CTRL_EditTopic extends OW_ActionController
     /**
      * Generates edit topic form.
      *
-     * @param $topicDto
-     * @param $postDto
+     * @param FORUM_BOL_Topic $topicDto
+     * @param FORUM_BOL_Post $postDto
      * @param $uid
      * @return Form
      */
-    private function generateEditTopicForm( $topicDto, $postDto, $uid )
+    private function generateEditTopicForm( FORUM_BOL_Topic $topicDto, FORUM_BOL_Post $postDto, $uid )
     {
-        $form = new Form('edit-topic-form');
-        $form->setEnctype('multipart/form-data');
-        
-        $lang = OW::getLanguage();
-        
-        $topicIdField = new HiddenField('topic-id');
-        $topicIdField->setValue($topicDto->id);
-        $form->addElement($topicIdField);
+        $form = new FORUM_CLASS_TopicEditForm(
+            'edit-topic-form', 
+            $uid,
+            $topicDto,
+            $postDto
+        );
 
-        $postIdField = new HiddenField('post-id');
-        $postIdField->setValue($postDto->id);
-        $form->addElement($postIdField);
-
-        $attachmentUid = new HiddenField('attachmentUid');
-        $attachmentUid->setValue($uid);
-        $attachmentUid->setRequired(true);
-        $form->addElement($attachmentUid);
-
-        $topicTitleField = new TextField('title');
-        $topicTitleField->setValue($topicDto->title);
-        $topicTitleField->setRequired(true);
-        $sValidator = new StringValidator(1, 255);
-        $sValidator->setErrorMessage($lang->text('forum', 'chars_limit_exceeded', array('limit' => 255)));
-        $topicTitleField->addValidator($sValidator);
-        $form->addElement($topicTitleField);
-
-        $btnSet = array(BOL_TextFormatService::WS_BTN_IMAGE, BOL_TextFormatService::WS_BTN_VIDEO, BOL_TextFormatService::WS_BTN_HTML);
-        $postText = new WysiwygTextarea('text', $btnSet);
-        $postText->setValue($postDto->text);
-        $postText->setRequired(true);
-        $sValidator = new StringValidator(1, 50000);
-        $sValidator->setErrorMessage($lang->text('forum', 'chars_limit_exceeded', array('limit' => 50000)));
-        $postText->addValidator($sValidator);
-        $form->addElement($postText);
-
-        $submit = new Submit('save');
-        $submit->setValue($lang->text('base', 'edit_button'));
-        $form->addElement($submit);
-
+        $this->addForm($form);
         return $form;
     }
 }

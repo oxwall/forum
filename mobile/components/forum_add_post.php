@@ -30,56 +30,53 @@
  */
 
 /**
- * Forum group class.
+ * Forum add post class.
  *
  * @author Alex Ermashev <alexermashev@gmail.com>
  * @package ow.ow_plugins.forum.mobile.components
  * @since 1.0
  */
-class FORUM_MCMP_ForumNewTopic extends OW_MobileComponent
+class FORUM_MCMP_ForumAddPost extends OW_MobileComponent
 {
     /**
      * Class constructor
      * 
      * @param array $params
-     *      integer groupId
+     *      integer topicId
+     *      integer postId optional
      */
     public function __construct(array $params = array())
     {
         parent::__construct();
 
-        $groupId = !empty($params['groupId']) 
-            ? $params['groupId'] 
+        $topicId = !empty($params['topicId']) 
+            ? $params['topicId'] 
             : null;
 
-        $forumService = FORUM_BOL_ForumService::getInstance();
-        $userId = OW::getUser()->getId();
-        $attachmentUid = uniqid();
-        $groupList = $forumService->getGroupSelectList(0, false, $userId);
+        $postId = !empty($params['postId']) 
+            ? $params['postId'] 
+            : null;
 
-        // register js langs
-        OW::getLanguage()->addKeyForJs('forum', 'new_topic_btn');
-        OW::getLanguage()->addKeyForJs('forum', 'attached_files');
-        OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
+        $attachmentUid = uniqid();
 
         // get a form instance
-        $form = new FORUM_CLASS_TopicForm(
-                "topic_form", 
-                $attachmentUid, 
-                $groupList, 
-                $groupId, 
-                true
+        $form = new FORUM_CLASS_PostForm(
+            'post_form', 
+            $attachmentUid, 
+            $topicId, 
+            true
         );
 
-        $form->setTitleInvitation(OW::getLanguage()->text('forum', 'new_topic_subject'));
-        $form->setAction(OW::getRouter()->urlForRoute('add-topic', array(
-            'groupId' => $groupId
+        $form->setTextInvitation(OW::getLanguage()->text('forum', 'write_reply'));
+        $form->setAction(OW::getRouter()->urlForRoute('add-post', array(
+            'topicId' => $topicId
         )));
 
         $this->addForm($form);
 
         // attachments
         $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
+
         if ( $enableAttachments )
         {
             $attachmentCmp = new BASE_CLASS_FileAttachment('forum', $attachmentUid);
@@ -89,5 +86,20 @@ class FORUM_MCMP_ForumNewTopic extends OW_MobileComponent
         // assign view variables
         $this->assign('enableAttachments', $enableAttachments);
         $this->assign('attachmentUid', $attachmentUid);
+
+        // add a quote text
+        if ( $postId )
+        {
+            $postQuote = new FORUM_MCMP_ForumPostQuote(array(
+                'quoteId' => $postId
+            ));
+
+            $this->assign('quoteText', $postQuote->render());
+            $this->assign('quoteId', $postId);
+        }
+
+        // include js files
+        OW::getDocument()->addScript(OW::
+                getPluginManager()->getPlugin('forum')->getStaticJsUrl() . 'mobile_attachment.js');
     }
 }

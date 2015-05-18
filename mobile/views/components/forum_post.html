@@ -1,0 +1,88 @@
+{assign var="canQuote" value=!$topicInfo.locked && ($canEdit || $canPost)}
+
+{foreach from=$postList item=post}
+    <div class="{if $firstTopic->id == $post.id}owm_forum_topic owm_forum_topic_view{else}owm_forum_reply{/if}" id="post-{$post.id}">
+        {add_content key="forum.before_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
+        <div class="owm_card clearfix">
+            <div class="owm_card_cap owm_padding">
+                <div class="owm_card_date">#{$post.number} {$post.createStamp}</div>
+            </div>
+            <div class="owm_card_content">
+                <div class="owm_card_header owm_bg_color_3 clearfix">
+                    <div class="owm_card_user owm_card_user_context owm_padding">
+                        <div class="owm_card_user_pic">
+                            {decorator name="avatar_item" data=$avatars[$post.userId]}
+                        </div>
+                        <div class="owm_card_user_info">
+                            <div class="owm_card_user_name">
+                                <a href="{$avatars[$post.userId].url}">
+                                    <b>{$avatars[$post.userId].title}</b>
+                                </a>
+                                {if !empty($onlineUsers[$post.userId])}
+                                    <div class="owm_profile_online"></div>
+                                {/if}
+                                <div class="owm_card_user_cont">
+                                    <span class="owm_remark">&nbsp;</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="owm_card_body owm_bg_color_1">
+                    <div class="owm_post_content">
+                        <p>{$post.text}</p>
+                    </div>
+                    {if $enableAttachments && isset($attachments[$post.id])}
+                        <div class="owm_attachments owm_border owm_padding">
+                            {foreach from=$attachments[$post.id] item='attm'}
+                                <div class="owm_attach_info clearfix">
+                                    <label class="owm_attach_label owm_attach_icon">{$attm.fileName} <span>({$attm.fileSize}KB)</span></label>
+                                    <a href="{$attm.downloadUrl}" class="owm_attach_download owm_float_right"></a>
+                                </div>
+                            {/foreach}
+                        </div>
+                    {/if}
+                </div>
+                {if !empty($post.edited) }
+                    <div class="owm_card_footer owm_bg_color_1">
+                        <div class="owm_post_action owm_padding owm_remark">
+                            {text key='forum+post_edited'}
+                            <a href="{$avatars[$post.edited.userId].url}">{$avatars[$post.edited.userId].title}</a> {$post.edited.editStamp}
+                        </div>
+                    </div>
+                {/if}
+            </div>
+            <div class="owm_card_toolbar">
+                <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix">
+                    {if $canQuote }
+                        <li class="owm_card_toolbar_quote" data-id="{$post.id}"><a href="#">Quote</a></li>
+                    {/if}
+                    <li class="owm_card_toolbar_flag"><a href="#">Flag</a></li>
+                    <li class="owm_card_toolbar_share"><a href="#">Share</a></li>
+                </ul>
+            </div>
+            {add_content key="forum.after_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
+ 
+            {if $firstTopic->id == $post.id}
+                {add_content key='forum.topic.content.after_first_post'}
+            {/if}
+        </div>
+    </div>
+{/foreach}
+
+{if isset($paging)}{$paging}{/if}
+
+{if $canQuote }
+    {script}
+        $(document).ready(function(){
+            $(".owm_card_toolbar_quote").bind("click", function(e){
+                e.preventDefault();
+ 
+                // show the post form
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id}, "postId" : $(this).attr("data-id") }], {
+                    "title" : "{text key='forum+add_post_title'}"
+                });
+            })
+        });
+    {/script}
+{/if}

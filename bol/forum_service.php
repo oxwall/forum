@@ -946,16 +946,194 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Add post
+     * 
+     * @param FORUM_BOL_Topic $topicDto
+     * @param array $data
+     *      string text
+     *      string attachmentUid
+     * @return FORUM_BOL_Post
+     */
+    public function addPost( FORUM_BOL_Topic $topicDto, array $data )
+    {
+        $postDto = new FORUM_BOL_Post();
+        $postDto->topicId = $topicDto->id;
+        $postDto->userId = OW::getUser()->getId();
+        $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($data['text'], array('form', 'input', 'button'), null, true));
+
+        $postDto->createStamp = time();
+        $this->saveOrUpdatePost($postDto);
+
+        $topicDto->lastPostId = $postDto->getId();
+        $this->saveOrUpdateTopic($topicDto);
+
+        $this->deleteByTopicId($topicDto->id);
+
+        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
+
+        if ( $enableAttachments )
+        {
+            $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $data['attachmentUid']);
+
+            if ( $filesArray )
+            {
+                $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
+                $skipped = 0;
+
+                foreach ( $filesArray as $file )
+                {
+                    $attachmentDto = new FORUM_BOL_PostAttachment();
+                    $attachmentDto->postId = $postDto->id;
+                    $attachmentDto->fileName = $file['dto']->origFileName;
+                    $attachmentDto->fileNameClean = $file['dto']->fileName;
+                    $attachmentDto->fileSize = $file['dto']->size * 1024;
+                    $attachmentDto->hash = uniqid();
+
+                    $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
+
+                    if ( !$added )
+                    {
+                        $skipped++;
+                    }
+                }
+
+                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
+            }
+        }
+
+        $event = new OW_Event('forum.add_post', array('postId' => $postDto->id, 'topicId' => $topicDto->id, 'userId' => $postDto->userId));
+        OW::getEventManager()->trigger($event);
+
+        $forumGroup = $this->findGroupById($topicDto->groupId);
+        if ( $forumGroup )
+        {
+            $forumSection = $this->findSectionById($forumGroup->sectionId);
+            if ( $forumSection )
+            {
+                $pluginKey = $forumSection->isHidden ? $forumSection->entity : 'forum';
+                $action = $forumSection->isHidden ? 'add_topic' : 'edit';
+                BOL_AuthorizationService::getInstance()->trackAction($pluginKey, $action);
+            }
+        }
+
+        return $postDto;
+    }
+
+    /**
+     * Edit topic
+     * 
+     * @param integer $userId
+     * @param array $data
+     *      string text
+     *      string attachmentUid
+     * @param FORUM_BOL_Topic $topicDto
+     * @param FORUM_BOL_Post $postDto
+     * @param FORUM_BOL_Section $forumSection
+     * @param FORUM_BOL_Group $forumGroup
+     * @return void
+     */
+    public function editTopic($userId, array $data, FORUM_BOL_Topic $topicDto, 
+            FORUM_BOL_Post $postDto, FORUM_BOL_Section $forumSection, FORUM_BOL_Group $forumGroup)
+    {
+        //save topic
+        $topicDto->title = strip_tags($data['title']);
+        $this->saveOrUpdateTopic($topicDto);
+
+        //save post
+        $postDto->text = UTIL_HtmlTag::
+                stripJs(UTIL_HtmlTag::stripTags(trim($data['text']), array('form', 'input', 'button'), null, true));
+
+        $this->saveOrUpdatePost($postDto);
+
+        //save post edit info
+        $editPostDto = $this->findEditPost($postDto->id);
+
+        if ( $editPostDto === null )
+        {
+            $editPostDto = new FORUM_BOL_EditPost();
+        }
+
+        $editPostDto->postId = $postDto->id;
+        $editPostDto->userId = $userId;
+        $editPostDto->editStamp = time();
+        $this->saveOrUpdateEditPost($editPostDto);
+
+        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
+
+        if ( $enableAttachments )
+        {
+            $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $data['attachmentUid']);
+
+            if ( $filesArray )
+            {
+                $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
+                $skipped = 0;
+
+                foreach ( $filesArray as $file )
+                {
+                    $attachmentDto = new FORUM_BOL_PostAttachment();
+                    $attachmentDto->postId = $postDto->id;
+                    $attachmentDto->fileName = $file['dto']->origFileName;
+                    $attachmentDto->fileNameClean = $file['dto']->fileName;
+                    $attachmentDto->fileSize = $file['dto']->size * 1024;
+                    $attachmentDto->hash = uniqid();
+
+                    $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
+
+                    if ( !$added )
+                    {
+                        $skipped++;
+                    }
+                }
+
+                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
+            }
+        }
+
+        $topicUrl = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topicDto->id));
+
+        $params = array(
+            'topicId' => $topicDto->id,
+            'entity' => $forumSection->entity ? $forumSection->entity : NULL,
+            'entityId' => $forumGroup->entityId ? $forumGroup->entityId : NULL,
+            'userId' => $topicDto->userId,
+            'topicUrl' => $topicUrl,
+            'topicTitle' => $topicDto->title,
+            'postText' => $postDto->text
+        );
+
+        OW::getEventManager()->trigger(new OW_Event('feed.action', array(
+            'pluginKey' => 'forum',
+            'entityType' => 'forum-topic',
+            'entityId' => $topicDto->id,
+            'userId' => $topicDto->userId,
+            'time' => $postDto->createStamp
+        )));
+
+        OW::getEventManager()->trigger(new OW_Event(FORUM_BOL_ForumService::EVENT_AFTER_TOPIC_EDIT, array(
+            'topicId' => $topicDto->id
+        )));
+
+        $event = new OW_Event('forum.topic_add', $params);
+        OW::getEventManager()->trigger($event);
+    }
+
+    /**
      * Add topic 
      * 
      * @param FORUM_BOL_Group $forumGroup
      * @param boolean $isHidden
      * @param integer $userId
      * @param array $data
+     *      integer group
+     *      string title
+     *      string text
+     *      string attachmentUid
+     *      integer subscribe
      * @param object $forumSection
      * @return FORUM_BOL_Topic
      */
-    public function addTopic( $forumGroup, $isHidden, $userId, array $data, $forumSection = null )
+    public function addTopic( FORUM_BOL_Group $forumGroup, $isHidden, $userId, array $data, $forumSection = null )
     {
          $topicDto = new FORUM_BOL_Topic();
 

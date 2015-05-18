@@ -209,7 +209,7 @@ class FORUM_CTRL_AddTopic extends OW_ActionController
      */
     private function generateForm( $groupSelect, $groupId, $isHidden, $uid )
     {
-        $form = new FORUM_CLASS_TopicForm(
+        $form = new FORUM_CLASS_TopicAddForm(
             'add-topic-form', 
             $uid, 
             $groupSelect, 
