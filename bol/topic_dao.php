@@ -132,6 +132,32 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
     }
 
     /**
+     * Returns simple forum group's topic list
+     *
+     * @param int $groupId
+     * @param int $first
+     * @param int $count
+     * @param integer $lastTopicId
+     * @return array of FORUM_BOL_Topic
+     */
+    public function findSimpleGroupTopicList( $groupId, $first, $count, $lastTopicId = null )
+    {
+        $example = new OW_Example();
+
+        $example->andFieldEqual('groupId', $groupId);
+
+        if ( $lastTopicId )
+        {
+            $example->andFieldGreaterThan('id', $lastTopicId);
+        }
+
+        $example->setOrder('`id`');
+        $example->setLimitClause($first, $count);
+
+        return $this->findListByExample($example);
+    }
+
+    /**
      * Returns forum group's topic list
      * 
      * @param int $groupId
@@ -255,6 +281,32 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
 		";
 
         return $this->dbo->queryForRow($query, array($topicId));
+    }
+
+    /**
+     * Returns topic list by ids
+     * 
+     * @param array $topicIds
+     * @return array 
+     */
+    public function findListByTopicIds( array $topicIds )
+    {
+        if ( !$topicIds )
+        {
+            return array();
+        }
+
+        $topicsIn = $this->dbo->mergeInClause($topicIds);
+        $query = "
+		SELECT `t`.*, `g`.`id` AS `groupId`, `g`.`name` AS `groupName`, `s`.`name` AS `sectionName`, `s`.`id` AS `sectionId` 
+		FROM `" . $this->getTableName() . "` AS `t`
+		INNER JOIN `" . FORUM_BOL_GroupDao::getInstance()->getTableName() . "` AS `g` 
+		ON (`t`.`groupId` = `g`.`id`)
+		INNER JOIN `" . FORUM_BOL_SectionDao::getInstance()->getTableName() . "` AS `s`
+		ON (`g`.`sectionId` = `s`.`id`)
+		WHERE t.id IN (" . $topicsIn .") ORDER BY FIELD (t.id, " . $topicsIn . ")";
+
+        return $this->dbo->queryForList($query);
     }
 
     /**

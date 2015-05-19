@@ -93,13 +93,19 @@ class FORUM_BOL_PostDao extends OW_BaseDao
      * @param int $topicId
      * @param int $first
      * @param int $count
+     * @param int $lastPostId
      * @return array of FORUM_BOL_Post
      */
-    public function findTopicPostList( $topicId, $first, $count )
+    public function findTopicPostList( $topicId, $first, $count, $lastPostId = null )
     {
         $example = new OW_Example();
-
         $example->andFieldEqual('topicId', $topicId);
+
+        if ( $lastPostId )
+        {
+            $example->andFieldGreaterThan('id', $lastPostId);
+        }
+
         $example->setOrder('`id`');
         $example->setLimitClause($first, $count);
 
@@ -224,316 +230,28 @@ class FORUM_BOL_PostDao extends OW_BaseDao
         
         return $this->dbo->queryForRow($sql, array('groupId' => $groupId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED));
     }
-    
-    public function getUserTokenJoinString( $userToken )
+
+    /**
+     * Returns post list by ids
+     * 
+     * @param array $postIds
+     * @return array 
+     */
+    public function findListByPostIds( array $postIds )
     {
-        $userTokenJoin = "";
-
-        if ( mb_strlen($userToken) )
+        if ( !$postIds )
         {
-            $question = OW::getConfig()->getValue('base', 'display_name_question');
-            if ( $question == 'username' )
-            {
-                $userTokenJoin = " INNER JOIN `".BOL_UserDao::getInstance()->getTableName()."` AS `u`
-                    ON (`u`.`id` = `p`.`userId` AND `u`.`username` LIKE '".$this->dbo->escapeString($userToken)."%') ";
-            }
-            else
-            {
-                $userTokenJoin = " INNER JOIN `".BOL_QuestionDataDao::getInstance()->getTableName()."` AS `qd`
-                    ON (`qd`.`userId`=`p`.`userId` AND `qd`.`questionName`='realname'
-                    AND `qd`.`textValue` LIKE '".$this->dbo->escapeString($userToken)."%') ";
-            }
+            return array();
         }
 
-        return $userTokenJoin;
-    }
-    
-    public function searchInGroups( $token, $userToken, $page, $limit, $excludeGroupIdList = null, $sortBy = null )
-    {
-        $excludeCond = $excludeGroupIdList ? ' AND `g`.`id` NOT IN ('.implode(',', $excludeGroupIdList).') = 1' : '';
-        $sortCond = $sortBy == 'date' ? ' `p`.`createStamp` DESC, ' : '';
-        
-        $limit = (int) $limit;
-        $first = ( $page - 1 ) * $limit;
-        
-        if ( !mb_strlen($token) ) // search by name only
-        {
-            $query = "SELECT `t`.*, `g`.`sectionId`, `s`.`name` AS `sectionName`, `g`.`name` AS `groupName`
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-                INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-                INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE 1 ".$excludeCond." AND `s`.`isHidden` = 0 AND `t`.`status` = :status
-                GROUP BY `t`.`id`
-                ORDER BY `p`.`createStamp` DESC
-                LIMIT :first, :limit";
+        $postsIn = $this->dbo->mergeInClause($postIds);
 
-            $params = array('status' => FORUM_BOL_ForumService::STATUS_APPROVED, 'first' => (int)$first, 'limit' => (int)$limit);
-        }
-        else
-        {
-            $multiple = $this->countTokenWords($token) > 1;
-            $booleanMode = $multiple ? ' IN BOOLEAN MODE' : '';
-            $token = $booleanMode ? '"'.$token.'"' : $token;
+        $query = "
+		SELECT  *
+		FROM `" . $this->getTableName() . "`
+		WHERE id IN (" . $postsIn .") ORDER BY FIELD (id, " . $postsIn . ")";
 
-        $query = "SELECT `t`.*, `g`.`sectionId`, `s`.`name` AS `sectionName`, `g`.`name` AS `groupName`, 
-                MATCH (`t`.`title`) AGAINST(:token".$booleanMode."), MATCH (`p`.`text`) AGAINST(:token".$booleanMode.")
-            FROM `".$this->getTableName()."` AS `p`
-            INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-            INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-            INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE (MATCH (`t`.`title`) AGAINST(:token".$booleanMode.") OR MATCH (`p`.`text`) AGAINST(:token".$booleanMode."))
-            ".$excludeCond." AND `s`.`isHidden` = 0 AND `t`.`status` = :status
-            GROUP BY `t`.`id`
-                ORDER BY ".$sortCond." MATCH (`t`.`title`) AGAINST(:token".$booleanMode.") DESC, MATCH (`p`.`text`) AGAINST(:token".$booleanMode.") DESC
-            LIMIT :first, :limit";
-        
-        $params = array('status' => FORUM_BOL_ForumService::STATUS_APPROVED, 'token' => $token, 'first' => (int)$first, 'limit' => (int)$limit);
-        }
-        
-        return $this->dbo->queryForList($query, $params);
-    }
-    
-    public function countFoundTopicsInGroups( $token, $userToken, $excludeGroupIdList = null )
-    {
-        $excludeCond = $excludeGroupIdList ? ' AND `g`.`id` NOT IN ('.implode(',', $excludeGroupIdList).') = 1' : '';
-
-        if ( !mb_strlen($token) ) // search by name only
-        {
-            $query = "SELECT count(DISTINCT(`t`.`id`))
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-                INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-                INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE 1 ".$excludeCond." AND `s`.`isHidden` = 0 AND `t`.`status` = :status";
-            $params = array('status' => FORUM_BOL_ForumService::STATUS_APPROVED);
-        }
-        else
-        {
-            $multiple = $this->countTokenWords($token) > 1;
-            $booleanMode = $multiple ? ' IN BOOLEAN MODE' : '';
-            $token = $booleanMode ? '"'.$token.'"' : $token;
-
-        $query = "SELECT count(DISTINCT(`t`.`id`)) 
-            FROM `".$this->getTableName()."` AS `p`
-            INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-            INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-            INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE (MATCH (`t`.`title`) AGAINST(:token".$booleanMode.") OR MATCH (`p`.`text`) AGAINST(:token".$booleanMode."))
-            ".$excludeCond." AND `s`.`isHidden` = 0 AND `t`.`status` = :status";
-            $params = array('token' => $token, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED);
-        }
-
-        return (int) $this->dbo->queryForColumn($query, $params);
-    }
-
-    public function searchInSection( $token, $userToken, $sectionId, $page, $limit, $excludeGroupIdList = null, $sortBy = null )
-    {
-        $excludeCond = $excludeGroupIdList ? ' AND `g`.`id` NOT IN ('.implode(',', $excludeGroupIdList).') = 1' : '';
-        $sortCond = $sortBy == 'date' ? ' `p`.`createStamp` DESC, ' : '';
-
-        $limit = (int) $limit;
-        $first = ( $page - 1 ) * $limit;
-
-        if ( !mb_strlen($token) ) // search by name only
-        {
-            $query = "SELECT `t`.*, `g`.`sectionId`, `s`.`name` AS `sectionName`, `g`.`name` AS `groupName`
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-                INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-                INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE 1 ".$excludeCond." AND `s`.`id` = :sectionId
-                GROUP BY `t`.`id`
-                ORDER BY `p`.`createStamp` DESC
-                LIMIT :first, :limit";
-
-            $params = array('first' => $first, 'limit' => $limit, 'sectionId' => $sectionId);
-        }
-        else
-        {
-            $multiple = $this->countTokenWords($token) > 1;
-            $booleanMode = $multiple ? ' IN BOOLEAN MODE' : '';
-            $token = $booleanMode ? '"'.$token.'"' : $token;
-
-            $query = "SELECT `t`.*, `g`.`sectionId`, `s`.`name` AS `sectionName`, `g`.`name` AS `groupName`,
-                MATCH (`t`.`title`) AGAINST(:token".$booleanMode."), MATCH (`p`.`text`) AGAINST(:token".$booleanMode.")
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-                INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-                INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE (MATCH (`t`.`title`) AGAINST(:token".$booleanMode.") OR MATCH (`p`.`text`) AGAINST(:token".$booleanMode."))
-                ".$excludeCond." AND `s`.`id` = :sectionId
-                GROUP BY `t`.`id`
-                ORDER BY ".$sortCond." MATCH (`t`.`title`) AGAINST(:token".$booleanMode.") DESC, MATCH (`p`.`text`) AGAINST(:token".$booleanMode.") DESC
-                LIMIT :first, :limit";
-
-            $params = array('token' => $token, 'first' => $first, 'limit' => $limit, 'sectionId' => $sectionId);
-        }
-
-        return $this->dbo->queryForList($query, $params);
-    }
-
-    public function countFoundTopicsInSection( $token, $userToken, $sectionId, $excludeGroupIdList = null )
-    {
-        $excludeCond = $excludeGroupIdList ? ' AND `g`.`id` NOT IN ('.implode(',', $excludeGroupIdList).') = 1' : '';
-
-        if ( !mb_strlen($token) ) // search by name only
-        {
-            $query = "SELECT count(DISTINCT(`t`.`id`))
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-                INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-                INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE 1 ".$excludeCond." AND `s`.`id` = :sectionId";
-        
-            $params = array('sectionId' => $sectionId);
-        }
-        else
-        {
-            $multiple = $this->countTokenWords($token) > 1;
-            $booleanMode = $multiple ? ' IN BOOLEAN MODE' : '';
-            $token = $booleanMode ? '"'.$token.'"' : $token;
-
-            $query = "SELECT count(DISTINCT(`t`.`id`))
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-                INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-                INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE (MATCH (`t`.`title`) AGAINST(:token".$booleanMode.") OR MATCH (`p`.`text`) AGAINST(:token".$booleanMode."))
-                ".$excludeCond." AND `s`.`id` = :sectionId";
-
-            $params = array('token' => $token, 'sectionId' => $sectionId);
-    }
-    
-        return (int)$this->dbo->queryForColumn($query, $params);
-    }
-    
-    public function searchInGroup( $token, $userToken, $page, $limit, $groupId, $isHidden = 0, $sortBy = null )
-    {
-        $hiddenCond = $isHidden ? ' AND `s`.`isHidden` = 1' : ' AND `s`.`isHidden` = 0';
-        $sortCond = $sortBy == 'date' ? ' `p`.`createStamp` DESC, ' : '';
-        
-        $limit = (int) $limit;
-        $first = ( $page - 1 ) * $limit;
-        
-        if ( !mb_strlen($token) ) // search by name only
-        {
-            $query = "SELECT `t`.*, `g`.`sectionId`, `s`.`name` AS `sectionName`, `g`.`name` AS `groupName`
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-                INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-                INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE `g`.`id` = :groupId AND `t`.`status` = :status " . $hiddenCond."
-                GROUP BY `t`.`id`
-                ORDER BY `p`.`createStamp` DESC
-                LIMIT :first, :limit";
-
-            $params = array('groupId' => $groupId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED, 'first' => (int)$first, 'limit' => (int)$limit);
-        }
-        else
-        {
-            $multiple = $this->countTokenWords($token) > 1;
-            $booleanMode = $multiple ? ' IN BOOLEAN MODE' : '';
-            $token = $booleanMode ? '"'.$token.'"' : $token;
-
-        $query = "SELECT `t`.*, `g`.`sectionId`, `s`.`name` AS `sectionName`, `g`.`name` AS `groupName`, 
-                MATCH (`t`.`title`) AGAINST(:token".$booleanMode."), MATCH (`p`.`text`) AGAINST(:token".$booleanMode.")
-            FROM `".$this->getTableName()."` AS `p`
-            INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-            INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-            INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE (MATCH (`t`.`title`) AGAINST(:token".$booleanMode.") OR MATCH (`p`.`text`) AGAINST(:token".$booleanMode."))
-            AND `g`.`id` = :groupId AND `t`.`status` = :status " . $hiddenCond."
-            GROUP BY `t`.`id`
-                ORDER BY ".$sortCond." MATCH (`t`.`title`) AGAINST(:token".$booleanMode.") DESC,
-                MATCH (`p`.`text`) AGAINST(:token".$booleanMode.") DESC
-            LIMIT :first, :limit";
-        
-        $params = array('token' => $token, 'groupId' => $groupId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED, 'first' => (int)$first, 'limit' => (int)$limit);
-        }
-        
-        return $this->dbo->queryForList($query, $params);
-    }
-    
-    public function countFoundTopicsInGroup( $token, $userToken, $groupId, $isHidden = 0 )
-    {
-        $hiddenCond = $isHidden ? ' AND `s`.`isHidden` = 1' : ' AND `s`.`isHidden` = 0';
-
-        if ( !mb_strlen($token) ) // search by name only
-        {
-        $query = "SELECT count(DISTINCT(`t`.`id`)) 
-            FROM `".$this->getTableName()."` AS `p`
-            INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-            INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-            INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE `g`.`id` = :groupId AND `t`.`status` = :status " . $hiddenCond;
-
-            $params = array('groupId' => $groupId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED);
-        }
-        else
-        {
-            $multiple = $this->countTokenWords($token) > 1;
-            $booleanMode = $multiple ? ' IN BOOLEAN MODE' : '';
-            $token = $booleanMode ? '"'.$token.'"' : $token;
-
-            $query = "SELECT count(DISTINCT(`t`.`id`))
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON (`t`.`id`=`p`.`topicId`)
-                INNER JOIN `".FORUM_BOL_GroupDao::getInstance()->getTableName()."` AS `g` ON (`g`.`id`=`t`.`groupId`)
-                INNER JOIN `".FORUM_BOL_SectionDao::getInstance()->getTableName()."` AS `s` ON (`s`.`id`=`g`.`sectionId`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE (MATCH (`t`.`title`) AGAINST(:token".$booleanMode.") OR MATCH (`p`.`text`) AGAINST(:token".$booleanMode."))
-            AND `g`.`id` = :groupId AND `t`.`status` = :status " . $hiddenCond;
-        
-        $params = array('token' => $token, 'groupId' => $groupId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED);
-        }
-        
-        return (int)$this->dbo->queryForColumn($query, $params);
-    }
-    
-    public function searchInTopic( $token, $userToken, $topicId, $sortBy = null )
-    {
-        $sortCond = $sortBy == 'date' ? ' `createStamp` DESC, ' : '';
-        
-        if ( !mb_strlen($token) ) // search by name only
-        {
-            $query = "SELECT `p`.*
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON(`p`.`topicId` = `t`.`id`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE `p`.`topicId` = :topicId AND `t`.`status` = :status
-                ORDER BY `createStamp` DESC";
-
-            $params = array('topicId' => $topicId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED);
-        }
-        else
-        {
-            $multiple = $this->countTokenWords($token) > 1;
-            $booleanMode = $multiple ? ' IN BOOLEAN MODE' : '';
-            $token = $booleanMode ? '"'.$token.'"' : $token;
-
-            $query = "SELECT `p`.*, MATCH (`p`.`text`) AGAINST(:token".$booleanMode.")
-                FROM `".$this->getTableName()."` AS `p`
-                INNER JOIN `".FORUM_BOL_TopicDao::getInstance()->getTableName()."` AS `t` ON(`p`.`topicId` = `t`.`id`)
-                " . $this->getUserTokenJoinString($userToken) . "
-                WHERE MATCH (`p`.`text`) AGAINST(:token".$booleanMode.") AND `p`.`topicId` = :topicId AND `t`.`status` = :status
-                ORDER BY ".$sortCond." MATCH (`p`.`text`) AGAINST(:token".$booleanMode.") DESC";
-        
-        $params = array('token' => $token, 'topicId' => $topicId, 'status' => FORUM_BOL_ForumService::STATUS_APPROVED);
-        }
-        
-        return $this->dbo->queryForObjectList($query, 'FORUM_BOL_Post', $params);
+        return $this->dbo->queryForList($query);
     }
 
     private function countTokenWords( $token )

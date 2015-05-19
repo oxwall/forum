@@ -454,6 +454,9 @@ class FORUM_CTRL_Topic extends OW_ActionController
         $this->assign('canEdit', $canEdit);
         $this->assign('canMoveToHidden', $canMoveToHidden);
 
+        // remember the last forum page
+        OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
+
         OW::getDocument()->setTitle($topicInfo['title']);
         OW::getDocument()->setDescription($firstPostText);
 
@@ -896,6 +899,16 @@ class FORUM_CTRL_Topic extends OW_ActionController
     }
 
     /**
+     * Get text search service
+     * 
+     * @return FORUM_BOL_TextSearchService
+     */
+    private function getTextSearchService()
+    {
+        return FORUM_BOL_TextSearchService::getInstance();
+    }
+
+    /**
      * This action moves the topic called by ajax request
      */
     public function moveTopic()
@@ -905,11 +918,11 @@ class FORUM_CTRL_Topic extends OW_ActionController
 
         if ( OW::getRequest()->isAjax() && $_POST['topic-id'] )
         {
-            $topicId = (int) $_POST['topic-id'];
-            $groupId = (int) $_POST['group-id'];
+            $topicId = (int) $_POST['topic-id']; // moved topic
+            $groupId = (int) $_POST['group-id']; // new forum id
 
-            $groupDto = $this->forumService->findGroupById($groupId);
-            $topicDto = $this->forumService->findTopicById($topicId);
+            $groupDto = $this->forumService->findGroupById($groupId); // new forum info
+            $topicDto = $this->forumService->findTopicById($topicId); // moved topic dto
 
             if ( $groupDto === null || $topicDto === null || !$isModerator )
             {
@@ -919,7 +932,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
             //create replace topic
             $replaceTopicDto = new FORUM_BOL_Topic();
 
-            $replaceTopicDto->groupId = $topicDto->groupId;
+            $replaceTopicDto->groupId = $topicDto->groupId; // use the old forum
             $replaceTopicDto->userId = $userId;
             $replaceTopicDto->title = $topicDto->title;
             $replaceTopicDto->locked = 1;
@@ -958,7 +971,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
             $topicDto->groupId = $groupDto->id;
             $topicDto->lastPostId = $postDto->id;
 
-            $this->forumService->saveOrUpdateTopic($topicDto);
+            $this->forumService->saveOrUpdateTopic($topicDto, true);
 
             echo json_encode($this->forumService->getPostUrl($replaceTopicDto->id, $replacePostDto->id, false));
         }

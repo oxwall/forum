@@ -1,0 +1,121 @@
+{style}
+    {literal}
+        .ow_forum_advanced_search .ow_multiselect {
+            width: 100%;
+            height:200px;
+        }
+
+        .ow_forum_advanced_search #search_usage_example_wrapper {
+            padding-top:10px;
+        }
+
+        #forum_manage_buttons .ow_forum_breadcrumb_wrapper .ow_box_empty {
+            margin:0
+        }
+    {/literal}
+{/style}
+
+
+<div style="display: table; width: 100%; margin-bottom: 16px;" id="forum_manage_buttons">
+    <div class="ow_forum_breadcrumb_wrapper" style="display: table-cell; vertical-align: bottom; width: 50%;">
+        {$breadcrumb}
+    </div>
+    <div class="ow_txtright ow_btn_delimiter" style="display: table-cell; vertical-align: bottom;">
+        {block_decorator name='button'
+            langLabel="forum+back_forum"
+            class="ow_ic_left_arrow ow_forum_back"}
+        {/block_decorator}
+    </div>
+</div>
+
+{form name="search_form"}
+
+    <div class="ow_superwide ow_automargin ow_forum_advanced_search">
+        <table class="ow_table_1">
+            <tr class="ow_tr_first">
+                <th colspan="2">{text key="forum+search"}</th>
+            </tr>
+            <tr class="ow_alt1">
+                <td colspan="2" class="ow_txtleft ow_small">
+                    {input name="keyword" class="ow_smallmargin"}
+                    <a id="search_usage_example" href="#">{text key="forum+search_example_usage"}</a>
+                    <div id="search_usage_example_wrapper" style="display:none">
+                        {text key="forum+search_example_usage_text"} 
+                    </div>
+                </td>
+            </tr>
+            <tr class="ow_alt1">
+                <td class="ow_txtcenter" width="35%">
+                    {label name="username"}
+                </td>
+                <td class="ow_txtleft">
+                    {input name="username"}
+                </td>
+            </tr>
+            <tr class="ow_tr_delimiter"><td></td></tr>
+            <tr class="ow_tr_first">
+                <th colspan="2">{text key="forum+where_to_search"}</th>
+            </tr>
+            <tr class="ow_alt1">
+                <td class="ow_txtcenter">
+                    {label name="parts[]"}
+                </td>
+                <td class="ow_txtleft">
+                    {input name="parts[]"}
+                </td>
+            </tr>
+            <tr class="ow_alt1">
+                <td class="ow_txtcenter">
+                    {label name="search_in"}
+                </td>
+                <td class="ow_txtleft">
+                    {input name="search_in"}
+                </td>
+            </tr>
+            <tr class="ow_tr_delimiter"><td></td></tr>
+            <tr class="ow_tr_first">
+                <th colspan="2">{text key="forum+additional"}</th>
+            </tr>
+            <tr class="ow_alt1">
+                <td class="ow_txtcenter">
+                    {label name="period"}
+                </td>
+                <td class="ow_txtleft">
+                    {input name="period"}
+                </td>
+            </tr>
+            <tr class="ow_alt1">
+                <td class="ow_txtcenter">
+                    {label name="sort"}
+                </td>
+                <td class="ow_txtleft">
+                    {input name="sort"}
+                    {input name="sort_direction"}
+                </td>
+            </tr>
+        </table>
+        
+        <div class="clearfix">
+            <div class="ow_right">
+                <span class="ow_button">
+                    <span class=" ow_ic_search">
+                        {submit name="submit"}
+                    </span>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+{/form}
+
+{script}
+    $("#search_usage_example").click(function(e) {
+        e.preventDefault();
+        $("#search_usage_example_wrapper").toggle("slow");
+    });
+
+    $("#forum_manage_buttons .ow_forum_back").bind("click", function(e){
+        location.href="{$backUrl}";
+    });
+{/script}
