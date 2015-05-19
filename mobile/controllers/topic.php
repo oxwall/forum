@@ -95,6 +95,7 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         OW::getLanguage()->addKeyForJs('forum', 'attached_files');
 
         // assign view variables
+        $this->assign('userId', $userId);
         $this->assign('topicInfo', $topicInfo);
         $this->assign('page', $page);
         $this->assign('isOwner', $isOwner);

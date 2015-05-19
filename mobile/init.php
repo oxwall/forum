@@ -52,3 +52,4 @@ OW::getRouter()->addRoute(new OW_Route('forum_delete_attachment', 'forum/deleteA
 OW::getRouter()->addRoute(new OW_Route('edit-topic', 'forum/edit-topic/:id', 'FORUM_MCTRL_EditTopic', 'index'));
 
 FORUM_MCLASS_EventHandler::getInstance()->init();
+FORUM_CLASS_ContentProvider::getInstance()->init();

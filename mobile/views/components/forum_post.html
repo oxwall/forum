@@ -53,12 +53,20 @@
                 {/if}
             </div>
             <div class="owm_card_toolbar">
-                <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix">
+                <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix" data-id="{$post.id}">
                     {if $canQuote }
-                        <li class="owm_card_toolbar_quote" data-id="{$post.id}"><a href="#">Quote</a></li>
+                        <li class="owm_card_toolbar_quote">
+                            <a href="#">{text key='forum+quote'}</a>
+                        </li>
                     {/if}
-                    <li class="owm_card_toolbar_flag"><a href="#">Flag</a></li>
-                    <li class="owm_card_toolbar_share"><a href="#">Share</a></li>
+                    {if $post.userId != $userId}
+                        <li class="owm_card_toolbar_flag">
+                            <a href="#">{text key='forum+flag'}</a>
+                        </li>
+                    {/if}
+                    <!-- <li class="owm_card_toolbar_share">
+                        <a href="#">{text key='forum+share'}</a>
+                    </li> -->
                 </ul>
             </div>
             {add_content key="forum.after_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
@@ -70,19 +78,29 @@
     </div>
 {/foreach}
 
+<div>
+    
+</div>
 {if isset($paging)}{$paging}{/if}
 
-{if $canQuote }
-    {script}
-        $(document).ready(function(){
+{script}
+    $(document).ready(function(){
+        // flag post
+        $(".owm_card_toolbar_flag").bind("click", function(e){
+            e.preventDefault();
+            OWM.flagContent("forum_post", $(this).parent().attr("data-id"));
+        });
+
+        {if $canQuote }
+            // quote post
             $(".owm_card_toolbar_quote").bind("click", function(e){
                 e.preventDefault();
- 
+
                 // show the post form
-                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id}, "postId" : $(this).attr("data-id") }], {
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id}, "postId" : $(this).parent().attr("data-id") }], {
                     "title" : "{text key='forum+add_post_title'}"
                 });
-            })
-        });
-    {/script}
-{/if}
+            });
+        {/if}
+    });
+{/script}
