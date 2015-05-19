@@ -1020,6 +1020,68 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Edit post
+     * 
+     * @param integer $userId
+     * @param array $data
+     *      string text
+     *      string attachmentUid
+     * @param FORUM_BOL_Post $postDto
+     * @return void
+     */
+    public function editPost( $userId, array $data, FORUM_BOL_Post $postDto )
+    {
+        //save post
+        $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($data['text'], array('form', 'input', 'button'), null, true));
+        $this->saveOrUpdatePost($postDto);
+
+        //save post edit info
+        $editPostDto = $this->findEditPost($postDto->id);
+
+        if ( $editPostDto === null )
+        {
+            $editPostDto = new FORUM_BOL_EditPost();
+        }
+
+        $editPostDto->postId = $postDto->id;
+        $editPostDto->userId = $userId;
+        $editPostDto->editStamp = time();
+
+        $this->saveOrUpdateEditPost($editPostDto);
+        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
+        
+        if ( $enableAttachments )
+        {
+            $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $data['attachmentUid']);
+
+            if ( $filesArray )
+            {
+                $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
+                $skipped = 0;
+
+                foreach ( $filesArray as $file )
+                {
+                    $attachmentDto = new FORUM_BOL_PostAttachment();
+                    $attachmentDto->postId = $postDto->id;
+                    $attachmentDto->fileName = $file['dto']->origFileName;
+                    $attachmentDto->fileNameClean = $file['dto']->fileName;
+                    $attachmentDto->fileSize = $file['dto']->size * 1024;
+                    $attachmentDto->hash = uniqid();
+
+                    $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
+
+                    if ( !$added )
+                    {
+                        $skipped++;
+                    }
+                }
+
+                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
+            }
+        }
+    }
+
+    /**
      * Edit topic
      * 
      * @param integer $userId

@@ -63,7 +63,7 @@
 
 {if $enableAttachments}
     <div style="display: none">
-        <div id="forum_topic_attachments" class="owm_attach_win owm_forum_attach_win owm_padding">
+        <div id="forum_add_topic_attachments" class="owm_attach_win owm_forum_attach_win owm_padding">
             {$attachments}
             <div class="owm_padding owm_btn_wrap">
                 <span class="ow_button">
@@ -84,7 +84,7 @@
         {
             var forumAddTopicAttachments = new ForumAttachments({
                 "attachmentUid"      : "{$attachmentUid}",
-                "attachmentsWrapper" : $('#forum_topic_attachments'),
+                "attachmentsWrapper" : $('#forum_add_topic_attachments'),
                 "attachDefaultTitle" : $("#forum_add_topic_attach_default_title"),
                 "firstAttachName"    : $("#forum_add_topic_first_attach_name"),
                 "clearFiles"         : $("#forum_add_topic_clear_files"),

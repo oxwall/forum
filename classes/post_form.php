@@ -59,12 +59,8 @@ class FORUM_CLASS_PostForm extends Form
      * @param integer $topicId
      * @param boolean $mobileWysiwyg
      */
-    public function __construct(
-            $name, 
-            $attachmentUid, 
-            $topicId, 
-            $mobileWysiwyg = false
-    ) {
+    public function __construct( $name, $attachmentUid, $topicId, $mobileWysiwyg = false ) 
+    {
 
         parent::__construct($name);
         $lang = OW::getLanguage();

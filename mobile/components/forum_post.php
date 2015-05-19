@@ -116,6 +116,8 @@ class FORUM_MCMP_ForumPost extends OW_MobileComponent
         $this->assign('firstTopic', $forumService->findTopicFirstPost($topicInfo['id']));
         $this->assign('canEdit', $canEdit);
         $this->assign('canPost', $canPost);
+        $this->assign('postEnityType', FORUM_CLASS_ContentProvider::POST_ENTITY_TYPE);
+        $this->assign('topicEnityType', FORUM_CLASS_ContentProvider::ENTITY_TYPE);
 
         if ( $enableAttachments )
         {

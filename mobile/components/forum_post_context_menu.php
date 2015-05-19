@@ -30,25 +30,68 @@
  */
 
 /**
- * Forum post quote class.
+ * Forum post context menu class.
  *
  * @author Alex Ermashev <alexermashev@gmail.com>
  * @package ow.ow_plugins.forum.mobile.components
  * @since 1.0
  */
-class FORUM_MCMP_ForumPostQuote extends FORUM_CMP_ForumPostQuote
+class FORUM_MCMP_ForumPostContextMenu extends OW_MobileComponent
 {
+    /**
+     * Post id
+     * @var integer
+     */
+    protected $postId;
+
     /**
      * Class constructor
      * 
      * @param array $params
-     *      integer quoteId
+     *      integer topicId
+     *      integer postId
      */
-    public function __construct(array $params = array())
+    public function __construct( array $params = array() )
     {
-        parent::__construct($params);
-        
-        $plugin = OW::getPluginManager()->getPlugin('forum');
-        $this->setTemplate($plugin->getMobileCmpViewDir() . 'forum_post_quote.html');
+        parent::__construct();
+
+        $this->topicId = !empty($params['topicId']) ? $params['topicId'] : -1;
+        $this->postId = !empty($params['postId']) ? $params['postId'] : -1;
+    }
+
+    /**
+     * Render component
+     * 
+     * @return type
+     */
+    public function render()
+    {
+        $items[] = array(
+            'group' => 'forum',
+            'label' => OW::getLanguage()->text('forum', 'edit'),
+            'order' => 1,
+            'class' => null,
+            'href' => null,
+            'id' => null,
+            'attributes' => array(
+                'class' => 'forum_edit_post',
+                'data-id' => $this->postId,
+            )
+        );
+
+        $items[] = array(
+            'group' => 'forum',
+            'label' => OW::getLanguage()->text('forum', 'delete'),
+            'order' => 1,
+            'class' => null,
+            'href' => OW::getRouter()->urlForRoute('delete-post', array('topicId' => $this->topicId, 'postId' => $this->postId)),
+            'id' => null,
+            'attributes' => array(
+                'class' => 'forum_delete_post',
+            )
+        );
+
+        $menu = new BASE_MCMP_ContextAction($items);
+        return $menu->render();
     }
 }

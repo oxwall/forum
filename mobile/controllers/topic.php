@@ -114,6 +114,53 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_topic'));
     }
 
+    
+    /**
+     * Delete forum post
+     */
+    public function ajaxDeletePost( array $params )
+    {
+        $result  = false;
+        $postUrl = null;
+
+        $topicId = !empty($params['topicId']) ? (int) $params['topicId'] : null;
+        $postId = !empty($params['postId']) ? (int) $params['postId'] : null;
+
+        if ( OW::getRequest()->isPost() && $topicId && $postId ) 
+        {
+            $topicDto = $this->forumService->findTopicById($topicId);
+            $postDto = $this->forumService->findPostById($postId);
+
+            if ( $topicDto && $postDto )
+            {
+                $forumGroup = $this->forumService->findGroupById($topicDto->groupId);
+                $forumSection = $this->forumService->findSectionById($forumGroup->sectionId);
+                $userId = OW::getUser()->getId();
+                $isModerator = OW::getUser()->isAuthorized('forum');
+
+                if ( !$forumSection->isHidden && ($postDto->userId == $userId || $isModerator) )
+                {
+                    $prevPostDto = $this->forumService->findPreviousPost($topicId, $postId);
+
+                    if ( $prevPostDto ) 
+                    {
+                        $topicDto->lastPostId = $prevPostDto->id;
+                        $this->forumService->saveOrUpdateTopic($topicDto);
+
+                        $this->forumService->deletePost($postId);
+                        $postUrl = $this->forumService->getPostUrl($topicId, $prevPostDto->id, false);
+                        $result = true;
+                    }
+                }
+            }
+        }
+
+        die(json_encode(array(
+            'result' => $result,
+            'url' => $postUrl
+        )));
+    }
+
     /**
      * Delete attachment
      */

@@ -30,52 +30,62 @@
  */
 
 /**
- * Forum add post controller
+ * Forum edit post controller
  *
  * @author Alex Ermashev <alexermashev@gmail.com>
  * @package ow.ow_plugins.forum.mobile.controllers
  * @since 1.0
  */
-class FORUM_MCTRL_AddPost extends FORUM_MCTRL_AbstractForum
+class FORUM_MCTRL_EditPost extends FORUM_MCTRL_AbstractForum
 {
     /**
      * Controller's default action
      *
      * @param array $params
-     * @throws AuthorizationException
+     * @throws AuthorizationException|Redirect404Exception|AuthenticateException
      */
     public function index( array $params = null )
     {
-        if ( !isset($params['topicId']) || !($topicId = (int) $params['topicId']) )
+        if ( !isset($params['id']) || !($postId = (int) $params['id']) )
         {
             throw new Redirect404Exception();
         }
 
-        if ( !OW::getUser()->isAuthenticated() )
-        {
-            throw new AuthenticateException();
-        }
+        $forumService = FORUM_BOL_ForumService::getInstance();
+        $postDto = $forumService->findPostById($postId);
 
-        // check permissions
-        if ( !OW::getUser()->isAuthorized('forum', 'edit') )
-        {
-            $status = BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'edit');
-            throw new AuthorizationException($status['msg']);
-        }
-
-        // get topic info
-        $topicDto = $this->forumService->findTopicById($topicId);
-
-        if ( !$topicDto )
+        if ( !$postDto )
         {
             throw new Redirect404Exception();
         }
-        
+
+        $userId = OW::getUser()->getId();
+        $topicId = $postDto->topicId;
+        $topicDto = $forumService->findTopicById($topicId);
+
+        $forumGroup = $forumService->getGroupInfo($topicDto->groupId);
+        $forumSection = $forumService->findSectionById($forumGroup->sectionId);
+
+        if ( $forumSection->isHidden )
+        {
+            throw new Redirect404Exception();
+        }
+
+        $isModerator = OW::getUser()->isAuthorized('forum');
+        $canEdit = $postDto->userId == $userId;
+
+        if ( !$canEdit && !$isModerator )
+        {
+            throw new AuthorizationException();
+        }
+
+        $attachmentUid = uniqid();
+
         // get a form instance
         $form = new FORUM_CLASS_PostForm(
             'post_form', 
-            uniqid(), 
-            $topicDto->id, 
+            $attachmentUid, 
+            $topicId, 
             true
         );
 
@@ -84,29 +94,18 @@ class FORUM_MCTRL_AddPost extends FORUM_MCTRL_AbstractForum
         {
             $data = $form->getValues();
 
-            if ( $data['topic'] && $data['topic'] == $topicDto->id && !$topicDto->locked )
-            {
-                $quoteId = !empty($_POST['quoteId']) ? (int) $_POST['quoteId'] : null;
+            // update the post
+            $this->forumService->editPost($userId, $data, $postDto);
 
-                // add a quote to the text
-                if ( $quoteId )
-                {
-                    $postQuote = new FORUM_CMP_ForumPostQuote(array(
-                        'quoteId' => $quoteId
-                    ));
-
-                    $data['text'] = $postQuote->render() . $data['text'];
-                }
-
-                $postDto = $this->forumService->addPost($topicDto, $data);
-                return $this->redirect($this->forumService->getPostUrl($topicDto->id, $postDto->id));
-            }
+            $this->redirect(OW::getRouter()->
+                    urlForRoute('topic-default', array('topicId' => $topicId)));
         }
 
         OW::getFeedback()->
                 error(OW::getLanguage()->text('base', 'form_validate_common_error_message'));
 
+        // an error occured
         $this->redirect(OW::getRouter()->
-                        urlForRoute('topic-default', array('topicId' => $topicDto->id)));
+                        urlForRoute('topic-default', array('topicId' => $topicId)));
     }
 }

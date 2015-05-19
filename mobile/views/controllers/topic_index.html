@@ -45,6 +45,7 @@
                 canEdit=$canEdit
                 canPost=$canPost
                 userId=$userId
+                isModerator=$isModerator
             }
  
             {if $canSubscribe}
@@ -58,7 +59,8 @@
                             ? "{text key='forum+unsubscribe_confirm'}"
                             : "{text key='forum+subscribe_confirm'}";
 
-                        topicAction(confirmText, "{url_for_route for="subscribe-topic:[topicId=>`$topicInfo.id`]"}", function(){
+                        topicAction(confirmText, "{url_for_route for="subscribe-topic:[topicId=>`$topicInfo.id`]"}", function()
+                        {
                             // show or hide action buttons
                             if ( unsubscribe ) 
                             {
@@ -86,7 +88,8 @@
                             ? "{text key='forum+unsticky_topic_confirm'}"
                             : "{text key='forum+sticky_topic_confirm'}";
 
-                        topicAction(confirmText, "{url_for_route for="sticky-topic:[topicId=>`$topicInfo.id`]"}", function(){
+                        topicAction(confirmText, "{url_for_route for="sticky-topic:[topicId=>`$topicInfo.id`]"}", function()
+                        {
                             // show or hide action buttons
                             if ( unsticky ) 
                             {
@@ -113,7 +116,8 @@
                             ? "{text key='forum+unlock_topic_confirm'}"
                             : "{text key='forum+lock_topic_confirm'}";
 
-                        topicAction(confirmText, "{url_for_route for="lock-topic:[topicId=>`$topicInfo.id`]"}", function(){
+                        topicAction(confirmText, "{url_for_route for="lock-topic:[topicId=>`$topicInfo.id`]"}", function()
+                        {
                             location.reload();
                         });
                     });
@@ -127,11 +131,13 @@
                     /**
                      * Show a new topic form
                      */
-                    $("#forum_new_topic").bind("click", function(e){
+                    $( "#forum_new_topic" ).bind("click", function(e)
+                    {
                         e.preventDefault();
 
                         // show the topic form
-                        OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [{ "groupId" : {$topicInfo.groupId} }], {
+                        OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [{ "groupId" : {$topicInfo.groupId} }], 
+                        {
                             "title" : "{text key='forum+new_topic_btn'}"
                         });
                     });
@@ -144,7 +150,8 @@
                         $("#forum_edit_topic").bind("click", function(e)
                         {
                             // show the edit topic form
-                            OWM.ajaxFloatBox("FORUM_MCMP_ForumEditTopic", [{ "topicId" : {$topicInfo.id} }], {
+                            OWM.ajaxFloatBox("FORUM_MCMP_ForumEditTopic", [{ "topicId" : {$topicInfo.id} }], 
+                            {
                                 "title" : "{text key='forum+edit_topic'}"
                             });
                          });
@@ -157,7 +164,8 @@
                         {
                             e.preventDefault();
 
-                            topicAction("{text key='forum+delete_topic_confirm'}", "{url_for_route for="delete-topic:[topicId=>`$topicInfo.id`]"}", function(){
+                            topicAction("{text key='forum+delete_topic_confirm'}", "{url_for_route for="delete-topic:[topicId=>`$topicInfo.id`]"}", function()
+                            {
                                 location.href = "{url_for_route for="group-default:[groupId=>`$topicInfo.groupId`]"}";
                             });
                         });
@@ -174,9 +182,11 @@
                         /**
                          * Show a new post form
                          */
-                        $("#forum_new_post_wrappper").focus(function() {                           
+                        $("#forum_new_post_wrappper").focus(function() 
+                        {                
                             // show the post form
-                            OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id} }], {
+                            OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id} }], 
+                            {
                                 "title" : "{text key='forum+add_post_title'}"
                             });
                         });
