@@ -21,9 +21,9 @@
                 <div class="owm_forum_topic_bottom owm_forum_topic_submit owm_padding owm_bg_color_1 clearfix">
                     {if $enableAttachments}
                         <div class="owm_forum_topic_attach_info owm_float_left">
-                            <label id="forum_add_topic_attach_file" class="owm_attach_label owm_topic_attach_icon">
-                                <span id="forum_add_topic_attach_default_title">{text key='forum+attach_files'}</span>
-                                <span id="forum_add_topic_first_attach_name" style="display: none"></span>
+                            <label id="forum_edit_topic_attach_file" class="owm_attach_label owm_topic_attach_icon">
+                                <span id="forum_edit_topic_attach_default_title">{text key='forum+attach_files'}</span>
+                                <span id="forum_edit_topic_first_attach_name" style="display: none"></span>
                             </label>
                         </div>
                     {/if}
@@ -45,12 +45,12 @@
             <div class="owm_padding owm_btn_wrap">
                 <span class="ow_button">
                     <span class="ow_button">
-                        <input type="button" id="forum_add_topic_clear_files" value="{text key='forum+clear_all'}">
+                        <input type="button" id="forum_edit_topic_clear_files" value="{text key='forum+clear_all'}">
                     </span>
                 </span>
                 <span class="ow_button">
                     <span class="ow_button">
-                        <input type="button" id="forum_add_topic_attach_files" value="{text key='forum+add_files'}">
+                        <input type="button" id="forum_edit_topic_attach_files" value="{text key='forum+add_files'}">
                     </span>
                 </span>
             </div>
@@ -62,11 +62,11 @@
             var forumEditTopicAttachments = new ForumAttachments({
                 "attachmentUid"       : "{$attachmentUid}",
                 "attachmentsWrapper"  : $('#forum_edit_topic_attachments'),
-                "attachDefaultTitle"  : $("#forum_add_topic_attach_default_title"),
-                "firstAttachName"     : $("#forum_add_topic_first_attach_name"),
-                "clearFiles"          : $("#forum_add_topic_clear_files"),
-                "attachNewFiles"      : $("#forum_add_topic_attach_files"),
-                "attachNewFile"       : $("#forum_add_topic_attach_file")
+                "attachDefaultTitle"  : $("#forum_edit_topic_attach_default_title"),
+                "firstAttachName"     : $("#forum_edit_topic_first_attach_name"),
+                "clearFiles"          : $("#forum_edit_topic_clear_files"),
+                "attachNewFiles"      : $("#forum_edit_topic_attach_files"),
+                "attachNewFile"       : $("#forum_edit_topic_attach_file")
             });
 
             {if !empty($attachments)}
