@@ -1,13 +1,10 @@
 <div class="owm_padding owm_bg_color_1">
     {form name="post_form"}
-        {if !empty($quoteText) && !empty($quoteId)}           
-            <div class="owm_quote owm_std_margin_bottom">
-                {$quoteText}
-                <a href="#" id="close_forum_quote" class="owm_attach_preview_close"></a>
-                <input type="hidden" name="quoteId" value="{$quoteId}" />
-            </div>
-        {/if}
         <div class="owm_forum_topic owm_forum_topic_reply">
+            {if !empty($quoteText) && !empty($quoteId)}
+                <a id="forum_view_quote" href="#">{text key='forum+view_quote'}</a>
+                <input type="hidden" name="quoteId" value="{$quoteId}" />
+            {/if}
             <div class="owm_forum_topic_nav">
                 <div class="owm_forum_name_select owm_bg_color_1">
                     <div class="owm_select_wrap">
@@ -39,10 +36,22 @@
     {/form}
 </div>
 
+{if !empty($quoteText) && !empty($quoteId)}
+    <div style="display:none">
+        <div class="owm_padding owm_bg_color_1" id="forum_post_attach_wrapper">
+            <div class="owm_forum_topic owm_forum_topic_reply">
+                <div class="owm_quote owm_std_margin_bottom" id="forum_post_attach_wrapper">
+                    {$quoteText}
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
+
 
 {if $enableAttachments}
     <div style="display: none">
-        <div id="forum_post_attachments" class="owm_attach_win owm_forum_attach_win owm_padding">
+        <div id="forum_add_post_attachments" class="owm_attach_win owm_forum_attach_win owm_padding owm_bg_color_1">
             {$attachments}
             <div class="owm_padding owm_btn_wrap">
                 <span class="ow_button">
@@ -63,7 +72,7 @@
         { 
             var forumAddPostAttachments = new ForumAttachments({
                 "attachmentUid"      : "{$attachmentUid}",
-                "attachmentsWrapper" : $('#forum_post_attachments'),
+                "attachmentsWrapper" : $('#forum_add_post_attachments'),
                 "attachDefaultTitle" : $("#forum_add_post_attach_default_title"),
                 "firstAttachName"    : $("#forum_add_post_first_attach_name"),
                 "clearFiles"         : $("#forum_add_post_clear_files"),
@@ -71,10 +80,15 @@
                 "attachNewFile"      : $("#forum_add_post_attach_file")
             });
  
-            $("#close_forum_quote").bind("click", function(e){
-                e.preventDefault();
-                $(this).parent().remove();
-            });
+            {if !empty($quoteText) && !empty($quoteId)}
+                $("#forum_view_quote").bind("click", function(e){
+                    e.preventDefault();
+                    OWM.FloatBox({
+                        "title" : "{text key='forum+view_quote'}",
+                        "content" : $("#forum_post_attach_wrapper")
+                    });
+                });
+            {/if}
         });
     {/script}
 {/if}

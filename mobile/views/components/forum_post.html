@@ -27,6 +27,15 @@
                             </div>
                         </div>
                     </div>
+                    {if ($isModerator || ($userId == $post.userId && !$topicInfo.locked)) && $post.id != $firstTopic->id}
+                        <div class="owm_view_more owm_float_right">
+                             {component 
+                                class="FORUM_MCMP_ForumPostContextMenu"
+                                topicId=$post.topicId
+                                postId=$post.id
+                             }
+                        </div>
+                    {/if}
                 </div>
                 <div class="owm_card_body owm_bg_color_1">
                     <div class="owm_post_content">
@@ -53,12 +62,20 @@
                 {/if}
             </div>
             <div class="owm_card_toolbar">
-                <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix">
+                <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix" data-id="{$post.id}" data-type="{if $firstTopic->id == $post.id}{$topicEnityType}{else}{$postEnityType}{/if}">
                     {if $canQuote }
-                        <li class="owm_card_toolbar_quote" data-id="{$post.id}"><a href="#">Quote</a></li>
+                        <li class="owm_card_toolbar_quote">
+                            <a href="#">{text key='forum+quote'}</a>
+                        </li>
                     {/if}
-                    <li class="owm_card_toolbar_flag"><a href="#">Flag</a></li>
-                    <li class="owm_card_toolbar_share"><a href="#">Share</a></li>
+                    {if $post.userId != $userId}
+                        <li class="owm_card_toolbar_flag">
+                            <a href="#">{text key='forum+flag'}</a>
+                        </li>
+                    {/if}
+                    <!-- <li class="owm_card_toolbar_share">
+                        <a href="#">{text key='forum+share'}</a>
+                    </li> -->
                 </ul>
             </div>
             {add_content key="forum.after_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
@@ -70,19 +87,65 @@
     </div>
 {/foreach}
 
+<div>
+    
+</div>
 {if isset($paging)}{$paging}{/if}
 
-{if $canQuote }
-    {script}
-        $(document).ready(function(){
-            $(".owm_card_toolbar_quote").bind("click", function(e){
+{script}
+    $(document).ready(function()
+    {
+        // flag post
+        $(".owm_card_toolbar_flag").bind("click", function(e)
+        {
+            e.preventDefault();
+            OWM.flagContent($(this).parent().attr("data-type"), $(this).parent().attr("data-id"));
+        });
+
+        {if $canQuote }
+            // quote post
+            $(".owm_card_toolbar_quote").bind("click", function(e)
+            {
                 e.preventDefault();
- 
+
                 // show the post form
-                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id}, "postId" : $(this).attr("data-id") }], {
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id}, "postId" : $(this).parent().attr("data-id") }], 
+                {
                     "title" : "{text key='forum+add_post_title'}"
                 });
-            })
-        });
-    {/script}
-{/if}
+            });
+        {/if}
+
+        {if ($isModerator || ($userId == $post.userId && !$topicInfo.locked))}
+            // delete post
+            $(".forum_delete_post").bind("click", function(e)
+            {
+                e.preventDefault();
+
+                if ( confirm("{text key='forum+delete_post_confirm'}") ) 
+                {
+                    $.post($(this).attr("href"), function(data)
+                    {
+                        var data = jQuery.parseJSON(data);
+
+                        if (data.result === true && data.url)
+                        {
+                            location.href = data.url;
+                        }
+                    });
+                }
+            });
+ 
+            // edit post
+            $(".forum_edit_post").bind("click", function(e)
+            {
+                e.preventDefault();
+ 
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumEditPost", [{ "topicId" : "{$topicInfo.id}", "postId" : $(this).attr("data-id") }], 
+                {
+                    "title" : "{text key='forum+edit_post_title'}"
+                });
+            });
+        {/if}
+    });
+{/script}

@@ -50,9 +50,7 @@ class FORUM_MCMP_ForumEditTopic extends OW_MobileComponent
         parent::__construct();
 
         $forumService = FORUM_BOL_ForumService::getInstance();
-        $topicId = !empty($params['topicId']) 
-            ? $params['topicId'] 
-            : null;
+        $topicId = !empty($params['topicId']) ? $params['topicId'] : -1;
 
         $topicDto = $forumService->findTopicById($topicId);
 

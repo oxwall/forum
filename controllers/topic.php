@@ -600,11 +600,14 @@ class FORUM_CTRL_Topic extends OW_ActionController
         {
             $prevPostDto = $this->forumService->findPreviousPost($topicId, $postId);
 
-            $topicDto->lastPostId = $prevPostDto->id;
-            $this->forumService->saveOrUpdateTopic($topicDto);
+            if ( $prevPostDto )
+            {
+                $topicDto->lastPostId = $prevPostDto->id;
+                $this->forumService->saveOrUpdateTopic($topicDto);
 
-            $this->forumService->deletePost($postId);
-            $postUrl = $this->forumService->getPostUrl($topicId, $prevPostDto->id, false);
+                $this->forumService->deletePost($postId);
+                $postUrl = $this->forumService->getPostUrl($topicId, $prevPostDto->id, false);
+            }
         }
         else
         {
