@@ -1,0 +1,64 @@
+{style}
+    {literal}
+        .ow_forum_matching_posts { padding: 5px; }
+        .ow_forum_search_result .ow_highbox { padding: 0 3px; }
+        #forum_manage_buttons .ow_forum_breadcrumb_wrapper .ow_box_empty {margin:0}
+    {/literal}
+{/style}
+
+<div style="display: table; width: 100%; margin-bottom: 16px;" id="forum_manage_buttons">
+    <div class="ow_forum_breadcrumb_wrapper" style="display: table-cell; vertical-align: bottom; width: 50%;">
+        {$breadcrumb}
+    </div>
+    <div class="ow_txtright ow_btn_delimiter" style="display: table-cell; vertical-align: bottom;">
+        {block_decorator name='button'
+            langLabel="forum+back_forum"
+            class="ow_ic_left_arrow ow_forum_back"}
+        {/block_decorator}
+    </div>
+</div>
+
+{if $topics}
+    {if isset($paging)}{$paging}{/if}
+ 
+    <div class="ow_forum_search_result">
+        {foreach from=$topics item='topic'}
+            {capture assign='label'}<a href="{$topic.topicUrl}">{$topic.title}</a>{/capture}
+            {block_decorator name='box' type='empty' addClass='ow_stdmargin' label=$label iconClass='ow_ic_forum'}
+                <div class="ow_forum_matching_posts">
+                    <div class="ow_smallmargin ow_small">
+                        {text key='forum+topic_location'}
+                        <a href="{url_for_route for="forum-default"}#section-{$topic.sectionId}">{$topic.sectionName}</a>
+                        &raquo; <a href="{url_for_route for="group-default:[groupId=>`$topic.groupId`]"}">{$topic.groupName}</a>
+                    </div>
+                    {if !empty($topic.posts)}
+                        {foreach from=$topic.posts item='post'}
+                            {capture assign='info_string'}
+                                <a href="{$avatars[$post.userId].url}">{$avatars[$post.userId].title}</a> <span class="ow_tiny ow_ipc_date">{$post.createStamp}</span>
+                            {/capture}
+
+                            {capture assign='content'}
+                                <div class="post_content">{$post.text} <a href="{$post.postUrl}" class="ow_lbutton">{text key='base+more'}</a></div>
+                            {/capture}
+
+                            {decorator name='ipc' addClass='ow_smallmargin'
+                                avatar=$avatars[$post.userId]
+                                content=$content
+                                infoString=$info_string}
+                        {/foreach}
+                    {/if}
+                </div>
+            {/block_decorator}
+        {/foreach}
+    </div>
+
+    {if isset($paging)}{$paging}{/if}
+{else}
+    <div class="ow_anno ow_center">{text key='forum+no_posts_found'}</div>
+{/if}
+
+{script}
+    $("#forum_manage_buttons .ow_forum_back").bind("click", function(e){
+        location.href="{$backUrl}";
+    });
+{/script}
