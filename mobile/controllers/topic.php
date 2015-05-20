@@ -93,6 +93,8 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         // include js translations
         OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
         OW::getLanguage()->addKeyForJs('forum', 'attached_files');
+        OW::getLanguage()->addKeyForJs('forum', 'confirm_delete_all_attachments');
+        OW::getLanguage()->addKeyForJs('forum', 'confirm_delete_attachment');
 
         // assign view variables
         $this->assign('userId', $userId);
@@ -167,29 +169,40 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
     public function ajaxDeleteAttachment()
     {
         $result  = false;
-        $attachmentId = !empty($_POST['id']) ? (int) $_POST['id'] : 0;
+        $attachmentIds = !empty($_POST['id']) ? $_POST['id'] : null;
 
-        if ( OW::getRequest()->isPost() && $attachmentId ) 
+        if ( OW::getRequest()->isPost() && $attachmentIds ) 
         {
+            if (!is_array($attachmentIds)) {
+                $attachmentIds = array($attachmentIds);
+            }
+
             $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
-            $attachment = $attachmentService->findPostAttachmentById($attachmentId);
+            $forumService = FORUM_BOL_ForumService::getInstance();
+            $userId = OW::getUser()->getId();
+            $isAuthorized = OW::getUser()->isAuthorized('forum');
 
-            if ( $attachment ) 
-            {
-                $forumService = FORUM_BOL_ForumService::getInstance();
-                $post = $forumService->findPostById($attachment->postId);
+            foreach ($attachmentIds as $attachmentId)
+            {                
+                $attachment = $attachmentService->findPostAttachmentById($attachmentId);
 
-                if ( $post )
-                {
-                    $userId = OW::getUser()->getId();
+                if ( $attachment ) 
+                {                    
+                    $post = $forumService->findPostById($attachment->postId);
 
-                    // check the ownership
-                    if ( OW::getUser()->isAuthorized('forum') || $post->userId == $userId )
+                    if ( $post )
                     {
-                        $attachmentService->deleteAttachment($attachment->id);
-                        $result = true;
+                        // check the ownership
+                        if ( $isAuthorized || $post->userId == $userId )
+                        {
+                            $attachmentService->deleteAttachment($attachment->id);
+                            $result = true;
+                            continue;
+                        }
                     }
                 }
+
+                $result = false;
             }
         }
 

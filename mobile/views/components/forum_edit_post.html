@@ -54,18 +54,19 @@
         $( document ).ready(function() 
         { 
             var forumEditPostAttachments = new ForumAttachments({
-                "attachmentUid"      : "{$attachmentUid}",
-                "attachmentsWrapper" : $('#forum_edit_post_attachments'),
-                "attachDefaultTitle" : $("#forum_edit_post_attach_default_title"),
-                "firstAttachName"    : $("#forum_edit_post_first_attach_name"),
-                "clearFiles"         : $("#forum_edit_post_clear_files"),
-                "attachNewFiles"     : $("#forum_edit_post_attach_files"),
-                "attachNewFile"      : $("#forum_edit_post_attach_file")
+                "attachmentUid"        : "{$attachmentUid}",
+                "attachmentsWrapper"   : $('#forum_edit_post_attachments'),
+                "attachDefaultTitle"   : $("#forum_edit_post_attach_default_title"),
+                "firstAttachName"      : $("#forum_edit_post_first_attach_name"),
+                "clearFiles"           : $("#forum_edit_post_clear_files"),
+                "attachNewFiles"       : $("#forum_edit_post_attach_files"),
+                "attachNewFile"        : $("#forum_edit_post_attach_file"),
+                "deleteAttachmentsUrl" : "{url_for_route for='forum_delete_attachment'}"
             });
 
             {if !empty($attachments)}
                 forumEditPostAttachments.
-                    renderUploadedAttachments({$attachments}, "{url_for_route for='forum_delete_attachment'}");
+                    renderUploadedAttachments({$attachments});
             {/if}
         });
     {/script}
