@@ -16,13 +16,14 @@ ForumAttachments = function(settings)
     * @var array
     */
    var attachmentsSettings = {
-       'attachmentUid'       : '',
-       'attachmentsWrapper'  : $([]),
-       'attachDefaultTitle'  : $([]),
-       'firstAttachName'     : $([]),
-       'clearFiles'          : $([]),
-       'attachNewFiles'      : $([]),
-       'attachNewFile'       : $([])
+       "attachmentUid"        : "",
+       "attachmentsWrapper"   : $([]),
+       "attachDefaultTitle"   : $([]),
+       "firstAttachName"      : $([]),
+       "clearFiles"           : $([]),
+       "attachNewFiles"       : $([]),
+       "attachNewFile"        : $([]),
+       "deleteAttachmentsUrl" : ""
    };
 
    attachmentsSettings = $.extend(attachmentsSettings, settings);
@@ -84,11 +85,30 @@ ForumAttachments = function(settings)
    // listen to clear all attached files event
    $(attachmentsSettings.clearFiles).unbind().bind("click", function()
    {
-       owFileAttachments[attachmentsSettings.attachmentUid].reset(attachmentsSettings.attachmentUid);
+        if ( filesList.length && confirm(OW.getLanguageText('forum', 'confirm_delete_all_attachments')) )
+        {
+            owFileAttachments[attachmentsSettings.attachmentUid].reset(attachmentsSettings.attachmentUid, function(items){
+                // collect list of uploaded files
+                 var ids = [];
 
-       attachmentsSettings.attachDefaultTitle.show();
-       attachmentsSettings.firstAttachName.text("").hide();
-       filesList = [];
+                 $.each(items, function(index, data) 
+                 {
+                     if ( typeof data.dbId != "undefined" && typeof data.customDeleteUrl != "undefined")
+                     {
+                         ids.push(data.dbId);
+                     }
+                 });
+
+                 if ( ids.length )
+                 {
+                     $.post(attachmentsSettings.deleteAttachmentsUrl, {'id' : ids});
+                 }
+            });
+
+            attachmentsSettings.attachDefaultTitle.show();
+            attachmentsSettings.firstAttachName.text("").hide();
+            filesList = [];
+        }
    });
 
    // listen to upload new files event
@@ -149,11 +169,11 @@ ForumAttachments = function(settings)
      * Render uploaded attachments
      * 
      * @param object attachedFiles
-     * @param string deleteUrl
      * @return void
      */
-    this.renderUploadedAttachments = function( attachedFiles, deleteUrl )
+    this.renderUploadedAttachments = function( attachedFiles )
     {
-        owFileAttachments[attachmentsSettings.attachmentUid].renderUploaded(attachedFiles, deleteUrl);
+        owFileAttachments[attachmentsSettings.attachmentUid].renderUploaded(attachedFiles, 
+                attachmentsSettings.deleteAttachmentsUrl, OW.getLanguageText('forum', 'confirm_delete_attachment'));
     }
 }

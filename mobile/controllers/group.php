@@ -107,6 +107,7 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
         // include js translations
         OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
         OW::getLanguage()->addKeyForJs('forum', 'attached_files');
+        OW::getLanguage()->addKeyForJs('forum', 'confirm_delete_all_attachments');
 
         // assign view variables
         $this->assign('canEdit', $canEdit);
