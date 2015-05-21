@@ -1,6 +1,36 @@
 <div class="owm_search_field clearfix">
-    {form name="search_form"}
+    {form name="search_form" id="quick_forum_search_form"}
         <span class="owm_search_field_icon"></span>
-        {input name="keyword" class="owm_invitation"}
+        {input name="keyword" class="owm_invitation" id="forum_search_cap" readonly="readonly"}
     {/form}
 </div>
+<div style="display:none">
+    <div id="forum_search_wrapper">
+        <form action="{$location}" method="get">
+            <div class="owm_search_field clearfix">
+                <textarea name="q"></textarea>
+            </div> 
+            <div class="owm_box_toolbar">
+                <a href="#" class="owm_float_left">
+                    <span>{text key="forum+advanced_search"}</span>
+                </a> 
+                <span>
+                    <input type="submit" value="{text key="forum+search"}" />
+                </span>
+            </div>
+        </form>
+    </div>
+</div>
+
+{script}
+    /**
+     * Show the float search form
+     */
+    $("#quick_forum_search_form").bind("click", function() 
+    {
+        OWM.FloatBox({ 
+            "title" : "{$invitation}",
+            "content" : $("#forum_search_wrapper")
+        });
+    });
+{/script}

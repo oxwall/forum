@@ -30,61 +30,35 @@
  */
 
 /**
- * Forum group action controller
+ * Data Transfer Object for `forum_update_search_index` table.
  *
- * @author Egor Bulgakov <egor.bulgakov@gmail.com>
- * @package ow.ow_plugins.forum.controllers
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.ow_plugins.forum.bol
  * @since 1.0
  */
-class FORUM_CTRL_Group extends OW_ActionController
+class FORUM_BOL_UpdateSearchIndex extends OW_Entity
 {
     /**
-     * @var FORUM_BOL_ForumService
+     * Type 
+     * @var string
      */
-    private $forumService;
+    public $type;
 
     /**
-     * Class constructor
+     * Entity id
+     * @var int
      */
-    public function __construct()
-    {
-        parent::__construct();
-
-        $this->forumService = FORUM_BOL_ForumService::getInstance();
-
-        if ( !OW::getRequest()->isAjax() )
-        {
-            OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
-        }
-    }
+    public $entityId;
 
     /**
-     * Controller's default action
-     *
-     * @param array $params
-     * @throws Redirect404Exception
+     * Last entity id
+     * @var int
      */
-    public function index( array $params )
-    {
-        if ( !isset($params['groupId']) || !($groupId = (int) $params['groupId']) )
-        {
-            throw new Redirect404Exception();
-        }
+    public $lastEntityId;
 
-        $groupInfo = $this->forumService->getGroupInfo($groupId);
-        if ( !$groupInfo )
-        {
-            throw new Redirect404Exception();
-        }
-        
-        $forumSection = $this->forumService->findSectionById($groupInfo->sectionId);
-        if ( !$forumSection )
-        {
-            throw new Redirect404Exception();
-        }
-
-        // remember the last forum page
-        OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
-        $this->addComponent('groupCmp', new FORUM_CMP_ForumGroup(array('groupId' => $params['groupId'], 'caption' => true)));
-    }
+    /**
+     * Priority
+     * @var integer
+     */
+    public $priority;
 }

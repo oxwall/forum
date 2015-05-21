@@ -34,7 +34,7 @@ $plugin = OW::getPluginManager()->getPlugin('forum');
 OW::getAutoloader()->addClass('ForumSelectBox', $plugin->getRootDir() . 'classes' . DS . 'forum_select_box.php');
 OW::getAutoloader()->addClass('ForumStringValidator', $plugin->getRootDir() . 'classes' . DS . 'forum_string_validator.php');
 
-OW::getRouter()->addRoute(new OW_Route('forum_index', 'forum/', 'FORUM_MCTRL_Forum', 'index'));
+OW::getRouter()->addRoute(new OW_Route('forum-default', 'forum/', 'FORUM_MCTRL_Forum', 'index'));
 OW::getRouter()->addRoute(new OW_Route('section-default', 'forum/section/:sectionId', 'FORUM_MCTRL_Section', 'index'));
 OW::getRouter()->addRoute(new OW_Route('topic-default', 'forum/topic/:topicId', 'FORUM_MCTRL_Topic', 'index'));
 OW::getRouter()->addRoute(new OW_Route('group-default', 'forum/:groupId', 'FORUM_MCTRL_Group', 'index'));

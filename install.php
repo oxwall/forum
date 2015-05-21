@@ -46,6 +46,16 @@ if ( !$config->configExists('forum', 'uninstall_cron_busy') )
     $config->addConfig('forum', 'uninstall_cron_busy', 0, 'Uninstall queue is busy');
 }
 
+if ( !$config->configExists('forum', 'update_search_index_cron_busy') )
+{
+    $config->addConfig('forum', 'update_search_index_cron_busy', 0, 'Update search index queue is busy');
+}
+
+if ( !$config->configExists('forum', 'delete_search_index_cron') )
+{
+    $config->addConfig('forum', 'delete_search_index_cron', 0, 'Delete search index');
+}
+
 if ( !$config->configExists('forum', 'maintenance_mode_state') )
 {
     $state = (int) $config->getValue('base', 'maintenance');
