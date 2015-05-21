@@ -306,7 +306,24 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
 		ON (`g`.`sectionId` = `s`.`id`)
 		WHERE t.id IN (" . $topicsIn .") ORDER BY FIELD (t.id, " . $topicsIn . ")";
 
-        return $this->dbo->queryForList($query);
+        $list = $this->dbo->queryForList($query);
+
+        if ( $list )
+        {
+            $topicIdList = array();
+            foreach ( $list as $topic )
+            {
+                $topicIdList[] = $topic['id'];
+            }
+
+            $counters = $this->getPostCountForTopicIdList($topicIdList);
+            foreach ( $list as &$topic )
+            {
+                $topic['postCount'] = !empty($counters[$topic['id']]) ? $counters[$topic['id']] : 0;
+            }
+        }
+
+        return $list;
     }
 
     /**

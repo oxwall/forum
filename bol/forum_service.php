@@ -1314,9 +1314,6 @@ final class FORUM_BOL_ForumService
             'topicId' => $topicDto->id
         )));
 
-        // add a topic into the search index
-        $this->getTextSearchService()->addTopic($topicDto);
-
         return $topicDto;
     }
 
@@ -1836,9 +1833,21 @@ final class FORUM_BOL_ForumService
         // process topics
         $formatter = new FORUM_CLASS_ForumSearchResultFormatter();
 
+        $userId = OW::getUser()->getId();
+        $readTopicIds = array();
+
+        if ( $userId )
+        {
+            $readTopicDao = FORUM_BOL_ReadTopicDao::getInstance();
+            $readTopicIds = $readTopicDao->findUserReadTopicIds($topicsIds, $userId);
+        }
+
         foreach($topics as &$topic)
         {
             $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
+            $topic['replyCount'] = $topic['postCount'] - 1;
+            $topic['new'] = ($userId && !in_array($topic['id'], $readTopicIds));
+
             if (null == ($postDto = $this->findTopicFirstPost($topic['id'])))
             {
                 continue;
@@ -1914,7 +1923,7 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countGlobalTopics( $token, $userId )
+    public function countGlobalTopics( $token, $userId = null )
     {
         return $this->getTextSearchService()->countGlobalTopics($token, $userId);
     }
@@ -1989,7 +1998,7 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countTopicsInSection( $token, $sectionId, $userId )
+    public function countTopicsInSection( $token, $sectionId, $userId = null )
     {
         return $this->getTextSearchService()->countTopicsInSection($token, $sectionId, $userId);
     }
@@ -2067,7 +2076,7 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countTopicsInGroup( $token, $groupId, $userId )
+    public function countTopicsInGroup( $token, $groupId, $userId = null )
     {
         return $this->getTextSearchService()->countTopicsInGroup($token, $groupId, $userId);
     }
@@ -2250,7 +2259,7 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countPostsInTopic( $token, $topicId, $userId )
+    public function countPostsInTopic( $token, $topicId, $userId = null )
     {
         return $this->getTextSearchService()->countPostsInTopic($token, $topicId, $userId);
     }

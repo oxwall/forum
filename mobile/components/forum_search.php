@@ -70,8 +70,13 @@ class FORUM_MCMP_ForumSearch extends OW_MobileComponent
                 break;
         }
 
-        // add form
-        $this->addForm(new FORUM_MCLASS_SearchForm("search_form", 
-                OW::getLanguage()->text('forum', 'search_invitation_' . $this->scope), $location));
+        $invitation = OW::getLanguage()->text('forum', 'search_invitation_' . $this->scope);
+
+        // add form       
+        $this->addForm(new FORUM_MCLASS_SearchForm("search_form", $invitation, $location));
+
+        // assign view variables
+        $this->assign('invitation', $invitation);
+        $this->assign('location', $location);
     }
 }

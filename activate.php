@@ -59,7 +59,7 @@ $credits = new FORUM_CLASS_Credits();
 $credits->triggerCreditActionsAdd();
 
 // Mobile activation
-OW::getNavigation()->addMenuItem(OW_Navigation::MOBILE_TOP, 'forum_index', 'forum', 'forum_mobile', OW_Navigation::VISIBLE_FOR_ALL);
+OW::getNavigation()->addMenuItem(OW_Navigation::MOBILE_TOP, 'forum-default', 'forum', 'forum_mobile', OW_Navigation::VISIBLE_FOR_ALL);
 
 require_once dirname(__FILE__) . DS .  'bol' . DS . 'text_search_service.php';
 FORUM_BOL_TextSearchService::getInstance()->activateEntities();

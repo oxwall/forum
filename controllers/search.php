@@ -513,8 +513,6 @@ class FORUM_CTRL_Search extends OW_ActionController
         $breadCrumbCmp = new BASE_CMP_Breadcrumb($bcItems);
         $this->addComponent('breadcrumb', $breadCrumbCmp);
 
-        $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
-
         OW::getDocument()->setHeading($lang->text('forum', 'search_page_heading'));
         OW::getDocument()->setHeadingIconClass('ow_ic_forum');
         OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
