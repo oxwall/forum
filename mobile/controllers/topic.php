@@ -109,6 +109,9 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         $this->assign('canSubscribe', OW::getUser()->isAuthorized('forum', 'subscribe'));
         $this->assign('isSubscribed', $userId 
                 && FORUM_BOL_SubscriptionService::getInstance()->isUserSubscribed($userId, $topicDto->id));
+        
+        // remember the last forum page
+        OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
 
         // set current page settings
         OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));

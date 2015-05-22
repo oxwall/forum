@@ -50,7 +50,7 @@ class FORUM_MCMP_ForumAddTopic extends OW_MobileComponent
 
         $groupId = !empty($params['groupId']) 
             ? $params['groupId'] 
-            : null;
+            : 0;
 
         $forumService = FORUM_BOL_ForumService::getInstance();
         $userId = OW::getUser()->getId();

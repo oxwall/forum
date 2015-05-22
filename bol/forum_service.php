@@ -1842,20 +1842,25 @@ final class FORUM_BOL_ForumService
             $readTopicIds = $readTopicDao->findUserReadTopicIds($topicsIds, $userId);
         }
 
-        foreach($topics as &$topic)
+        $postIds = array();
+        $processedTopics = array();
+        foreach($topics as $topic)
         {
-            $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
-            $topic['replyCount'] = $topic['postCount'] - 1;
-            $topic['new'] = ($userId && !in_array($topic['id'], $readTopicIds));
+            $processedTopics[$topic['id']] = $topic;
 
-            if (null == ($postDto = $this->findTopicFirstPost($topic['id'])))
+            $postIds[] = $topic['lastPostId'];
+            $processedTopics[$topic['id']]['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
+            $processedTopics[$topic['id']]['replyCount'] = $topic['postCount'] - 1;
+            $processedTopics[$topic['id']]['new'] = ($userId && !in_array($processedTopics[$topic['id']]['id'], $readTopicIds));
+
+            if (null == ($postDto = $this->findTopicFirstPost($processedTopics[$topic['id']]['id'])))
             {
                 continue;
             }
 
             $text = strip_tags($postDto->text);
 
-            $topic['posts'][] = array(
+            $processedTopics[$topic['id']]['posts'][] = array(
                 'postId' => $postDto->id,
                 'topicId' => $postDto->topicId,
                 'userId' => $postDto->userId,
@@ -1865,7 +1870,19 @@ final class FORUM_BOL_ForumService
             );
         }
 
-        return $topics; 
+        // get list of last posts
+        if ( $postIds ) {
+            $postList = $this->getTopicLastReplyList($postIds);
+
+            foreach( $postList as $post )
+            {
+                $processedTopics[$post['topicId']]['lastPost'] = array_merge($post, array(
+                    'postUrl' => $this->getPostUrl($post['topicId'], $post['postId'])
+                ));
+            }
+        }
+
+        return $processedTopics; 
     }
 
     /**

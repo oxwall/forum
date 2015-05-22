@@ -6,6 +6,11 @@
                 <div class="owm_box_menu owm_float_left">
                     <a class="owm_forum_nav_left" href="{$backUrl}"></a>
                 </div>
+                {if !empty($closeUrl)}
+                    <div class="owm_box_menu owm_float_right">
+                        <a class="owm_forum_nav_right" href="{$closeUrl}"></a>
+                    </div>
+                {/if}
             </div>
             {if !empty($topics)}
                 {foreach from=$topics item=topic}

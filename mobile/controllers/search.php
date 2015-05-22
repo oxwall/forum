@@ -37,6 +37,172 @@
 class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
 {
     /**
+     * Advanced search result
+     */
+    public function advancedResult()
+    {
+        
+        // get search params
+        $keyword = !empty($_GET['keyword']) && is_string($_GET['keyword']) 
+            ? urldecode(trim($_GET['keyword'])) 
+            : null;
+
+        $userName = !empty($_GET['username']) && is_string($_GET['username']) 
+            ? urldecode(trim($_GET['username'])) 
+            : null;
+
+        $parts = !empty($_GET['parts']) && is_array($_GET['parts']) 
+            ? $_GET['parts'] 
+            : null;
+
+        $searchIn = !empty($_GET['search_in']) && is_string($_GET['search_in']) 
+            ? urldecode(trim($_GET['search_in'])) 
+            : null;
+
+        $period = !empty($_GET['period']) && is_string($_GET['period']) 
+            ? urldecode(trim($_GET['period'])) 
+            : null;
+
+        $sort = !empty($_GET['sort']) && is_string($_GET['sort']) 
+            ? urldecode(trim($_GET['sort'])) 
+            : null;
+
+        $sortDirection = !empty($_GET['sort_direction']) && is_string($_GET['sort_direction']) 
+            ? urldecode(trim($_GET['sort_direction'])) 
+            : null;
+
+        $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
+
+        if ( !mb_strlen($keyword) && !mb_strlen($userName) )
+        {
+            OW::getFeedback()->info(OW::getLanguage()->text('forum', 'please_enter_keyword_or_user_name'));
+            $this->redirect(OW::getRouter()->urlForRoute('forum_advanced_search'));
+        }
+
+        $userId = null;
+
+        // filter by user id
+        if ( $userName )
+        {
+            $userId = -1;
+            $questionName = OW::getConfig()->getValue('base', 'display_name_question');
+            $userInfo = BOL_UserService::getInstance()->
+                    findUserIdListByQuestionValues(array($questionName => $userName), 0, 1);
+
+            if ( $userInfo )
+            {
+                $userId = array_shift($userInfo);
+            }
+        }
+
+        // make a search
+        $searchInPosts = $searchIn == 'message' ? true : false;
+
+        // search by keyword
+        if ( $keyword ) {
+            $total = $this->forumService->
+                    countAdvancedFindEntities($keyword, $userId, $parts, $period, $searchInPosts);
+
+            $topics = $total
+                ? $this->forumService->
+                    advancedFindEntities($keyword, $page, $userId, $parts, $period, $sort, $sortDirection, $searchInPosts)
+                : array();
+        }
+        else {
+            // search by user
+            $total = $this->forumService->
+                    countAdvancedFindEntitiesByUser($userId, $parts, $period, $searchInPosts);
+
+            $topics = $total
+                ? $this->forumService->
+                    advancedFindEntitiesByUser($userId, $page, $parts, $period, $sort, $sortDirection, $searchInPosts)
+                : array();
+        }
+
+        // collect authors 
+        $authors = array();
+        foreach ( $topics as $topic )
+        {
+            if ( !empty($topic['posts']) )
+            {
+                foreach ( $topic['posts'] as $post )
+                {
+                    if ( !in_array($post['userId'], $authors) )
+                    {
+                        array_push($authors, $post['userId']);
+                    }
+                }
+            }
+
+            if ( !empty($topic['lastPost']) ) 
+            {
+                if ( !in_array($topic['lastPost']['userId'], $authors) )
+                {
+                    array_push($authors, $topic['lastPost']['userId']);
+                }
+            }
+        }
+
+        $iterationPerPage = $searchIn == 'title'
+            ? $this->forumService->getTopicPerPageConfig()
+            : $this->forumService->getPostPerPageConfig();
+
+        // paging
+        $perPage = $searchIn == 'title' 
+            ? $this->forumService->getTopicPerPageConfig()
+            : $this->forumService->getPostPerPageConfig();
+
+        // assign view variables
+        $pages = (int) ceil($total / $perPage);
+        $paging = new BASE_CMP_Paging($page, $pages, $perPage);
+        $this->assign('paging', $paging->render());
+        $this->assign('topics', $topics);
+        $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
+        $this->assign('backUrl', OW::getRouter()->urlForRoute('forum_advanced_search'));
+
+        $closeUrl = OW::getSession()->get('last_forum_page');
+        $this->assign('closeUrl', ($closeUrl ? $closeUrl : OW::getRouter()->urlForRoute('forum-default')));
+        $this->assign('displayNames', BOL_UserService::getInstance()->getDisplayNamesForList($authors));
+        $this->assign('iteration',  ($page - 1) * $iterationPerPage + 1);
+        $this->assign('onlineUsers', BOL_UserService::getInstance()->findOnlineStatusForUserList($authors));
+
+        // set page title
+        $pageTitle = OW::getLanguage()->text('forum', 'search_advanced_heading');
+
+        $plugin = OW::getPluginManager()->getPlugin('forum');
+        $searchIn != 'title'
+            ? $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result.html')
+            : $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result_topic.html');
+
+        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+        OW::getDocument()->setHeading($pageTitle);
+        OW::getDocument()->setTitle($pageTitle);
+    }
+
+    /**
+     * Advanced search
+     */
+    public function advanced()
+    {
+        // get all sections and forums
+        $sections = $this->forumService->getCustomSectionGroupList();
+
+        // add form
+        $this->addForm(new FORUM_CLASS_AdvancedSearchForm('search_form', $sections));
+
+        // set page title
+        $pageTitle = OW::getLanguage()->text('forum', 'search_advanced_heading');
+
+        // assign view variables
+        $closeUrl = OW::getSession()->get('last_forum_page');
+        $this->assign('closeUrl', ($closeUrl ? $closeUrl : OW::getRouter()->urlForRoute('forum-default')));
+        
+        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+        OW::getDocument()->setHeading($pageTitle);
+        OW::getDocument()->setTitle($pageTitle);
+    }
+
+    /**
      * Find posts into topic
      * 
      * @param array $params
@@ -164,6 +330,7 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
         switch ( $type )
         {
             case 'topic' :
+                $iterationPerPage = $this->forumService->getPostPerPageConfig();
                 $topicId = (int) $params['topicId'];
                 $backUrl = OW::getRouter()->urlForRoute('topic-default', array(
                     'topicId' => $topicId
