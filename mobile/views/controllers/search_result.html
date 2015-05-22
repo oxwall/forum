@@ -1,65 +1,63 @@
 <div class="owm_forum_page owm_forum_section">
-    <div class="owm_dnd_widget">
-        <div class="owm_box">
-            <div class="owm_box_cap clearfix">
-                <h3>{text key='forum+search_results'}</h3>
-                <div class="owm_box_menu owm_float_left">
-                    <a class="owm_forum_nav_left" href="{$backUrl}"></a>
-                </div>
+    <div class="owm_std_margin_bottom">
+        <div class="owm_nav_cap owm_bg_color_3 clearfix">
+            <h3>{text key='forum+search_results'}</h3>
+            <div class="owm_float_left">
+                <a class="owm_nav_cap_left" href="{$backUrl}"></a>
             </div>
-            {if !empty($topics)}
-                {foreach from=$topics item=topic}
-                    <div class="owm_box_cap clearfix">
-                        <h3>{$topic.title}</h3>
-                        <div class="owm_box_menu owm_float_right">
-                            <a class="owm_forum_nav_right" href="{$topic.topicUrl}"></a>
-                        </div>
+        </div>
+        {if !empty($topics)}
+            {foreach from=$topics item=topic}
+                <div class="owm_nav_cap owm_nav_cap_left_space owm_bg_color_3 clearfix">
+                    <h3>{$topic.title}</h3>
+                    <div class="owm_float_right">
+                        <a class="owm_nav_cap_right" href="{$topic.topicUrl}"></a>
                     </div>
-                    {if !empty($topic.posts)}
-                        {foreach from=$topic.posts item='post'}
-                            <div class="owm_forum_reply" id="post-{$post.postId}">
-                                {add_content key="forum.before_post_add_content" postId=$post.postId userId=$post.userId text=$post.text}
-                                <div class="owm_card clearfix">
-                                    <div class="owm_card_cap owm_padding">
-                                        <div class="owm_card_date">#{$iteration++} {$post.createStamp}</div>
-                                    </div>
-                                    <div class="owm_card_content">
-                                        <div class="owm_card_header owm_bg_color_3 clearfix">
-                                            <div class="owm_card_user owm_card_user_context owm_padding">
-                                                <div class="owm_card_user_pic">
-                                                    {decorator name="avatar_item" data=$avatars[$post.userId]}
-                                                </div>
-                                                <div class="owm_card_user_info">
-                                                    <div class="owm_card_user_name">
-                                                        <a href="{$avatars[$post.userId].url}">
-                                                            <b>{$avatars[$post.userId].title}</b>
-                                                        </a>
-                                                        {if !empty($onlineUsers[$post.userId])}
-                                                            <div class="owm_profile_online"></div>
-                                                        {/if}
-                                                        <div class="owm_card_user_cont">
-                                                            <span class="owm_remark">&nbsp;</span>
-                                                        </div>
+                </div>
+                {if !empty($topic.posts)}
+                    {foreach from=$topic.posts item='post'}
+                        <div class="owm_forum_reply" id="post-{$post.postId}">
+                            {add_content key="forum.before_post_add_content" postId=$post.postId userId=$post.userId text=$post.text}
+                            <div class="owm_card clearfix owm_std_margin_bottom">
+                                <div class="owm_card_cap owm_padding">
+                                    <div class="owm_card_date">#{$iteration++} {$post.createStamp}</div>
+                                </div>
+                                <div class="owm_card_content">
+                                    <div class="owm_card_header owm_bg_color_3 clearfix">
+                                        <div class="owm_card_user owm_card_user_context owm_padding">
+                                            <div class="owm_card_user_pic">
+                                                {decorator name="avatar_item" data=$avatars[$post.userId]}
+                                            </div>
+                                            <div class="owm_card_user_info">
+                                                <div class="owm_card_user_name">
+                                                    <a href="{$avatars[$post.userId].url}">
+                                                        <b>{$avatars[$post.userId].title}</b>
+                                                    </a>
+                                                    {if !empty($onlineUsers[$post.userId])}
+                                                        <div class="owm_profile_online"></div>
+                                                    {/if}
+                                                    <div class="owm_card_user_cont">
+                                                        <span class="owm_remark">&nbsp;</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="owm_card_body owm_bg_color_1">
-                                            <div class="owm_post_content">
-                                                <p>{$post.text}</p>
-                                                <p><a href="{$post.postUrl}" class="ow_lbutton">{text key='base+more'}</a></p>
-                                            </div>
+                                    </div>
+                                    <div class="owm_card_body owm_bg_color_1">
+                                        <div class="owm_post_content">
+                                            <p>{$post.text}</p>
+                                            <p><a href="{$post.postUrl}" class="ow_lbutton">{text key='base+more'}</a></p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        {/foreach}
-                    {/if}
-                {/foreach}
-                {if isset($paging)}{$paging}{/if}
-            {else}
-                <div class="ow_anno ow_center">{text key='forum+no_posts_found'}</div>
-            {/if}
-        </div>
+                        </div>
+                    {/foreach}
+                {/if}
+            {/foreach}
+            {if isset($paging)}{$paging}{/if}
+        {else}
+            <div class="ow_anno ow_center">{text key='forum+no_posts_found'}</div>
+        {/if}
     </div>
 </div>

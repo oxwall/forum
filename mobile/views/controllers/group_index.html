@@ -1,33 +1,31 @@
 <div class="owm_forum_page owm_forum_section">
-    <div class="owm_dnd_widget">
-        <div class="owm_box">
-            <div class="owm_box_cap clearfix">
-                <h3>{$group->name}</h3>
-                <div class="owm_box_menu owm_float_left">
-                    <a class="owm_forum_nav_left" href="{url_for_route for="section-default:[sectionId=>`$group->sectionId`]"}"></a>
-                </div>
-                {if $canEdit}
-                    <a id="owm_forum_new_topic_link" href="#" class="owm_nav_left_item_add"></a>
-                {/if}
+    <div class="owm_std_margin_bottom">
+        <div class="owm_nav_cap owm_bg_color_3 clearfix">
+            <h3>{$group->name}</h3>
+            <div class="owm_float_left">
+                <a class="owm_nav_cap_left" href="{url_for_route for="section-default:[sectionId=>`$group->sectionId`]"}"></a>
             </div>
-            {component class="FORUM_MCMP_ForumSearch" scope="group" id="{$group->id}"}
-
-            {if $stickyTopics || $regularTopics}
-                {if $stickyTopics}
-                    <div class="owm_topics_sticky">
-                        {component class="FORUM_MCMP_ForumGroup" topics=$stickyTopics}
-                    </div>
-                {/if}
-
-                {if $regularTopics}
-                    {component class="FORUM_MCMP_ForumGroup" topics=$regularTopics}
-                {/if}
-
-                {if isset($paging)}{$paging}{/if}
-            {else}
-                {text key='forum+no_topic'}
+            {if $canEdit}
+                <a id="owm_forum_new_topic_link" href="#" class="owm_nav_left_item_add"></a>
             {/if}
         </div>
+        {component class="FORUM_MCMP_ForumSearch" scope="group" id="{$group->id}"}
+
+        {if $stickyTopics || $regularTopics}
+            {if $stickyTopics}
+                <div class="owm_topics_sticky">
+                    {component class="FORUM_MCMP_ForumGroup" topics=$stickyTopics}
+                </div>
+            {/if}
+
+            {if $regularTopics}
+                {component class="FORUM_MCMP_ForumGroup" topics=$regularTopics}
+            {/if}
+
+            {if isset($paging)}{$paging}{/if}
+        {else}
+            {text key='forum+no_topic'}
+        {/if}
     </div>
 </div>
 
