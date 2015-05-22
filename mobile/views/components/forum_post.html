@@ -3,7 +3,7 @@
 {foreach from=$postList item=post}
     <div class="{if $firstTopic->id == $post.id}owm_forum_topic owm_forum_topic_view{else}owm_forum_reply{/if}" id="post-{$post.id}">
         {add_content key="forum.before_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
-        <div class="owm_card clearfix">
+        <div class="owm_card clearfix owm_std_margin_bottom">
             <div class="owm_card_cap owm_padding">
                 <div class="owm_card_date">#{$post.number} {$post.createStamp}</div>
             </div>
@@ -65,16 +65,16 @@
                 <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix" data-id="{$post.id}" data-type="{if $firstTopic->id == $post.id}{$topicEnityType}{else}{$postEnityType}{/if}">
                     {if $canQuote }
                         <li class="owm_card_toolbar_quote">
-                            <a href="#">{text key='forum+quote'}</a>
+                            <a href="#"><span>{text key='forum+quote'}</span></a>
                         </li>
                     {/if}
                     {if $post.userId != $userId}
                         <li class="owm_card_toolbar_flag">
-                            <a href="#">{text key='forum+flag'}</a>
+                            <a href="#"><span>{text key='forum+flag'}</span></a>
                         </li>
                     {/if}
                     <!-- <li class="owm_card_toolbar_share">
-                        <a href="#">{text key='forum+share'}</a>
+                        <a href="#"><span>{text key='forum+share'}<span></a>
                     </li> -->
                 </ul>
             </div>

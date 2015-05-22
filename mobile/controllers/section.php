@@ -55,8 +55,20 @@ class FORUM_MCTRL_Section extends FORUM_MCTRL_AbstractForum
             throw new Redirect404Exception();
         }
 
+        $isModerator = OW::getUser()->isAuthorized('forum');
+        $canEdit = OW::getUser()->isAuthorized('forum', 'edit') || $isModerator ? true : false;
+
+        // include js translations
+        OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
+        OW::getLanguage()->addKeyForJs('forum', 'attached_files');
+        OW::getLanguage()->addKeyForJs('forum', 'confirm_delete_all_attachments');
+
         // assign view variables
         $this->assign('section', $forumSection);
+        $this->assign('canEdit', $canEdit);
+
+        // remember the last forum page
+        OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
 
         OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_section'));
