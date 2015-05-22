@@ -124,6 +124,9 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
         $paging = new BASE_CMP_PagingMobile($page, $pageCount, $perPage);
         $this->assign('paging', $paging->render());
 
+        // remember the last forum page
+        OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
+
         OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_group'));
         OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_group'));

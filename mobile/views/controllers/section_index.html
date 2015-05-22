@@ -5,8 +5,24 @@
             <div class="owm_float_left">
                 <a class="owm_nav_cap_left" href="{url_for_route for="forum-default"}"></a>
             </div>
+            {if $canEdit}
+                    <a id="owm_forum_new_topic_link" href="#" class="owm_nav_left_item_add"></a>
+            {/if}
         </div>
         {component class="FORUM_MCMP_ForumSearch" scope="section" id="{$section->id}"}
         {component class="FORUM_MCMP_ForumSection" sectionId="{$section->id}"}
     </div>
 </div>
+
+{if $canEdit}
+    {script}
+        $("#owm_forum_new_topic_link").bind("click", function(e){
+            e.preventDefault();
+ 
+            // show the topic form
+            OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [], {
+                "title" : "{text key='forum+create_new_topic'}"
+            });
+        });
+    {/script}
+{/if}

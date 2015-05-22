@@ -52,6 +52,8 @@ OW::getRouter()->addRoute(new OW_Route('forum_delete_attachment', 'forum/deleteA
 OW::getRouter()->addRoute(new OW_Route('edit-topic', 'forum/edit-topic/:id', 'FORUM_MCTRL_EditTopic', 'index'));
 OW::getRouter()->addRoute(new OW_Route('delete-post', 'forum/deletePost/:topicId/:postId', 'FORUM_MCTRL_Topic', 'ajaxDeletePost'));
 OW::getRouter()->addRoute(new OW_Route('edit-post', 'forum/edit-post/:id', 'FORUM_MCTRL_EditPost', 'index'));
+OW::getRouter()->addRoute(new OW_Route('forum_advanced_search', 'forum/advanced-search/', 'FORUM_MCTRL_Search', 'advanced'));
+OW::getRouter()->addRoute(new OW_Route('forum_advanced_search_result', 'forum/advanced-search/result', 'FORUM_MCTRL_Search', 'advancedResult'));
 
 FORUM_MCLASS_EventHandler::getInstance()->init();
 FORUM_CLASS_ContentProvider::getInstance()->init();
