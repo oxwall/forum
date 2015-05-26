@@ -1,6 +1,6 @@
-{foreach from=$topics item=topic}
+{foreach from=$topics item=topic}                
     <div class="owm_box_body">
-        <div class="owm_box_body_cont" data-id="{$topic.id}">
+        <div class="owm_box_body_cont">
             <div class="owm_box_padding">
                 <a class="owm_topic_list_format {if $topic.new}owm_topic_list_unread{/if} {if $topic.locked}owm_topic_list_locked{/if}" href="{$topic.topicUrl}">
                     <div class="owm_topic_name owm_small_margin_bottom">
@@ -14,6 +14,11 @@
                         <div class="owm_forum_counter owm_float_right">
                             {if $topic.replyCount}{$topic.replyCount}{else}&nbsp;{/if}
                         </div>
+                    </div>
+                    <div>
+                        {text key='forum+topic_location'}
+                        <a href="{url_for_route for="forum-default"}#section-{$topic.sectionId}">{$topic.sectionName}</a>
+                        &raquo; <a href="{url_for_route for="group-default:[groupId=>`$topic.groupId`]"}">{$topic.groupName}</a>
                     </div>
                     <div class="owm_forum_description">
                         {text key='forum+author'}: {$displayNames[$topic.userId]}

@@ -40,8 +40,7 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
      * Advanced search result
      */
     public function advancedResult()
-    {
-        
+    {        
         // get search params
         $keyword = !empty($_GET['keyword']) && is_string($_GET['keyword']) 
             ? urldecode(trim($_GET['keyword'])) 
@@ -100,29 +99,24 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
 
         // search by keyword
         if ( $keyword ) {
-            $total = $this->forumService->
-                    countAdvancedFindEntities($keyword, $userId, $parts, $period, $searchInPosts);
-
-            $topics = $total
-                ? $this->forumService->
-                    advancedFindEntities($keyword, $page, $userId, $parts, $period, $sort, $sortDirection, $searchInPosts)
-                : array();
+            $topics = $this->forumService->advancedFindEntities($keyword, 
+                    $page, $userId, $parts, $period, $sort, $sortDirection, $searchInPosts);
         }
         else {
-            // search by user
-            $total = $this->forumService->
-                    countAdvancedFindEntitiesByUser($userId, $parts, $period, $searchInPosts);
-
-            $topics = $total
-                ? $this->forumService->
-                    advancedFindEntitiesByUser($userId, $page, $parts, $period, $sort, $sortDirection, $searchInPosts)
-                : array();
+            // search by a user
+            $topics = $this->forumService->
+                    advancedFindEntitiesByUser($userId, $page, $parts, $period, $sort, $sortDirection, $searchInPosts);
         }
 
         // collect authors 
         $authors = array();
         foreach ( $topics as $topic )
         {
+            if ( !in_array($topic['userId'], $authors) )
+            {
+                array_push($authors, $topic['userId']);
+            }
+
             if ( !empty($topic['posts']) )
             {
                 foreach ( $topic['posts'] as $post )
@@ -147,15 +141,18 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
             ? $this->forumService->getTopicPerPageConfig()
             : $this->forumService->getPostPerPageConfig();
 
-        // paging
-        $perPage = $searchIn == 'title' 
-            ? $this->forumService->getTopicPerPageConfig()
-            : $this->forumService->getPostPerPageConfig();
+        $location  = OW::getRouter()->urlForRoute('forum_advanced_search_result');
+        $location .= '?' . http_build_query(array(
+            'keyword' => $keyword,
+            'username' => $userName,
+            'parts' => $parts,
+            'search_in' => $searchIn,
+            'period' => $period,
+            'sort' => $sort,
+            'sort_direction' => $sortDirection
+        ));
 
         // assign view variables
-        $pages = (int) ceil($total / $perPage);
-        $paging = new BASE_CMP_Paging($page, $pages, $perPage);
-        $this->assign('paging', $paging->render());
         $this->assign('topics', $topics);
         $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
         $this->assign('backUrl', OW::getRouter()->urlForRoute('forum_advanced_search'));
@@ -165,11 +162,28 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
         $this->assign('displayNames', BOL_UserService::getInstance()->getDisplayNamesForList($authors));
         $this->assign('iteration',  ($page - 1) * $iterationPerPage + 1);
         $this->assign('onlineUsers', BOL_UserService::getInstance()->findOnlineStatusForUserList($authors));
-
+        $this->assign('postsCount', $this->forumService->findPostCountListByUserIds($authors));
+        $this->assign('drawTopicWrapper', true);
+        $this->assign('location', $location);
+        
         // set page title
         $pageTitle = OW::getLanguage()->text('forum', 'search_advanced_heading');
-
         $plugin = OW::getPluginManager()->getPlugin('forum');
+
+        // paginate
+        if ( OW::getRequest()->isAjax() )
+        {
+            $searchIn != 'title'
+                ? $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result_ajax.html')
+                : $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result_topic_ajax.html');
+
+            die( $this->render() );
+        }
+
+        // include js files
+        OW::getDocument()->addScript(OW::
+                getPluginManager()->getPlugin('forum')->getStaticJsUrl() . 'mobile_pagination.js');
+
         $searchIn != 'title'
             ? $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result.html')
             : $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result_topic.html');
@@ -308,9 +322,6 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
      */
     private function searchEntities(array $params, $type)
     {
-        $plugin = OW::getPluginManager()->getPlugin('forum');
-        $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result.html');
-
         $token = !empty($_GET['q']) && is_string($_GET['q']) 
             ? urldecode(trim($_GET['q'])) 
             : null;
@@ -325,6 +336,7 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
         }
 
         $authors = array();
+        $drawTopicWrapper = true;
 
         // make a search
         switch ( $type )
@@ -332,50 +344,50 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
             case 'topic' :
                 $iterationPerPage = $this->forumService->getPostPerPageConfig();
                 $topicId = (int) $params['topicId'];
+
+                $location = OW::getRouter()->
+                        urlForRoute('forum_search_topic', array('topicId' => $topicId));
+
                 $backUrl = OW::getRouter()->urlForRoute('topic-default', array(
                     'topicId' => $topicId
                 ));
 
                 $pageTitle = OW::getLanguage()->text('forum', 'search_invitation_topic');
-                $total = $this->forumService->countPostsInTopic($token, $topicId);
-                $topics = $total
-                    ? $this->forumService->findPostsInTopic($token, $topicId, $page)
-                    : array();
+                $topics = $this->forumService->findPostsInTopic($token, $topicId, $page);
+                $drawTopicWrapper = OW::getRequest()->isAjax() ? false : true;
                 break;
 
             case 'group' :
                 $groupId = (int) $params['groupId'];
+                $location = OW::getRouter()->
+                        urlForRoute('forum_search_group', array('groupId' => $groupId));
+
                 $backUrl = OW::getRouter()->urlForRoute('group-default', array(
                     'groupId' => $groupId
                 ));
 
                 $pageTitle = OW::getLanguage()->text('forum', 'search_invitation_group');
-                $total = $this->forumService->countTopicsInGroup($token, $groupId);
-                $topics = $total
-                    ? $this->forumService->findTopicsInGroup($token, $groupId, $page)
-                    : array();
+                $topics = $this->forumService->findTopicsInGroup($token, $groupId, $page);
                 break;
 
             case 'section' :
                 $sectionId = (int) $params['sectionId'];
+                $location = OW::getRouter()->
+                        urlForRoute('forum_search_section', array('sectionId' => $sectionId));
+
                 $backUrl = OW::getRouter()->urlForRoute('section-default', array(
                     'sectionId' => $sectionId
                 ));
 
                 $pageTitle = OW::getLanguage()->text('forum', 'search_invitation_section');
-                $total = $this->forumService->countTopicsInSection($token, $sectionId);
-                $topics = $total
-                    ? $this->forumService->findTopicsInSection($token, $sectionId, $page)
-                    : array();
+                $topics = $this->forumService->findTopicsInSection($token, $sectionId, $page);
                 break;
 
             case 'global' :
+                $location = OW::getRouter()->urlForRoute('forum_search');
                 $backUrl = OW::getRouter()->urlForRoute('forum-default');
                 $pageTitle = OW::getLanguage()->text('forum', 'search_invitation_all_forum');
-                $total = $this->forumService->countGlobalTopics($token);
-                $topics = $total
-                    ? $this->forumService->findGlobalTopics($token, $page)
-                    : array();
+                $topics = $this->forumService->findGlobalTopics($token, $page);
                 break;
         }
 
@@ -393,20 +405,32 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
                 }
             }
         }
-        
+
+        $plugin = OW::getPluginManager()->getPlugin('forum');
+
         // assign view variables
+        $this->assign('drawTopicWrapper', $drawTopicWrapper);
+        $this->assign('location', $location . '?q=' . urlencode($token));
         $this->assign('backUrl', $backUrl);
         $this->assign('iteration',  ($page - 1) * $iterationPerPage + 1);
         $this->assign('topics', $topics);
         $this->assign('displayNames', BOL_UserService::getInstance()->getDisplayNamesForList($authors));
         $this->assign('avatars', BOL_AvatarService::getInstance()->getDataForUserAvatars($authors));
         $this->assign('onlineUsers', BOL_UserService::getInstance()->findOnlineStatusForUserList($authors));
+        $this->assign('postsCount', $this->forumService->findPostCountListByUserIds($authors));
 
-        // paging
-        $perPage = $this->forumService->getTopicPerPageConfig();
-        $pages = (int) ceil($total / $perPage);
-        $paging = new BASE_CMP_PagingMobile($page, $pages, $perPage);
-        $this->assign('paging', $paging->render());
+        // paginate
+        if ( OW::getRequest()->isAjax() )
+        {
+            $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result_ajax.html');
+            die( $this->render() );
+        }
+
+        $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result.html');
+        
+        // include js files
+        OW::getDocument()->addScript(OW::
+                getPluginManager()->getPlugin('forum')->getStaticJsUrl() . 'mobile_pagination.js');
 
         // set current page settings
         OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));

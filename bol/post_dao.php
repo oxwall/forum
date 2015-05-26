@@ -232,6 +232,36 @@ class FORUM_BOL_PostDao extends OW_BaseDao
     }
 
     /**
+     * Returns users post count list by ids
+     * 
+     * @param array $userIds
+     * @return array 
+     */
+    public function findPostCountListByUserIds( array $userIds )
+    {
+        if ( !$userIds )
+        {
+            return array();
+        }
+
+        $userIds = $this->dbo->mergeInClause($userIds);
+
+        $query = "
+		SELECT `userId` , COUNT( * ) AS `postsCount`
+		FROM `" . $this->getTableName() . "`
+		WHERE `userId` IN (" . $userIds .") GROUP BY `userId`";
+
+        $values =  $this->dbo->queryForList($query);
+        $processedValues = array();
+
+        foreach($values as $value) {
+            $processedValues[$value['userId']] = $value['postsCount'];
+        }
+
+        return $processedValues;
+    }
+
+    /**
      * Returns post list by ids
      * 
      * @param array $postIds

@@ -639,17 +639,18 @@ final class FORUM_BOL_ForumService
      * @param int $groupId
      * @param int $page
      * @param int $count
+     * @param array $excludeTopicIds
      * @return array
      */
-    public function getGroupTopicList( $groupId, $page, $count = null )
+    public function getGroupTopicList( $groupId, $page, $count = null, array $excludeTopicIds = array() )
     {
-        if ( !isset($count) )
+        if ( empty($count) ||  $count <= 0 )
         {
             $count = $this->getTopicPerPageConfig();
         }
         $first = ($page - 1) * $count;
 
-        $topicList = $this->topicDao->findGroupTopicList($groupId, $first, $count);
+        $topicList = $this->topicDao->findGroupTopicList($groupId, $first, $count, $excludeTopicIds);
 
         $postIds = array();
         $topicIds = array();
@@ -1613,6 +1614,17 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Get users posts count
+     * 
+     * @param array $userIds
+     * @return array
+     */
+    public function findPostCountListByUserIds( $userIds )
+    {
+        return $this->postDao->findPostCountListByUserIds($userIds);
+    }
+
+    /**
      * Deletes post
      * 
      * @param int $postId
@@ -2293,7 +2305,7 @@ final class FORUM_BOL_ForumService
      */
     public function findPostsInTopic( $token, $topicId, $page, $sortBy = null, $userId = null )
     {
-        $limit = $this->getTopicPerPageConfig();
+        $limit = $this->getPostPerPageConfig();
         $first = ( $page - 1 ) * $limit;
 
         // make a search
