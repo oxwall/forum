@@ -22,7 +22,13 @@
                                     <div class="owm_profile_online"></div>
                                 {/if}
                                 <div class="owm_card_user_cont">
-                                    <span class="owm_remark">&nbsp;</span>
+                                    <span class="owm_remark">
+                                        {if !empty($postsCount[$post.userId])}
+                                            {$postsCount[$post.userId]} {text key="forum+messages_on_forum"}
+                                        {else}
+                                            &nbsp;
+                                        {/if}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -39,7 +45,7 @@
                 </div>
                 <div class="owm_card_body owm_bg_color_1">
                     <div class="owm_post_content">
-                        <p>{$post.text}</p>
+                        {$post.text}
                     </div>
                     {if $enableAttachments && isset($attachments[$post.id])}
                         <div class="owm_attachments owm_border owm_padding">
@@ -63,15 +69,23 @@
             </div>
             <div class="owm_card_toolbar">
                 <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix" data-id="{$post.id}" data-type="{if $firstTopic->id == $post.id}{$topicEnityType}{else}{$postEnityType}{/if}">
-                    {if $canQuote }
-                        <li class="owm_card_toolbar_quote">
+                    {if $canQuote && $post.userId != $userId}
+                        <li class="owm_card_toolbar_quote" style="width: 50%">
                             <a href="#"><span>{text key='forum+quote'}</span></a>
                         </li>
-                    {/if}
-                    {if $post.userId != $userId}
-                        <li class="owm_card_toolbar_flag">
+                        <li class="owm_card_toolbar_flag" style="width: 50%">
                             <a href="#"><span>{text key='forum+flag'}</span></a>
                         </li>
+                    {else}
+                        {if $canQuote}
+                            <li class="owm_card_toolbar_quote" style="width: 100%">
+                                <a href="#"><span>{text key='forum+quote'}</span></a>
+                            </li>
+                        {else}
+                            <li class="owm_card_toolbar_flag" style="width: 100%">
+                                <a href="#"><span>{text key='forum+flag'}</span></a>
+                            </li>
+                        {/if}
                     {/if}
                     <!-- <li class="owm_card_toolbar_share">
                         <a href="#"><span>{text key='forum+share'}<span></a>

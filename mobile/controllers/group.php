@@ -82,9 +82,8 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
         }
 
         // get topics
-        $page = !empty($_GET['page']) && (int) $_GET['page'] ? abs((int) $_GET['page']) : 1;
-        $topicList = $this->forumService->getGroupTopicList($groupId, $page);
-        $topicCount = $this->forumService->getGroupTopicCount($groupId);
+        $page = !empty($_REQUEST['page']) && (int) $_REQUEST['page'] ? abs((int) $_REQUEST['page']) : 1;
+        $topicList = $this->forumService->getGroupTopicList($groupId, $page, null);
         $topicIds = array();
         $authors = $this->forumService->getGroupTopicAuthorList($topicList, $topicIds);
 
@@ -104,11 +103,6 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
                 ? $stickyTopics[] = $topic : $regularTopics[] = $topic;
         }
 
-        // include js translations
-        OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
-        OW::getLanguage()->addKeyForJs('forum', 'attached_files');
-        OW::getLanguage()->addKeyForJs('forum', 'confirm_delete_all_attachments');
-
         // assign view variables
         $this->assign('canEdit', $canEdit);
         $this->assign('stickyTopics', $stickyTopics);
@@ -119,10 +113,21 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
                 getAttachmentsCountByTopicIdList($topicIds));
 
         // paginate
-        $perPage = $this->forumService->getTopicPerPageConfig();
-        $pageCount = ($topicCount) ? ceil($topicCount / $perPage) : 1;
-        $paging = new BASE_CMP_PagingMobile($page, $pageCount, $perPage);
-        $this->assign('paging', $paging->render());
+        if ( OW::getRequest()->isAjax() )
+        {
+            $plugin = OW::getPluginManager()->getPlugin('forum');
+            $this->setTemplate($plugin->getMobileCtrlViewDir() . 'group_index_ajax.html');
+            die( $this->render() );
+        }
+
+        // include js files
+        OW::getDocument()->addScript(OW::
+                getPluginManager()->getPlugin('forum')->getStaticJsUrl() . 'mobile_pagination.js');
+
+        // include js translations
+        OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
+        OW::getLanguage()->addKeyForJs('forum', 'attached_files');
+        OW::getLanguage()->addKeyForJs('forum', 'confirm_delete_all_attachments');
 
         // remember the last forum page
         OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());

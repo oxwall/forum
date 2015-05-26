@@ -12,17 +12,21 @@
         {component class="FORUM_MCMP_ForumSearch" scope="group" id="{$group->id}"}
 
         {if $stickyTopics || $regularTopics}
-            {if $stickyTopics}
-                <div class="owm_topics_sticky">
-                    {component class="FORUM_MCMP_ForumGroup" topics=$stickyTopics}
-                </div>
-            {/if}
-
-            {if $regularTopics}
-                {component class="FORUM_MCMP_ForumGroup" topics=$regularTopics}
-            {/if}
-
-            {if isset($paging)}{$paging}{/if}
+            <div id="forum-topics-wrapper">
+                {include file="./group_index_ajax.html"}
+            </div>
+            <div class="owm_preloader owm_std_margin_bottom" id="forum_preloader" style="display:none;"></div>
+            {script}
+                // pagination
+                $(document).ready(function () 
+                {
+                    var mobilePagination = new ForumPagination({
+                        "paginateUrl" : "{url_for_route for="group-default:[groupId=>`$group->id`]"}",
+                        "paginateWrapper" : $("#forum-topics-wrapper"),
+                        "preloader" : $("#forum_preloader")                    
+                    });
+                });
+            {/script}
         {else}
             {text key='forum+no_topic'}
         {/if}
