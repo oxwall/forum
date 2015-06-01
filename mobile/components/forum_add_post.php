@@ -67,7 +67,6 @@ class FORUM_MCMP_ForumAddPost extends OW_MobileComponent
             true
         );
 
-        $form->setTextInvitation(OW::getLanguage()->text('forum', 'write_reply'));
         $form->setAction(OW::getRouter()->urlForRoute('add-post', array(
             'topicId' => $topicId
         )));
