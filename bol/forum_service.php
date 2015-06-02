@@ -981,38 +981,7 @@ final class FORUM_BOL_ForumService
         $this->saveOrUpdateTopic($topicDto);
 
         $this->deleteByTopicId($topicDto->id);
-
-        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
-
-        if ( $enableAttachments )
-        {
-            $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $data['attachmentUid']);
-
-            if ( $filesArray )
-            {
-                $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
-                $skipped = 0;
-
-                foreach ( $filesArray as $file )
-                {
-                    $attachmentDto = new FORUM_BOL_PostAttachment();
-                    $attachmentDto->postId = $postDto->id;
-                    $attachmentDto->fileName = $file['dto']->origFileName;
-                    $attachmentDto->fileNameClean = $file['dto']->fileName;
-                    $attachmentDto->fileSize = $file['dto']->size * 1024;
-                    $attachmentDto->hash = uniqid();
-
-                    $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
-
-                    if ( !$added )
-                    {
-                        $skipped++;
-                    }
-                }
-
-                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
-            }
-        }
+        $this->addAttachments($postDto, $data['attachmentUid']);
 
         $event = new OW_Event('forum.add_post', array('postId' => $postDto->id, 'topicId' => $topicDto->id, 'userId' => $postDto->userId));
         OW::getEventManager()->trigger($event);
@@ -1061,16 +1030,27 @@ final class FORUM_BOL_ForumService
         $editPostDto->editStamp = time();
 
         $this->saveOrUpdateEditPost($editPostDto);
+        $this->addAttachments($postDto, $data['attachmentUid']);
+    }
+
+    /**
+     * Add attachments
+     * 
+     * @param FORUM_BOL_Post $postDto
+     * @param string $attachmentUid
+     * @return void
+     */
+    protected function addAttachments(FORUM_BOL_Post $postDto, $attachmentUid)
+    {
         $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
-        
+
         if ( $enableAttachments )
         {
-            $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $data['attachmentUid']);
+            $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $attachmentUid);
 
             if ( $filesArray )
             {
                 $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
-                $skipped = 0;
 
                 foreach ( $filesArray as $file )
                 {
@@ -1081,15 +1061,10 @@ final class FORUM_BOL_ForumService
                     $attachmentDto->fileSize = $file['dto']->size * 1024;
                     $attachmentDto->hash = uniqid();
 
-                    $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
-
-                    if ( !$added )
-                    {
-                        $skipped++;
-                    }
+                    $attachmentService->addAttachment($attachmentDto, $file['path']);
                 }
 
-                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
+                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $attachmentUid);
             }
         }
     }
@@ -1133,38 +1108,7 @@ final class FORUM_BOL_ForumService
         $editPostDto->editStamp = time();
         $this->saveOrUpdateEditPost($editPostDto);
 
-        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
-
-        if ( $enableAttachments )
-        {
-            $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $data['attachmentUid']);
-
-            if ( $filesArray )
-            {
-                $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
-                $skipped = 0;
-
-                foreach ( $filesArray as $file )
-                {
-                    $attachmentDto = new FORUM_BOL_PostAttachment();
-                    $attachmentDto->postId = $postDto->id;
-                    $attachmentDto->fileName = $file['dto']->origFileName;
-                    $attachmentDto->fileNameClean = $file['dto']->fileName;
-                    $attachmentDto->fileSize = $file['dto']->size * 1024;
-                    $attachmentDto->hash = uniqid();
-
-                    $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
-
-                    if ( !$added )
-                    {
-                        $skipped++;
-                    }
-                }
-
-                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
-            }
-        }
-
+        $this->addAttachments($postDto, $data['attachmentUid']);
         $topicUrl = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topicDto->id));
 
         $params = array(
@@ -1243,38 +1187,7 @@ final class FORUM_BOL_ForumService
             $subService->addSubscription($subs);
         }
 
-        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
-
-        if ( $enableAttachments )
-        {
-            $filesArray = BOL_AttachmentService::getInstance()->
-                    getFilesByBundleName('forum', $data['attachmentUid']);
-
-            if ( $filesArray )
-            {
-                $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
-                $skipped = 0;
-
-                foreach ( $filesArray as $file )
-                {
-                    $attachmentDto = new FORUM_BOL_PostAttachment();
-                    $attachmentDto->postId = $postDto->id;
-                    $attachmentDto->fileName = $file['dto']->origFileName;
-                    $attachmentDto->fileNameClean = $file['dto']->fileName;
-                    $attachmentDto->fileSize = $file['dto']->size * 1024;
-                    $attachmentDto->hash = uniqid();
-
-                    $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
-
-                    if ( !$added )
-                    {
-                        $skipped++;
-                    }
-                }
-
-                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
-            }
-        }
+        $this->addAttachments($postDto, $data['attachmentUid']);
 
         //Newsfeed
         $params = array(
