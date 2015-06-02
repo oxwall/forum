@@ -28,12 +28,50 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->deleteMenuItem('forum', 'forum');
 
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_ForumTopicsWidget');
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_LatestTopicsWidget');
+/**
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.plugin.forum.mobile.controllers
+ * @since 1.6.0
+ */
+class FORUM_MCTRL_Section extends FORUM_MCTRL_AbstractForum
+{
+    /**
+     * Section index
+     * 
+     * @param array $params
+     */
+    public function index( array $params )
+    {
+        if ( !isset($params['sectionId']) || !($sectionId = (int) $params['sectionId']) )
+        {
+            throw new Redirect404Exception();
+        }
 
+        // get the section info
+        $forumSection = $this->forumService->findSectionById($sectionId);
+        if ( !$forumSection || $forumSection->isHidden )
+        {
+            throw new Redirect404Exception();
+        }
 
-// Mobile deactivation
-OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');
-FORUM_BOL_TextSearchService::getInstance()->deactivateEntities();
+        $isModerator = OW::getUser()->isAuthorized('forum');
+        $canEdit = OW::getUser()->isAuthorized('forum', 'edit') || $isModerator ? true : false;
+
+        // include js translations
+        OW::getLanguage()->addKeyForJs('forum', 'post_attachment');
+        OW::getLanguage()->addKeyForJs('forum', 'attached_files');
+        OW::getLanguage()->addKeyForJs('forum', 'confirm_delete_all_attachments');
+
+        // assign view variables
+        $this->assign('section', $forumSection);
+        $this->assign('canEdit', $canEdit);
+
+        // remember the last forum page
+        OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
+
+        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+        OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_section'));
+        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_section'));
+    }
+}

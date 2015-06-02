@@ -163,15 +163,24 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
      * @param int $groupId
      * @param int $first
      * @param int $count
+     * @param int $lastTopicId
+     * @param array $excludeTopicIds
      * @return array 
      */
-    public function findGroupTopicList( $groupId, $first, $count )
+    public function findGroupTopicList( $groupId, $first, $count, array $excludeTopicIds = array() )
     {
+        $topicExcludeFilter = null;
+
+        if ( $excludeTopicIds )
+        {
+            $topicExcludeFilter = ' AND `t`.`id` NOT IN (' . $this->dbo->mergeInClause($excludeTopicIds) . ')';
+        }
+
         $query = 'SELECT `t`.*
 		    FROM `' . $this->getTableName() . '` AS `t`
 		        INNER JOIN `' . FORUM_BOL_PostDao::getInstance()->getTableName() . '` AS `p`
 		            ON (`t`.`lastPostId` = `p`.`id`)
-		    WHERE `t`.`groupId` = ? AND `t`.`status` = ?
+		    WHERE `t`.`groupId` = ? AND `t`.`status` = ? ' . $topicExcludeFilter . '
 		    GROUP BY `p`.`topicId`
 		    ORDER BY `t`.`sticky` DESC, `p`.`createStamp` DESC
 		    LIMIT ?, ?';
@@ -306,7 +315,24 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
 		ON (`g`.`sectionId` = `s`.`id`)
 		WHERE t.id IN (" . $topicsIn .") ORDER BY FIELD (t.id, " . $topicsIn . ")";
 
-        return $this->dbo->queryForList($query);
+        $list = $this->dbo->queryForList($query);
+
+        if ( $list )
+        {
+            $topicIdList = array();
+            foreach ( $list as $topic )
+            {
+                $topicIdList[] = $topic['id'];
+            }
+
+            $counters = $this->getPostCountForTopicIdList($topicIdList);
+            foreach ( $list as &$topic )
+            {
+                $topic['postCount'] = !empty($counters[$topic['id']]) ? $counters[$topic['id']] : 0;
+            }
+        }
+
+        return $list;
     }
 
     /**

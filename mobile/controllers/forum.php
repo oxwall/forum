@@ -28,12 +28,22 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->deleteMenuItem('forum', 'forum');
 
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_ForumTopicsWidget');
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_LatestTopicsWidget');
+/**
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.plugin.forum.mobile.controllers
+ * @since 1.6.0
+ */
+class FORUM_MCTRL_Forum extends FORUM_MCTRL_AbstractForum
+{
+    /**
+     * Forum index
+     */
+    public function index()
+    {
+        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+        OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_index'));
+        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_index'));
+    }
+}
 
-
-// Mobile deactivation
-OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');
-FORUM_BOL_TextSearchService::getInstance()->deactivateEntities();

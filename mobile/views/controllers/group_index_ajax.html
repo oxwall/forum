@@ -1,0 +1,9 @@
+{if $stickyTopics}
+    <div class="owm_topics_sticky">
+        {component class="FORUM_MCMP_ForumGroup" topics=$stickyTopics}
+    </div>
+{/if}
+
+{if $regularTopics}
+    {component class="FORUM_MCMP_ForumGroup" topics=$regularTopics}
+{/if}

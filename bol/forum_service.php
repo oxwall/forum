@@ -111,6 +111,36 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Returns Sections Group List Author
+     *
+     * @param array $sectionGroupList
+     * @return array
+     */
+    public function getSectionGroupAuthorList( $sectionGroupList )
+    {
+        $authors = array();
+        foreach ( $sectionGroupList as $section )
+        {
+            foreach ( $section['groups'] as $group )
+            {
+                if ( !$group['lastReply'] )
+                {
+                    continue;
+                }
+
+                $id = $group['lastReply']['userId'];
+
+                if ( !in_array($id, $authors) )
+                {
+                    array_push($authors, $id);
+                }
+            }
+        }
+
+        return $authors;
+    }
+
+    /**
      * Returns Sections Group List
      *
      * @param int $forUserId
@@ -609,17 +639,18 @@ final class FORUM_BOL_ForumService
      * @param int $groupId
      * @param int $page
      * @param int $count
+     * @param array $excludeTopicIds
      * @return array
      */
-    public function getGroupTopicList( $groupId, $page, $count = null )
+    public function getGroupTopicList( $groupId, $page, $count = null, array $excludeTopicIds = array() )
     {
-        if ( !isset($count) )
+        if ( empty($count) ||  $count <= 0 )
         {
             $count = $this->getTopicPerPageConfig();
         }
         $first = ($page - 1) * $count;
 
-        $topicList = $this->topicDao->findGroupTopicList($groupId, $first, $count);
+        $topicList = $this->topicDao->findGroupTopicList($groupId, $first, $count, $excludeTopicIds);
 
         $postIds = array();
         $topicIds = array();
@@ -657,6 +688,30 @@ final class FORUM_BOL_ForumService
         }
 
         return $topicList;
+    }
+
+    /**
+     * Returns group's topic author list
+     * 
+     * @param array $topicList
+     * @apram array $topicIds
+     * @return array
+     */
+    public function getGroupTopicAuthorList( array $topicList, array &$topicIds )
+    {
+        $authors = array();
+
+        foreach ( $topicList as $topic )
+        {
+            array_push($topicIds, $topic['id']);
+ 
+            if ( isset($topic['lastPost']) && !in_array($topic['lastPost']['userId'], $authors) )
+            {
+                array_push($authors, $topic['lastPost']['userId']);
+            }
+        }
+
+        return $authors;
     }
 
     /**
@@ -903,12 +958,277 @@ final class FORUM_BOL_ForumService
         return $this->topicDao->findById($topicId);
     }
 
-    public function addTopic( $topicDto )
+    /**
+     * Add post
+     * 
+     * @param FORUM_BOL_Topic $topicDto
+     * @param array $data
+     *      string text
+     *      string attachmentUid
+     * @return FORUM_BOL_Post
+     */
+    public function addPost( FORUM_BOL_Topic $topicDto, array $data )
     {
-        $this->topicDao->save($topicDto);
+        $postDto = new FORUM_BOL_Post();
+        $postDto->topicId = $topicDto->id;
+        $postDto->userId = OW::getUser()->getId();
+        $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($data['text'], array('form', 'input', 'button'), null, true));
 
-        // add a topic into the search index
-        $this->getTextSearchService()->addTopic($topicDto);
+        $postDto->createStamp = time();
+        $this->saveOrUpdatePost($postDto);
+
+        $topicDto->lastPostId = $postDto->getId();
+        $this->saveOrUpdateTopic($topicDto);
+
+        $this->deleteByTopicId($topicDto->id);
+        $this->addAttachments($postDto, $data['attachmentUid']);
+
+        $event = new OW_Event('forum.add_post', array('postId' => $postDto->id, 'topicId' => $topicDto->id, 'userId' => $postDto->userId));
+        OW::getEventManager()->trigger($event);
+
+        $forumGroup = $this->findGroupById($topicDto->groupId);
+        if ( $forumGroup )
+        {
+            $forumSection = $this->findSectionById($forumGroup->sectionId);
+            if ( $forumSection )
+            {
+                $pluginKey = $forumSection->isHidden ? $forumSection->entity : 'forum';
+                $action = $forumSection->isHidden ? 'add_topic' : 'edit';
+                BOL_AuthorizationService::getInstance()->trackAction($pluginKey, $action);
+            }
+        }
+
+        return $postDto;
+    }
+
+    /**
+     * Edit post
+     * 
+     * @param integer $userId
+     * @param array $data
+     *      string text
+     *      string attachmentUid
+     * @param FORUM_BOL_Post $postDto
+     * @return void
+     */
+    public function editPost( $userId, array $data, FORUM_BOL_Post $postDto )
+    {
+        //save post
+        $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($data['text'], array('form', 'input', 'button'), null, true));
+        $this->saveOrUpdatePost($postDto);
+
+        //save post edit info
+        $editPostDto = $this->findEditPost($postDto->id);
+
+        if ( $editPostDto === null )
+        {
+            $editPostDto = new FORUM_BOL_EditPost();
+        }
+
+        $editPostDto->postId = $postDto->id;
+        $editPostDto->userId = $userId;
+        $editPostDto->editStamp = time();
+
+        $this->saveOrUpdateEditPost($editPostDto);
+        $this->addAttachments($postDto, $data['attachmentUid']);
+    }
+
+    /**
+     * Add attachments
+     * 
+     * @param FORUM_BOL_Post $postDto
+     * @param string $attachmentUid
+     * @return void
+     */
+    protected function addAttachments(FORUM_BOL_Post $postDto, $attachmentUid)
+    {
+        $enableAttachments = OW::getConfig()->getValue('forum', 'enable_attachments');
+
+        if ( $enableAttachments )
+        {
+            $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $attachmentUid);
+
+            if ( $filesArray )
+            {
+                $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
+
+                foreach ( $filesArray as $file )
+                {
+                    $attachmentDto = new FORUM_BOL_PostAttachment();
+                    $attachmentDto->postId = $postDto->id;
+                    $attachmentDto->fileName = $file['dto']->origFileName;
+                    $attachmentDto->fileNameClean = $file['dto']->fileName;
+                    $attachmentDto->fileSize = $file['dto']->size * 1024;
+                    $attachmentDto->hash = uniqid();
+
+                    $attachmentService->addAttachment($attachmentDto, $file['path']);
+                }
+
+                BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $attachmentUid);
+            }
+        }
+    }
+
+    /**
+     * Edit topic
+     * 
+     * @param integer $userId
+     * @param array $data
+     *      string text
+     *      string attachmentUid
+     * @param FORUM_BOL_Topic $topicDto
+     * @param FORUM_BOL_Post $postDto
+     * @param FORUM_BOL_Section $forumSection
+     * @param FORUM_BOL_Group $forumGroup
+     * @return void
+     */
+    public function editTopic($userId, array $data, FORUM_BOL_Topic $topicDto, 
+            FORUM_BOL_Post $postDto, FORUM_BOL_Section $forumSection, FORUM_BOL_Group $forumGroup)
+    {
+        //save topic
+        $topicDto->title = strip_tags($data['title']);
+        $this->saveOrUpdateTopic($topicDto);
+
+        //save post
+        $postDto->text = UTIL_HtmlTag::
+                stripJs(UTIL_HtmlTag::stripTags(trim($data['text']), array('form', 'input', 'button'), null, true));
+
+        $this->saveOrUpdatePost($postDto);
+
+        //save post edit info
+        $editPostDto = $this->findEditPost($postDto->id);
+
+        if ( $editPostDto === null )
+        {
+            $editPostDto = new FORUM_BOL_EditPost();
+        }
+
+        $editPostDto->postId = $postDto->id;
+        $editPostDto->userId = $userId;
+        $editPostDto->editStamp = time();
+        $this->saveOrUpdateEditPost($editPostDto);
+
+        $this->addAttachments($postDto, $data['attachmentUid']);
+        $topicUrl = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topicDto->id));
+
+        $params = array(
+            'topicId' => $topicDto->id,
+            'entity' => $forumSection->entity ? $forumSection->entity : NULL,
+            'entityId' => $forumGroup->entityId ? $forumGroup->entityId : NULL,
+            'userId' => $topicDto->userId,
+            'topicUrl' => $topicUrl,
+            'topicTitle' => $topicDto->title,
+            'postText' => $postDto->text
+        );
+
+        OW::getEventManager()->trigger(new OW_Event('feed.action', array(
+            'pluginKey' => 'forum',
+            'entityType' => 'forum-topic',
+            'entityId' => $topicDto->id,
+            'userId' => $topicDto->userId,
+            'time' => $postDto->createStamp
+        )));
+
+        OW::getEventManager()->trigger(new OW_Event(FORUM_BOL_ForumService::EVENT_AFTER_TOPIC_EDIT, array(
+            'topicId' => $topicDto->id
+        )));
+
+        $event = new OW_Event('forum.topic_add', $params);
+        OW::getEventManager()->trigger($event);
+    }
+
+    /**
+     * Add topic 
+     * 
+     * @param FORUM_BOL_Group $forumGroup
+     * @param boolean $isHidden
+     * @param integer $userId
+     * @param array $data
+     *      integer group
+     *      string title
+     *      string text
+     *      string attachmentUid
+     *      integer subscribe
+     * @param object $forumSection
+     * @return FORUM_BOL_Topic
+     */
+    public function addTopic( FORUM_BOL_Group $forumGroup, $isHidden, $userId, array $data, $forumSection = null )
+    {
+         $topicDto = new FORUM_BOL_Topic();
+
+         $topicDto->userId = $userId;
+         $topicDto->groupId = $data['group'];
+         $topicDto->title = strip_tags($data['title']);
+
+         $this->topicDao->save($topicDto);
+
+         $postDto = new FORUM_BOL_Post();
+
+         $postDto->topicId = $topicDto->id;
+         $postDto->userId = $userId;
+
+         $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($data['text'], array('form', 'input', 'button'), null, true));
+         $postDto->createStamp = time();
+
+         $this->saveOrUpdatePost($postDto);
+         $topicDto->lastPostId = $postDto->getId();
+
+         $this->saveOrUpdateTopic($topicDto);
+        
+        // subscribe author to new posts
+        if ( $data['subscribe'] )
+        {
+            $subService = FORUM_BOL_SubscriptionService::getInstance();
+
+            $subs = new FORUM_BOL_Subscription();
+            $subs->userId = $userId;
+            $subs->topicId = $topicDto->id;
+
+            $subService->addSubscription($subs);
+        }
+
+        $this->addAttachments($postDto, $data['attachmentUid']);
+
+        //Newsfeed
+        $params = array(
+            'pluginKey' => 'forum',
+            'entityType' => 'forum-topic',
+            'entityId' => $topicDto->id,
+            'userId' => $topicDto->userId
+        );
+
+        $event = new OW_Event('feed.action', $params);
+        OW::getEventManager()->trigger($event);
+
+        if ( $isHidden && !empty($forumSection) )
+        {
+            BOL_AuthorizationService::getInstance()->trackAction($forumSection->entity, 'add_topic');
+        }
+        else
+        {
+            BOL_AuthorizationService::getInstance()->trackAction('forum', 'edit');
+        }
+
+        $topicUrl = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topicDto->id));
+
+        $params = array(
+            'topicId' => $topicDto->id,
+            'entity' => !empty($forumSection->entity) ? $forumSection->entity : NULL,
+            'entityId' => $forumGroup->entityId ? $forumGroup->entityId : NULL,
+            'userId' => $topicDto->userId,
+            'topicUrl' => $topicUrl,
+            'topicTitle' => $topicDto->title,
+            'postText' => $postDto->text
+        );
+
+        $event = new OW_Event('forum.topic_add', $params);
+        OW::getEventManager()->trigger($event);
+
+        OW::getEventManager()->trigger(new OW_Event(FORUM_BOL_ForumService::EVENT_AFTER_TOPIC_ADD, array(
+            'topicId' => $topicDto->id
+        )));
+
+        return $topicDto;
     }
 
     /**
@@ -1207,6 +1527,17 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Get users posts count
+     * 
+     * @param array $userIds
+     * @return array
+     */
+    public function findPostCountListByUserIds( $userIds )
+    {
+        return $this->postDao->findPostCountListByUserIds($userIds);
+    }
+
+    /**
      * Deletes post
      * 
      * @param int $postId
@@ -1427,17 +1758,34 @@ final class FORUM_BOL_ForumService
         // process topics
         $formatter = new FORUM_CLASS_ForumSearchResultFormatter();
 
-        foreach($topics as &$topic)
+        $userId = OW::getUser()->getId();
+        $readTopicIds = array();
+
+        if ( $userId )
         {
-            $topic['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
-            if (null == ($postDto = $this->findTopicFirstPost($topic['id'])))
+            $readTopicDao = FORUM_BOL_ReadTopicDao::getInstance();
+            $readTopicIds = $readTopicDao->findUserReadTopicIds($topicsIds, $userId);
+        }
+
+        $postIds = array();
+        $processedTopics = array();
+        foreach($topics as $topic)
+        {
+            $processedTopics[$topic['id']] = $topic;
+
+            $postIds[] = $topic['lastPostId'];
+            $processedTopics[$topic['id']]['topicUrl'] = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topic['id']));
+            $processedTopics[$topic['id']]['replyCount'] = $topic['postCount'] - 1;
+            $processedTopics[$topic['id']]['new'] = ($userId && !in_array($processedTopics[$topic['id']]['id'], $readTopicIds));
+
+            if (null == ($postDto = $this->findTopicFirstPost($processedTopics[$topic['id']]['id'])))
             {
                 continue;
             }
 
             $text = strip_tags($postDto->text);
 
-            $topic['posts'][] = array(
+            $processedTopics[$topic['id']]['posts'][] = array(
                 'postId' => $postDto->id,
                 'topicId' => $postDto->topicId,
                 'userId' => $postDto->userId,
@@ -1447,7 +1795,19 @@ final class FORUM_BOL_ForumService
             );
         }
 
-        return $topics; 
+        // get list of last posts
+        if ( $postIds ) {
+            $postList = $this->getTopicLastReplyList($postIds);
+
+            foreach( $postList as $post )
+            {
+                $processedTopics[$post['topicId']]['lastPost'] = array_merge($post, array(
+                    'postUrl' => $this->getPostUrl($post['topicId'], $post['postId'])
+                ));
+            }
+        }
+
+        return $processedTopics; 
     }
 
     /**
@@ -1505,7 +1865,7 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countGlobalTopics( $token, $userId )
+    public function countGlobalTopics( $token, $userId = null )
     {
         return $this->getTextSearchService()->countGlobalTopics($token, $userId);
     }
@@ -1580,7 +1940,7 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countTopicsInSection( $token, $sectionId, $userId )
+    public function countTopicsInSection( $token, $sectionId, $userId = null )
     {
         return $this->getTextSearchService()->countTopicsInSection($token, $sectionId, $userId);
     }
@@ -1658,7 +2018,7 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countTopicsInGroup( $token, $groupId, $userId )
+    public function countTopicsInGroup( $token, $groupId, $userId = null )
     {
         return $this->getTextSearchService()->countTopicsInGroup($token, $groupId, $userId);
     }
@@ -1841,7 +2201,7 @@ final class FORUM_BOL_ForumService
      * @param integer $userId
      * @return integer
      */
-    public function countPostsInTopic( $token, $topicId, $userId )
+    public function countPostsInTopic( $token, $topicId, $userId = null )
     {
         return $this->getTextSearchService()->countPostsInTopic($token, $topicId, $userId);
     }
@@ -1858,7 +2218,7 @@ final class FORUM_BOL_ForumService
      */
     public function findPostsInTopic( $token, $topicId, $page, $sortBy = null, $userId = null )
     {
-        $limit = $this->getTopicPerPageConfig();
+        $limit = $this->getPostPerPageConfig();
         $first = ( $page - 1 ) * $limit;
 
         // make a search

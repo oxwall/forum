@@ -142,18 +142,8 @@ class FORUM_CMP_ForumGroup extends OW_Component
         $topicList = $this->forumService->getGroupTopicList($groupId, $page);
         $topicCount = $this->forumService->getGroupTopicCount($groupId);
 
-        $userIds = array();
         $topicIds = array();
-
-        foreach ( $topicList as $topic )
-        {
-            array_push($topicIds, $topic['id']);
-
-            if ( isset($topic['lastPost']) && !in_array($topic['lastPost']['userId'], $userIds) )
-            {
-                array_push($userIds, $topic['lastPost']['userId']);
-            }
-        }
+        $userIds = $this->forumService->getGroupTopicAuthorList($topicList, $topicIds);
 
         $attachments = FORUM_BOL_PostAttachmentService::getInstance()->getAttachmentsCountByTopicIdList($topicIds);
         $this->assign('attachments', $attachments);

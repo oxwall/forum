@@ -1,5 +1,4 @@
 <?php
-
 /**
  * This software is intended for use with Oxwall Free Community Software http://www.oxwall.org/ and is
  * licensed under The BSD license.
@@ -28,12 +27,32 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->deleteMenuItem('forum', 'forum');
 
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_ForumTopicsWidget');
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_LatestTopicsWidget');
+/**
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.ow_plugins.forum.mobile
+ * @since 1.7.2
+ */
+class FORUM_MCLASS_SearchForm extends Form
+{
+    /**
+     * Class constructor
+     * 
+     * @param string $name
+     * @param string $keywordInvitation
+     * @param string $url
+     */
+    public function __construct( $name, $keywordInvitation, $url ) 
+    {
+        parent::__construct($name);
 
+        $this->setMethod(self::METHOD_GET);
+        $this->setAction($url);
 
-// Mobile deactivation
-OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');
-FORUM_BOL_TextSearchService::getInstance()->deactivateEntities();
+        // keyword
+        $keywordField = new TextField('keyword');
+        $keywordField->setHasInvitation(true);
+        $keywordField->setInvitation($keywordInvitation);
+        $this->addElement($keywordField);
+    }
+}

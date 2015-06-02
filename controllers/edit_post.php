@@ -126,72 +126,9 @@ class FORUM_CTRL_EditPost extends OW_ActionController
         if ( OW::getRequest()->isPost() && $editPostForm->isValid($_POST) )
         {
             $values = $editPostForm->getValues();
-            
-            $postId = (int) $values['post-id'];
-            $text = $values['text'];
-            $topicId = (int) $values['topic'];
 
-            $topicUrl = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topicId));
-
-            $postDto = $forumService->findPostById($postId);
-
-            if ( $postDto === null || ($postDto->userId != $userId && !$isModerator) )
-            {
-                $this->redirect($topicUrl);
-            }
-
-            //save post
-            $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($text, array('form', 'input', 'button'), null, true));
-            $forumService->saveOrUpdatePost($postDto);
-
-            //save post edit info
-            $editPostDto = $forumService->findEditPost($postId);
-
-            if ( $editPostDto === null )
-            {
-                $editPostDto = new FORUM_BOL_EditPost();
-            }
-
-            $editPostDto->postId = $postId;
-            $editPostDto->userId = $userId;
-            $editPostDto->editStamp = time();
-
-            $forumService->saveOrUpdateEditPost($editPostDto);
-
-            if ( $enableAttachments )
-            {
-                $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $values['attachmentUid']);
-
-                if ( $filesArray )
-                {
-                    $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
-                    $skipped = 0;
-
-                    foreach ( $filesArray as $file )
-                    {
-                        $attachmentDto = new FORUM_BOL_PostAttachment();
-                        $attachmentDto->postId = $postDto->id;
-                        $attachmentDto->fileName = $file['dto']->origFileName;
-                        $attachmentDto->fileNameClean = $file['dto']->fileName;
-                        $attachmentDto->fileSize = $file['dto']->size * 1024;
-                        $attachmentDto->hash = uniqid();
-
-                        $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
-
-                        if ( !$added )
-                        {
-                            $skipped++;
-                        }
-                    }
-
-                    BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $values['attachmentUid']);
-                    
-                    if ( $skipped )
-                    {
-                        OW::getFeedback()->warning(OW::getLanguage()->text('forum', 'not_all_attachments_added'));
-                    }
-                }
-            }
+            // update the post
+            $forumService->editPost($userId, $values, $postDto);
 
             $this->redirect($forumService->getPostUrl($topicId, $postId, true));
         }

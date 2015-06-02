@@ -276,7 +276,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countGlobalTopics( $text, $userId )
+    public function countGlobalTopics( $text, $userId = null )
     {
         $tags = $userId
             ? array('forum_topic_public_user_id_' . $userId)
@@ -346,7 +346,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countTopicsInSection( $text, $sectionId, $userId )
+    public function countTopicsInSection( $text, $sectionId, $userId = null )
     {
         $tags = $userId
             ? array('forum_topic_section_id_' . $sectionId . '_user_id_' . $userId)
@@ -421,7 +421,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countTopicsInGroup( $text, $groupId, $userId )
+    public function countTopicsInGroup( $text, $groupId, $userId = null )
     {
         $tags = $userId
             ? array('forum_topic_group_id_' . $groupId . '_user_id_' . $userId)
@@ -747,7 +747,7 @@ class FORUM_BOL_TextSearchService
      * @param integer $userId
      * @return integer
      */
-    public function countPostsInTopic( $text, $topicId, $userId )
+    public function countPostsInTopic( $text, $topicId, $userId = null )
     {
         $tags = $userId
             ? array('forum_post_topic_id_' . $topicId . '_user_id_' . $userId)
