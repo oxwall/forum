@@ -1,4 +1,4 @@
-<div class="owm_padding owm_bg_color_1">
+<div class="owm_bg_color_1">
     {form name="post_form"}
         <div class="owm_forum_topic owm_forum_topic_reply">
             {if !empty($quoteText) && !empty($quoteId)}
@@ -7,10 +7,8 @@
             {/if}
             <div class="owm_forum_topic_nav">
                 <div class="owm_forum_name_select owm_bg_color_1">
-                    <div class="owm_select_wrap">
-                        <div class="ow_inline owm_inline">
-                            {input name="text"}
-                        </div>
+                    <div class="ow_inline owm_inline">
+                        {input name="text"}
                     </div>
                     <div class="owm_error_txt">
                         {error name="text"}
