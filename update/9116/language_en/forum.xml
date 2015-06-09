@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<prefix name="forum" label="Forum" language_tag="en" language_label="English">
+	<key name="forum_mobile">
+            <value>Forum</value>
+	</key>
+	<key name="forum_section">
+            <value>Section</value>
+	</key>
+	<key name="forum_group">
+            <value>Forum</value>
+	</key>
+        <key name="attached_files">
+            <value>attached files</value>
+	</key>
+        <key name="post_attachment">
+            <value>Post attachment</value>
+	</key>
+	<key name="clear_all">
+            <value>Clear all</value>
+	</key>
+	<key name="add_files">
+            <value>Add files</value>
+	</key>
+	<key name="write_reply">
+            <value>Write reply...</value>
+	</key>
+	<key name="unsubscribe">
+            <value>Unsubscribe</value>
+	</key>
+	<key name="forum_topic">
+            <value>Topic</value>
+	</key>
+	<key name="subscribe_confirm">
+            <value>Do you really want to subscribe to this topic?</value>
+	</key>
+	<key name="unsubscribe_confirm">
+            <value>Do you really want to unsubscribe to this topic?</value>
+	</key>
+	<key name="view_quote">
+            <value>View quote</value>
+	</key>
+	<key name="confirm_delete_all_attachments">
+            <value>Are you sure you want to delete these files?</value>
+	</key>
+	<key name="search_results">
+            <value>Search results</value>
+	</key>
+		<key name="basic">
+            <value>Basic</value>
+	</key>
+	<key name="messages_on_forum">
+            <value>message(s) on forum</value>
+	</key>
+</prefix>
