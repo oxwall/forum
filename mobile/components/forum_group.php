@@ -28,12 +28,31 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->deleteMenuItem('forum', 'forum');
 
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_ForumTopicsWidget');
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_LatestTopicsWidget');
+/**
+ * Forum group class.
+ *
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.ow_plugins.forum.mobile.components
+ * @since 1.0
+ */
+class FORUM_MCMP_ForumGroup extends OW_MobileComponent
+{
+    /**
+     * Class constructor
+     * 
+     * @param array $params
+     *      array topics
+     */
+    public function __construct(array $params = array())
+    {
+        parent::__construct();
 
+        $topics = !empty($params['topics']) 
+            ? $params['topics'] 
+            : array();
 
-// Mobile deactivation
-OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');
-FORUM_BOL_TextSearchService::getInstance()->deactivateEntities();
+        // assign view variables
+        $this->assign('topics', $topics);
+    }
+}

@@ -28,12 +28,70 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->deleteMenuItem('forum', 'forum');
 
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_ForumTopicsWidget');
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_LatestTopicsWidget');
+/**
+ * Forum post context menu class.
+ *
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.ow_plugins.forum.mobile.components
+ * @since 1.0
+ */
+class FORUM_MCMP_ForumPostContextMenu extends OW_MobileComponent
+{
+    /**
+     * Post id
+     * @var integer
+     */
+    protected $postId;
 
+    /**
+     * Class constructor
+     * 
+     * @param array $params
+     *      integer topicId
+     *      integer postId
+     */
+    public function __construct( array $params = array() )
+    {
+        parent::__construct();
 
-// Mobile deactivation
-OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');
-FORUM_BOL_TextSearchService::getInstance()->deactivateEntities();
+        $this->topicId = !empty($params['topicId']) ? $params['topicId'] : -1;
+        $this->postId = !empty($params['postId']) ? $params['postId'] : -1;
+    }
+
+    /**
+     * Render component
+     * 
+     * @return type
+     */
+    public function render()
+    {
+        $items[] = array(
+            'group' => 'forum',
+            'label' => OW::getLanguage()->text('forum', 'edit'),
+            'order' => 1,
+            'class' => null,
+            'href' => null,
+            'id' => null,
+            'attributes' => array(
+                'class' => 'forum_edit_post',
+                'data-id' => $this->postId,
+            )
+        );
+
+        $items[] = array(
+            'group' => 'forum',
+            'label' => OW::getLanguage()->text('forum', 'delete'),
+            'order' => 1,
+            'class' => null,
+            'href' => OW::getRouter()->urlForRoute('delete-post', array('topicId' => $this->topicId, 'postId' => $this->postId)),
+            'id' => null,
+            'attributes' => array(
+                'class' => 'forum_delete_post',
+            )
+        );
+
+        $menu = new BASE_MCMP_ContextAction($items);
+        return $menu->render();
+    }
+}

@@ -1,0 +1,165 @@
+{assign var="canQuote" value=!$topicInfo.locked && ($canEdit || $canPost)}
+
+{foreach from=$postList item=post}
+    <div class="{if $firstTopic->id == $post.id}owm_forum_topic owm_forum_topic_view{else}owm_forum_reply{/if}" id="post-{$post.id}">
+        {add_content key="forum.before_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
+        <div class="owm_card clearfix owm_std_margin_bottom">
+            <div class="owm_card_cap owm_padding">
+                <div class="owm_card_date">#{$post.number} {$post.createStamp}</div>
+            </div>
+            <div class="owm_card_content">
+                <div class="owm_card_header owm_bg_color_3 clearfix">
+                    <div class="owm_card_user owm_card_user_context owm_padding">
+                        <div class="owm_card_user_pic">
+                            {decorator name="avatar_item" data=$avatars[$post.userId]}
+                        </div>
+                        <div class="owm_card_user_info">
+                            <div class="owm_card_user_name">
+                                <a href="{$avatars[$post.userId].url}">
+                                    <b>{$avatars[$post.userId].title}</b>
+                                </a>
+                                {if !empty($onlineUsers[$post.userId])}
+                                    <div class="owm_profile_online"></div>
+                                {/if}
+                                <div class="owm_card_user_cont">
+                                    <span class="owm_remark">
+                                        {if !empty($postsCount[$post.userId])}
+                                            {$postsCount[$post.userId]} {text key="forum+messages_on_forum"}
+                                        {else}
+                                            &nbsp;
+                                        {/if}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {if ($isModerator || ($userId == $post.userId && !$topicInfo.locked)) && $post.id != $firstTopic->id}
+                        <div class="owm_view_more owm_float_right">
+                             {component 
+                                class="FORUM_MCMP_ForumPostContextMenu"
+                                topicId=$post.topicId
+                                postId=$post.id
+                             }
+                        </div>
+                    {/if}
+                </div>
+                <div class="owm_card_body owm_bg_color_1">
+                    <div class="owm_post_content">
+                        {$post.text}
+                    </div>
+                    {if $enableAttachments && isset($attachments[$post.id])}
+                        <div class="owm_attachments owm_border owm_padding">
+                            {foreach from=$attachments[$post.id] item='attm'}
+                                <div class="owm_attach_info clearfix">
+                                    <label class="owm_attach_label owm_attach_icon">{$attm.fileName} <span>({$attm.fileSize}KB)</span></label>
+                                    <a href="{$attm.downloadUrl}" class="owm_attach_download owm_float_right"></a>
+                                </div>
+                            {/foreach}
+                        </div>
+                    {/if}
+                </div>
+                {if !empty($post.edited) }
+                    <div class="owm_card_footer owm_bg_color_1">
+                        <div class="owm_post_action owm_padding owm_remark">
+                            {text key='forum+post_edited'}
+                            <a href="{$avatars[$post.edited.userId].url}">{$avatars[$post.edited.userId].title}</a> {$post.edited.editStamp}
+                        </div>
+                    </div>
+                {/if}
+            </div>
+            <div class="owm_card_toolbar">
+                <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix" data-id="{$post.id}" data-type="{if $firstTopic->id == $post.id}{$topicEnityType}{else}{$postEnityType}{/if}">
+                    {if $canQuote && $post.userId != $userId}
+                        <li class="owm_card_toolbar_quote" style="width: 50%">
+                            <a href="#"><span>{text key='forum+quote'}</span></a>
+                        </li>
+                        <li class="owm_card_toolbar_flag" style="width: 50%">
+                            <a href="#"><span>{text key='forum+flag'}</span></a>
+                        </li>
+                    {else}
+                        {if $canQuote}
+                            <li class="owm_card_toolbar_quote" style="width: 100%">
+                                <a href="#"><span>{text key='forum+quote'}</span></a>
+                            </li>
+                        {else}
+                            <li class="owm_card_toolbar_flag" style="width: 100%">
+                                <a href="#"><span>{text key='forum+flag'}</span></a>
+                            </li>
+                        {/if}
+                    {/if}
+                    <!-- <li class="owm_card_toolbar_share">
+                        <a href="#"><span>{text key='forum+share'}<span></a>
+                    </li> -->
+                </ul>
+            </div>
+            {add_content key="forum.after_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
+ 
+            {if $firstTopic->id == $post.id}
+                {add_content key='forum.topic.content.after_first_post'}
+            {/if}
+        </div>
+    </div>
+{/foreach}
+
+<div>
+    
+</div>
+{if isset($paging)}{$paging}{/if}
+
+{script}
+    $(document).ready(function()
+    {
+        // flag post
+        $(".owm_card_toolbar_flag").bind("click", function(e)
+        {
+            e.preventDefault();
+            OWM.flagContent($(this).parent().attr("data-type"), $(this).parent().attr("data-id"));
+        });
+
+        {if $canQuote }
+            // quote post
+            $(".owm_card_toolbar_quote").bind("click", function(e)
+            {
+                e.preventDefault();
+
+                // show the post form
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id}, "postId" : $(this).parent().attr("data-id") }], 
+                {
+                    "title" : "{text key='forum+add_post_title'}"
+                });
+            });
+        {/if}
+
+        {if ($isModerator || ($userId == $post.userId && !$topicInfo.locked))}
+            // delete post
+            $(".forum_delete_post").bind("click", function(e)
+            {
+                e.preventDefault();
+
+                if ( confirm("{text key='forum+delete_post_confirm'}") ) 
+                {
+                    $.post($(this).attr("href"), function(data)
+                    {
+                        var data = jQuery.parseJSON(data);
+
+                        if (data.result === true && data.url)
+                        {
+                            location.href = data.url;
+                        }
+                    });
+                }
+            });
+ 
+            // edit post
+            $(".forum_edit_post").bind("click", function(e)
+            {
+                e.preventDefault();
+ 
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumEditPost", [{ "topicId" : "{$topicInfo.id}", "postId" : $(this).attr("data-id") }], 
+                {
+                    "title" : "{text key='forum+edit_post_title'}"
+                });
+            });
+        {/if}
+    });
+{/script}

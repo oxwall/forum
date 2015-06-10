@@ -178,113 +178,18 @@ class FORUM_CTRL_AddTopic extends OW_ActionController
 
             if ( $data['group'] )
             {
-                $topicDto = new FORUM_BOL_Topic();
-
-                $topicDto->userId = $userId;
-                $topicDto->groupId = $data['group'];
-                $topicDto->title = strip_tags($data['title']);
-
-                $forumService->addTopic($topicDto);
-
-                $postDto = new FORUM_BOL_Post();
-
-                $postDto->topicId = $topicDto->id;
-                $postDto->userId = $userId;
-
-                $postDto->text = UTIL_HtmlTag::stripJs(UTIL_HtmlTag::stripTags($data['text'], array('form', 'input', 'button'), null, true));
-                $postDto->createStamp = time();
-
-                $forumService->saveOrUpdatePost($postDto);
-                $topicDto->lastPostId = $postDto->getId();
-
-                $forumService->saveOrUpdateTopic($topicDto);
-
-                // subscribe author to new posts
-                if ( $data['subscribe'] )
+                // create a new topic
+                if ( !isset($forumSection) )
                 {
-                    $subService = FORUM_BOL_SubscriptionService::getInstance();
-
-                    $subs = new FORUM_BOL_Subscription();
-                    $subs->userId = $userId;
-                    $subs->topicId = $topicDto->id;
-
-                    $subService->addSubscription($subs);
+                    $topicDto = $forumService->addTopic($forumGroup, $isHidden, $userId, $data);
+                }
+                else 
+                {
+                    $topicDto = $forumService->addTopic($forumGroup, $isHidden, $userId, $data, $forumSection);
                 }
 
-                if ( $enableAttachments )
-                {
-                    $filesArray = BOL_AttachmentService::getInstance()->getFilesByBundleName('forum', $data['attachmentUid']);
-
-                    if ( $filesArray )
-                    {
-                        $attachmentService = FORUM_BOL_PostAttachmentService::getInstance();
-                        $skipped = 0;
-
-                        foreach ( $filesArray as $file )
-                        {
-                            $attachmentDto = new FORUM_BOL_PostAttachment();
-                            $attachmentDto->postId = $postDto->id;
-                            $attachmentDto->fileName = $file['dto']->origFileName;
-                            $attachmentDto->fileNameClean = $file['dto']->fileName;
-                            $attachmentDto->fileSize = $file['dto']->size * 1024;
-                            $attachmentDto->hash = uniqid();
-
-                            $added = $attachmentService->addAttachment($attachmentDto, $file['path']);
-
-                            if ( !$added )
-                            {
-                                $skipped++;
-                            }
-                        }
-                        
-                        BOL_AttachmentService::getInstance()->deleteAttachmentByBundle('forum', $data['attachmentUid']);
-
-                        if ( $skipped )
-                        {
-                            OW::getFeedback()->warning(OW::getLanguage()->text('forum', 'not_all_attachments_added'));
-                        }
-                    }
-                }
-
-                $topicUrl = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topicDto->id));
-
-                //Newsfeed
-                $params = array(
-                    'pluginKey' => 'forum',
-                    'entityType' => 'forum-topic',
-                    'entityId' => $topicDto->id,
-                    'userId' => $topicDto->userId
-                );
-
-                $event = new OW_Event('feed.action', $params);
-                OW::getEventManager()->trigger($event);
-
-                if ( $isHidden && isset($forumSection) )
-                {
-                    BOL_AuthorizationService::getInstance()->trackAction($forumSection->entity, 'add_topic');
-                }
-                else
-                {
-                    BOL_AuthorizationService::getInstance()->trackAction('forum', 'edit');
-                }
-                
-                    $params = array(
-                        'topicId' => $topicDto->id,
-                    'entity' => $forumSection->entity ? $forumSection->entity : NULL,
-                    'entityId' => $forumGroup->entityId ? $forumGroup->entityId : NULL,
-                        'userId' => $topicDto->userId,
-                        'topicUrl' => $topicUrl,
-                        'topicTitle' => $topicDto->title,
-                        'postText' => $postDto->text
-                    );
-                    $event = new OW_Event('forum.topic_add', $params);
-                    OW::getEventManager()->trigger($event);
-
-                OW::getEventManager()->trigger(new OW_Event(FORUM_BOL_ForumService::EVENT_AFTER_TOPIC_ADD, array(
-                    'topicId' => $topicDto->id
-                )));
-
-                $this->redirect($topicUrl);
+                $this->redirect(OW::getRouter()->
+                        urlForRoute('topic-default', array('topicId' => $topicDto->id)));
             }
             else
             {
@@ -304,61 +209,16 @@ class FORUM_CTRL_AddTopic extends OW_ActionController
      */
     private function generateForm( $groupSelect, $groupId, $isHidden, $uid )
     {
-        $form = new Form('add-topic-form');
-        $form->setEnctype("multipart/form-data");
-
-        $lang = OW::getLanguage();
-
-        $attachmentUid = new HiddenField('attachmentUid');
-        $attachmentUid->setValue($uid);
-        $attachmentUid->setRequired(true);
-        $form->addElement($attachmentUid);
-
-        $title = new TextField('title');
-        $title->setRequired(true);
-        $sValidator = new StringValidator(1, 255);
-        $sValidator->setErrorMessage($lang->text('forum', 'chars_limit_exceeded', array('limit' => 255)));
-        $title->addValidator($sValidator);
-        $form->addElement($title);
-
-        if ( $isHidden )
-        {
-            $group = new HiddenField('group');
-            $group->setValue($groupId);
-        }
-        else
-        {
-            $group = new ForumSelectBox('group');
-            $group->setOptions($groupSelect);
-            if ( $groupId )
-            {
-                $group->setValue($groupId);
-            }
-            $group->setRequired(true);
-            $group->addValidator(new IntValidator());
-        }
-
-        $form->addElement($group);
-
-        $btnSet = array(BOL_TextFormatService::WS_BTN_IMAGE, BOL_TextFormatService::WS_BTN_VIDEO, BOL_TextFormatService::WS_BTN_HTML);
-        $text = new WysiwygTextarea('text', $btnSet);
-        $text->setRequired(true);
-        $sValidator = new StringValidator(1, 50000);
-        $sValidator->setErrorMessage($lang->text('forum', 'chars_limit_exceeded', array('limit' => 50000)));
-        $text->addValidator($sValidator);
-        $form->addElement($text);
-
-        $subscribe = new CheckboxField('subscribe');
-        $subscribe->setLabel($lang->text('forum', 'subscribe'));
-        $subscribe->setValue(true);
-        $form->addElement($subscribe);
-
-        $post = new Submit('post');
-        $post->setValue($lang->text('forum', 'add_post_btn'));
-        $form->addElement($post);
+        $form = new FORUM_CLASS_TopicAddForm(
+            'add-topic-form', 
+            $uid, 
+            $groupSelect, 
+            $groupId,
+            false,
+            $isHidden
+        );
 
         $this->addForm($form);
-
         return $form;
     }
 }

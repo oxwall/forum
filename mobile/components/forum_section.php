@@ -28,12 +28,38 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->deleteMenuItem('forum', 'forum');
 
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_ForumTopicsWidget');
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_LatestTopicsWidget');
+/**
+ * Forum section class.
+ *
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.ow_plugins.forum.mobile.components
+ * @since 1.0
+ */
+class FORUM_MCMP_ForumSection extends OW_MobileComponent
+{
+    /**
+     * Class constructor
+     * 
+     * @param array $params
+     */
+    public function __construct(array $params = array())
+    {
+        parent::__construct();
 
+        $sectionId = !empty($params['sectionId']) 
+            ? (int) $params['sectionId'] 
+            : null;
 
-// Mobile deactivation
-OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');
-FORUM_BOL_TextSearchService::getInstance()->deactivateEntities();
+        $forumService = FORUM_BOL_ForumService::getInstance();
+        $userId = OW::getUser()->getId();
+
+        $sectionGroupList = $forumService->getSectionGroupList($userId, $sectionId);
+        $authors = $forumService->getSectionGroupAuthorList($sectionGroupList);
+
+        // assign view variables
+        $this->assign('singleMode', null != $sectionId);
+        $this->assign('sectionGroupList', $sectionGroupList);
+        $this->assign('displayNames', BOL_UserService::getInstance()->getDisplayNamesForList($authors));
+    }
+}

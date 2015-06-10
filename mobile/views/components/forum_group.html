@@ -1,0 +1,38 @@
+{foreach from=$topics item=topic}
+    <div class="owm_box_body">
+        <div class="owm_box_body_cont" data-id="{$topic.id}">
+            <div class="owm_box_padding">
+                <a class="owm_topic_list_format {if $topic.new}owm_topic_list_unread{/if} {if $topic.locked}owm_topic_list_locked{/if}" href="{$topic.topicUrl}">
+                    <div class="owm_topic_name owm_small_margin_bottom">
+                        {if $topic.sticky}
+                            <span class="owm_topic_sticky_icon"></span>
+                        {/if}
+                        {if isset($attachments[$topic.id])}
+                            <span class="owm_topic_attach_icon"></span>
+                        {/if}
+                        {$topic.title}
+                        <div class="owm_forum_counter owm_float_right">
+                            {if $topic.replyCount}{$topic.replyCount}{else}&nbsp;{/if}
+                        </div>
+                    </div>
+                    <div class="owm_forum_description">
+                        {text key='forum+author'}: {$displayNames[$topic.userId]}
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="owm_box_bottom">
+        <div class="owm_box_toolbar owm_forum_additional_info owm_forum_list_unread">
+            <div class="owm_forum_additional_item owm_forum_additional_views">
+                {$topic.viewCount}
+            </div>
+            {if isset($topic.lastPost)}
+                <div class="owm_forum_additional_item owm_forum_additional_date">
+                    {$topic.lastPost.createStamp}
+                </div>
+                <span>{text key='forum+by'} <a href="{$topic.lastPost.postUrl}">{$displayNames[$topic.lastPost.userId]}</a></span>
+            {/if}
+        </div>
+    </div>
+{/foreach}

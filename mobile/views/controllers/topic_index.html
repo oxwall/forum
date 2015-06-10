@@ -1,0 +1,219 @@
+{style}
+    {literal}
+        .owm_forum_page .owm_context_action_list_item .owm_context_action_list_item_c > span {
+            display:block;
+        }
+    {/literal}
+{/style}
+
+<div class="owm_forum_page owm_forum_section">
+    <div class="owm_std_margin_bottom">
+        <div class="owm_nav_cap owm_nav_cap_context owm_bg_color_3 clearfix">
+            <h3>{$topicInfo.title}</h3>
+            <div class="owm_float_left">
+                <a class="owm_nav_cap_left" href="{url_for_route for="group-default:[groupId=>`$topicInfo.groupId`]"}"></a>
+            </div>
+
+            {if $canEdit || $canLock || $canSticky || $canSubscribe}
+                <div class="owm_view_more owm_float_right">
+                    {component 
+                        class="FORUM_MCMP_ForumTopicContextMenu"
+                        isOwner=$isOwner
+                        isModerator=$isModerator
+                        topicInfo=$topicInfo 
+                        canEdit=$canEdit 
+                        canLock=$canLock 
+                        canSticky=$canSticky 
+                        canSubscribe=$canSubscribe
+                        isSubscribed=$isSubscribed
+                    }
+                </div>
+            {/if}
+        </div>
+
+        {component 
+            class="FORUM_MCMP_ForumSearch" 
+            scope="topic" 
+            id="{$topicInfo.id}"
+        }
+
+        {component 
+            class="FORUM_MCMP_ForumPost" 
+            page=$page 
+            topicInfo=$topicInfo
+            canEdit=$canEdit
+            canPost=$canPost
+            userId=$userId
+            isModerator=$isModerator
+        }
+
+        {if $canSubscribe}
+            <!-- subscribe/unsubscribe topic -->
+            {script}
+                $("#subscribe_topic, #unsubscribe_topic").bind("click", function(e)
+                {
+                    e.preventDefault();
+                    var unsubscribe = $(this).attr("id") == "unsubscribe_topic";
+                    var confirmText = unsubscribe
+                        ? "{text key='forum+unsubscribe_confirm'}"
+                        : "{text key='forum+subscribe_confirm'}";
+
+                    topicAction(confirmText, "{url_for_route for="subscribe-topic:[topicId=>`$topicInfo.id`]"}", function()
+                    {
+                        // show or hide action buttons
+                        if ( unsubscribe ) 
+                        {
+                            $("#unsubscribe_topic").hide();
+                            $("#subscribe_topic").show();
+                            return;
+                        }
+
+                        $("#unsubscribe_topic").show();
+                        $("#subscribe_topic").hide();
+                    });
+                });
+            {/script}
+            <!-- end of subscribe/unsubscribe topic -->
+        {/if}
+
+        {if $canSticky}
+            <!-- sticky/unsticky topic -->
+            {script}
+                $("#sticky_topic, #unsticky_topic").bind("click", function(e)
+                {
+                    e.preventDefault();
+                    var unsticky = $(this).attr("id") == "unsticky_topic";
+                    var confirmText = unsticky
+                        ? "{text key='forum+unsticky_topic_confirm'}"
+                        : "{text key='forum+sticky_topic_confirm'}";
+
+                    topicAction(confirmText, "{url_for_route for="sticky-topic:[topicId=>`$topicInfo.id`]"}", function()
+                    {
+                        // show or hide action buttons
+                        if ( unsticky ) 
+                        {
+                            $("#unsticky_topic").hide();
+                            $("#sticky_topic").show();
+                            return;
+                        }
+
+                        $("#unsticky_topic").show();
+                        $("#sticky_topic").hide();
+                    });
+                 });
+            {/script}
+            <!-- end of lock/unlock topic -->
+        {/if}
+
+        {if $canLock}
+            <!-- lock/unlock topic -->
+            {script}
+                $("#lock_topic, #unlock_topic").bind("click", function(e)
+                {
+                    e.preventDefault();
+                    var confirmText = $(this).attr("id") == "unlock_topic"
+                        ? "{text key='forum+unlock_topic_confirm'}"
+                        : "{text key='forum+lock_topic_confirm'}";
+
+                    topicAction(confirmText, "{url_for_route for="lock-topic:[topicId=>`$topicInfo.id`]"}", function()
+                    {
+                        location.reload();
+                    });
+                });
+            {/script}
+            <!-- end of lock/unlock topic -->               
+        {/if}
+
+        {if $canEdit}
+            <!-- topic form -->
+            {script}
+                /**
+                 * Show a new topic form
+                 */
+                $( "#forum_new_topic" ).bind("click", function(e)
+                {
+                    e.preventDefault();
+
+                    // show the topic form
+                    OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [{ "groupId" : {$topicInfo.groupId} }], 
+                    {
+                        "title" : "{text key='forum+new_topic_btn'}"
+                    });
+                });
+            {/script}
+            <!-- end of topic form -->
+
+            {if $isOwner || $isModerator}
+                <!-- edit topic -->
+                {script}
+                    $("#forum_edit_topic").bind("click", function(e)
+                    {
+                        // show the edit topic form
+                        OWM.ajaxFloatBox("FORUM_MCMP_ForumEditTopic", [{ "topicId" : {$topicInfo.id} }], 
+                        {
+                            "title" : "{text key='forum+edit_topic'}"
+                        });
+                     });
+                {/script}
+                <!-- end of edit topic -->
+
+                <!-- delete topic -->
+                {script}
+                    $("#forum_delete_topic").bind("click", function(e)
+                    {
+                        e.preventDefault();
+
+                        topicAction("{text key='forum+delete_topic_confirm'}", "{url_for_route for="delete-topic:[topicId=>`$topicInfo.id`]"}", function()
+                        {
+                            location.href = "{url_for_route for="group-default:[groupId=>`$topicInfo.groupId`]"}";
+                        });
+                    });
+                {/script}
+                <!-- end of delete topic -->
+            {/if}
+        {/if}
+
+        {if $canPost}
+            {if !$topicInfo.locked}
+                <!-- post form -->
+                <textarea id="forum_new_post_wrappper" class="invitation" readonly="readonly">{text key='forum+write_reply'}</textarea>
+                {script}
+                    /**
+                     * Show a new post form
+                     */
+                    $("#forum_new_post_wrappper").focus(function() 
+                    {                
+                        // show the post form
+                        OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id} }], 
+                        {
+                            "title" : "{text key='forum+add_post_title'}"
+                        });
+                    });
+                {/script}
+                <!-- end of post form -->
+            {else}
+                <div class="owm_forum_topic_locked">
+                    {text key='forum+topic_is_locked'}
+                </div>
+            {/if}
+        {/if}
+
+        {script}
+            topicAction = function(confirmText, url, callback)
+            {
+                if ( confirm(confirmText) ) 
+                {
+                    $.post(url, function(data)
+                    {
+                        var data = jQuery.parseJSON(data);
+
+                        if ( true === data.result && callback != "undefined")
+                        {
+                            callback.call(this, data);
+                        }
+                    });
+                }
+            }
+        {/script}
+    </div>
+</div>

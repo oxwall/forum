@@ -28,12 +28,36 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->deleteMenuItem('forum', 'forum');
 
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_ForumTopicsWidget');
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_LatestTopicsWidget');
+/**
+ * @author Alex Ermashev <alexermashev@gmail.com>
+ * @package ow.plugin.forum.mobile.controllers
+ * @since 1.6.0
+ */
+abstract class FORUM_MCTRL_AbstractForum extends OW_MobileActionController
+{
+    /**
+     * Forum service
+     * 
+     * @var FORUM_BOL_ForumService 
+     */
+    protected $forumService;
 
+    public function __construct()
+    {
+        parent::__construct();
 
-// Mobile deactivation
-OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');
-FORUM_BOL_TextSearchService::getInstance()->deactivateEntities();
+        // check autorization
+        $isModerator = OW::getUser()->isAuthorized('forum');
+        $viewPermissions = OW::getUser()->isAuthorized('forum', 'view');
+
+        if ( !$viewPermissions && !$isModerator )
+        {
+            $status = BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'view');
+            throw new AuthorizationException($status['msg']);
+        }
+
+        $this->forumService = FORUM_BOL_ForumService::getInstance();
+    }
+}
+
