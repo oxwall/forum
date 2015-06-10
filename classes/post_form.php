@@ -77,7 +77,7 @@ class FORUM_CLASS_PostForm extends Form
         // text
         if ( $mobileWysiwyg )
         {
-            $textField = new Textarea('text');
+            $textField = new MobileWysiwygTextarea('text');
         }
         else {
             $textField = new WysiwygTextarea('text', array(
@@ -97,16 +97,5 @@ class FORUM_CLASS_PostForm extends Form
         $submit = new Submit('submit');
         $submit->setValue($lang->text('forum', 'add_post_btn'));
         $this->addElement($submit);
-    }
-
-    /**
-     * Set text invitation
-     * 
-     * @param string $invitation
-     * @return void
-     */
-    public function setTextInvitation($invitation)
-    {
-        $this->getElement('text')->setHasInvitation(true)->setInvitation($invitation);
     }
 }
