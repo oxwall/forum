@@ -1,9 +1,9 @@
 {assign var="canQuote" value=!$topicInfo.locked && ($canEdit || $canPost)}
-{assign var="socialSharing" value={add_content key="socialsharing.get_mobile_button" text_key="socialsharing+share_title" entityType='forum-topic' entityId=$topicInfo.id}}
 
 {foreach from=$postList item=post}
     <div class="{if $firstTopic->id == $post.id}owm_forum_topic owm_forum_topic_view{else}owm_forum_reply{/if}" id="post-{$post.id}">
         {add_content key="forum.before_post_add_content" postId=$post.id userId=$post.userId text=$post.text}      
+        {assign var="socialSharing" value={add_content key="socialsharing.get_mobile_button" description=$post.text url=$post.postUrl buttonLabelKey="socialsharing+share_title" entityType="forum_topic" entityId=$topicInfo.id}}
 
         {assign var="showQuoteButton"  value=$canQuote && $post.userId != $userId}
         {assign var="showFlagButton"   value=$userId <> 0}

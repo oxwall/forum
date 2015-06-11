@@ -1349,6 +1349,7 @@ final class FORUM_BOL_ForumService
                 'userId' => $postDto->userId,
                 'text' => $this->formatQuote($postDto->text),
                 'createStamp' => UTIL_DateTime::formatDate($postDto->createStamp),
+                'postUrl' => $this->getPostUrl($postDto->topicId, $postDto->id),
                 'edited' => array()
             );
 
