@@ -173,7 +173,7 @@ class FORUM_CTRL_Search extends OW_ActionController
 
         if ( !mb_strlen($keyword) && !mb_strlen($userName) )
         {
-            OW::getFeedback()->info(OW::getLanguage()->text('forum', 'please_enter_keyword_or_user_name'));
+            OW::getFeedback()->error(OW::getLanguage()->text('forum', 'please_enter_keyword_or_user_name'));
             $this->redirect(OW::getRouter()->urlForRoute('forum_advanced_search'));
         }
 
