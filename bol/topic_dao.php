@@ -313,7 +313,7 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
 		ON (`t`.`groupId` = `g`.`id`)
 		INNER JOIN `" . FORUM_BOL_SectionDao::getInstance()->getTableName() . "` AS `s`
 		ON (`g`.`sectionId` = `s`.`id`)
-		WHERE t.id IN (" . $topicsIn .") ORDER BY FIELD (t.id, " . $topicsIn . ")";
+		WHERE t.id IN (" . $topicsIn .") ORDER BY FIELD(t.id, " . $topicsIn . ")";
 
         $list = $this->dbo->queryForList($query);
 

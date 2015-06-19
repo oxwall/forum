@@ -279,7 +279,7 @@ class FORUM_BOL_PostDao extends OW_BaseDao
         $query = "
 		SELECT  *
 		FROM `" . $this->getTableName() . "`
-		WHERE id IN (" . $postsIn .") ORDER BY FIELD (id, " . $postsIn . ")";
+		WHERE id IN (" . $postsIn .") ORDER BY FIELD(id, " . $postsIn . ")";
 
         return $this->dbo->queryForList($query);
     }
