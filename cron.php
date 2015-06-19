@@ -144,8 +144,10 @@ class FORUM_Cron extends OW_Cron
             $this->getUpdateSearchIndexDao()->delete($firstQueue);
         }
 
-        // check the plugin state
-        if ( !OW_PluginManager::getInstance()->isPluginActive('forum') )
+        // check the plugin state       
+        $pluginForum = BOL_PluginDao::getInstance()->findPluginByKey('forum');
+
+        if ( !$pluginForum || !$pluginForum->isActive )
         {
             $this->getTextSearchService()->deactivateEntities();
         }
