@@ -6,7 +6,7 @@
                     <div class="owm_quote_link_wrap owm_padding owm_border">
                         <a class="owm_quote_link" id="forum_view_quote" href="#">{text key='forum+view_quote'}</a>
                         <input type="hidden" name="quoteId" value="{$quoteId}" />
-                        <a class="owm_quote_close owm_ic_close_cont" href="#"></a>
+                        <a class="owm_quote_close owm_ic_close_cont" id="forum_view_quote_close" href="#"></a>
                     </div>
                 {/if}
             </div>
@@ -78,6 +78,11 @@
                         "title" : "{text key='forum+view_quote'}",
                         "content" : $("#forum_post_attach_wrapper")
                     });
+                });
+                $("#forum_view_quote_close").bind("click", function(e){
+                    if(confirm('{text key='base+are_you_sure'}')) {
+                        $(this).parent().remove();
+                    }
                 });
             {/if}
         });
