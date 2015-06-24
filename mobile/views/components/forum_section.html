@@ -1,42 +1,40 @@
 {foreach from=$sectionGroupList item='section'}
 
     {if !$singleMode}
-        <div class="owm_std_margin_bottom">
-             <div class="owm_nav_cap owm_bg_color_3 clearfix">
-                 <h3>{$section.sectionName}</h3>
-                 <div class="owm_float_right">
+        <div class="owm_std_margin_bottom owm_forum_section_wrap">
+             <div class="owm_nav_cap owm_nav_cap_right_cont owm_forum_section_cap owm_bg_color_3 owm_border clearfix">
+                <div class="owm_float_right">
                      <a class="owm_nav_cap_right" href="{$section.sectionUrl}"></a>
-                 </div>
+                 </div>            
+                 <h3>{$section.sectionName}</h3>
              </div>
     {/if}
 
         {foreach from=$section.groups item='group'}
-             <div class="owm_box_body">
-                 <div class="owm_box_body_cont">
-                     <div class="owm_box_padding">
-                         <a class="owm_forum_list_format owm_forum_list_unread" href="{$group.groupUrl}">
-                             <div class="owm_forum_name owm_small_margin_bottom">
-                                 {$group.name}
-                                 <div class="owm_forum_counter owm_float_right">{$group.topicCount}</div>
-                             </div>
-                             <div class="owm_forum_description">
-                                 {$group.description}
-                             </div>
-                         </a>
-                     </div>
-                 </div>
-             </div>
-             <div class="owm_box_bottom">
-                 <div class="owm_box_toolbar owm_forum_additional_info owm_forum_list_unread">
-                     <div class="owm_forum_additional_item owm_forum_additional_comments">{$group.replyCount}</div>
-                     {if !empty($group.lastReply)}
-                          <div class="owm_forum_additional_item owm_forum_additional_date">
-                              {format_date timestamp=$group.lastReply.createStamp}
-                          </div>
-                           <span>{text key='forum+by'} <a href="{$group.lastReply.postUrl}">{$displayNames[$group.lastReply.userId]}</a></span>
-                     {/if}
-                 </div>
-             </div>
+            <div class="owm_forum_section_body owm_bg_color_1">
+                <div class="owm_padding">
+                    <a class="owm_forum_list_format owm_forum_list_unread" href="{$group.groupUrl}">
+                        <div class="owm_forum_name owm_small_margin_bottom">
+                            {$group.name}
+                            <div class="owm_forum_counter owm_float_right">{$group.topicCount}</div>
+                        </div>
+                        <div class="owm_forum_description">
+                            {$group.description}
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <div class="owm_forum_section_toolbar owm_border owm_bg_color_3">
+                <div class="owm_padding owm_forum_additional_info owm_forum_list_unread">
+                        <div class="owm_forum_additional_item owm_forum_additional_comments">{$group.replyCount}</div>
+                        {if !empty($group.lastReply)}
+                            <div class="owm_forum_additional_item owm_forum_additional_date">
+                                {format_date timestamp=$group.lastReply.createStamp}
+                            </div>
+                            <span>{text key='forum+by'} <a href="{$group.lastReply.postUrl}">{$displayNames[$group.lastReply.userId]}</a></span>
+                        {/if}
+                </div>
+            </div>
         {/foreach}
     
     {if !$singleMode}

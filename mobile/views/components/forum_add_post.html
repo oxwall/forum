@@ -1,33 +1,36 @@
-<div class="owm_bg_color_1">
+<div class="owm_forum_new_post_win owm_bg_color_1">
     {form name="post_form"}
         <div class="owm_forum_topic owm_forum_topic_reply">
-            {if !empty($quoteText) && !empty($quoteId)}
-                <a id="forum_view_quote" href="#">{text key='forum+view_quote'}</a>
-                <input type="hidden" name="quoteId" value="{$quoteId}" />
-            {/if}
             <div class="owm_forum_topic_nav">
-                <div class="owm_forum_name_select owm_bg_color_1">
+                {if !empty($quoteText) && !empty($quoteId)}
+                    <div class="owm_quote_link_wrap owm_padding owm_border">
+                        <a class="owm_quote_link" id="forum_view_quote" href="#">{text key='forum+view_quote'}</a>
+                        <input type="hidden" name="quoteId" value="{$quoteId}" />
+                        <a class="owm_quote_close owm_ic_close_cont" href="#"></a>
+                    </div>
+                {/if}
+            </div>
+            <div class="owm_forum_topic_body owm_bg_color_1">
+                <div class="owm_forum_topic_input">
                     <div class="ow_inline owm_inline">
                         {input name="text"}
                     </div>
-                    <div class="owm_error_txt">
-                        {error name="text"}
-                    </div>
                 </div>
-                <div class="owm_forum_topic_bottom owm_forum_topic_submit owm_padding owm_bg_color_1 clearfix">
-                    {if $enableAttachments}
-                        <div class="owm_forum_topic_attach_info owm_float_left">
-                            <label id="forum_add_post_attach_file" class="owm_attach_label owm_topic_attach_icon">
-                                <span id="forum_add_post_attach_default_title">{text key='forum+attach_files'}</span>
-                                <span id="forum_add_post_first_attach_name" style="display: none"></span>
-                            </label>
-                        </div>
-                    {/if}
-                    <div class="owm_float_right owm_forum_topic_submit">
-                        <span class="ow_button">
-                            {submit name="submit"}
-                        </span>
+                <div class="owm_error_txt">
+                    {error name="text"}
+                </div>
+            </div>
+            <div class="owm_forum_topic_bottom owm_border owm_forum_topic_submit owm_padding owm_bg_color_1 clearfix">
+                {if $enableAttachments}
+                    <div class="owm_forum_topic_attach_info owm_float_left">
+                        <label id="forum_add_post_attach_file" class="owm_attach_label owm_topic_attach_icon">
+                            <div id="forum_add_post_attach_default_title" class="owm_inline">{text key='forum+attach_files'}</div>
+                            <div id="forum_add_post_first_attach_name" class="owm_inline" style="display: none"></div>
+                        </label>
                     </div>
+                {/if}
+                <div class="owm_float_right owm_forum_topic_submit">
+                    {submit name="submit"}
                 </div>
             </div>
         </div>
@@ -36,11 +39,9 @@
 
 {if !empty($quoteText) && !empty($quoteId)}
     <div style="display:none">
-        <div class="owm_padding owm_bg_color_1" id="forum_post_attach_wrapper">
-            <div class="owm_forum_topic owm_forum_topic_reply">
-                <div class="owm_quote owm_std_margin_bottom" id="forum_post_attach_wrapper">
-                    {$quoteText}
-                </div>
+        <div class="owm_quote_win owm_padding owm_bg_color_1" id="forum_post_attach_wrapper">
+            <div class="owm_quote owm_std_margin_bottom" id="forum_post_attach_wrapper">
+                {$quoteText}
             </div>
         </div>
     </div>
@@ -52,16 +53,8 @@
         <div id="forum_add_post_attachments" class="owm_attach_win owm_forum_attach_win owm_padding owm_bg_color_1">
             {$attachments}
             <div class="owm_padding owm_btn_wrap">
-                <span class="ow_button">
-                    <span class="ow_button">
-                        <input type="button" id="forum_add_post_clear_files" value="{text key='forum+clear_all'}">
-                    </span>
-                </span>
-                <span class="ow_button">
-                    <span class="ow_button">
-                        <input type="button" id="forum_add_post_attach_files" value="{text key='forum+add_files'}">
-                    </span>
-                </span>
+                {decorator name="button" langLabel="forum+clear_all" id="forum_add_post_clear_files"}
+                {decorator name="button" langLabel="forum+add_files" id="forum_add_post_attach_files"}
             </div>
         </div>
     </div>

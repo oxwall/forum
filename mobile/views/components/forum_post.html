@@ -21,7 +21,7 @@
             <div class="owm_card_cap owm_padding">
                 <div class="owm_card_date">#{$post.number} {$post.createStamp}</div>
             </div>
-            <div class="owm_card_content">
+            <div class="owm_card_content owm_border">
                 <div class="owm_card_header owm_bg_color_3 clearfix">
                     <div class="owm_card_user owm_card_user_context owm_padding">
                         <div class="owm_card_user_pic">
@@ -57,7 +57,7 @@
                         </div>
                     {/if}
                 </div>
-                <div class="owm_card_body owm_bg_color_1">
+                <div class="owm_card_body owm_border owm_bg_color_1">
                     <div class="owm_post_content">
                         {$post.text}
                     </div>
@@ -82,22 +82,22 @@
                 {/if}
             </div>
             {if $showQuoteButton || $showFlagButton || $showShareButton}
-                <div class="owm_card_toolbar">
+                <div class="owm_card_toolbar owm_border">
                     <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix" data-id="{$post.id}" data-type="{if $firstTopic->id == $post.id}{$topicEnityType}{else}{$postEnityType}{/if}">
-                        {if $showQuoteButton && $showFlagButton && $showShareButton}
-                            <li class="owm_card_toolbar_quote" style="width:{$buttonsWidth}%">
+                        {if $showQuoteButton}
+                            <li class="owm_card_toolbar_quote owm_border" style="width:{$buttonsWidth}%">
                                 <a href="#"><span>{text key='forum+quote'}</span></a>
                             </li>
                         {/if}
  
                         {if $showFlagButton}
-                            <li class="owm_card_toolbar_flag" style="width:{$buttonsWidth}%">
+                            <li class="owm_card_toolbar_flag owm_border" style="width:{$buttonsWidth}%">
                                 <a href="#"><span>{text key='forum+flag'}</span></a>
                             </li>
                         {/if}
                         
                         {if $showShareButton}
-                            <li class="owm_card_toolbar_share" style="width:{$buttonsWidth}%">
+                            <li class="owm_card_toolbar_share owm_border" style="width:{$buttonsWidth}%">
                                 {$socialSharing}
                             </li>
                         {/if}

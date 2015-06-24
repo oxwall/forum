@@ -1,15 +1,15 @@
-<div class="owm_forum_page owm_forum_section">
+<div class="owm_forum_page owm_forum_search_result_page">
     <div class="owm_std_margin_bottom">
-        <div class="owm_nav_cap owm_bg_color_3 clearfix">
+        <div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
+            {if !empty($closeUrl)}
+                <div class="owm_float_right">
+                    <a class="owm_nav_cap_right owm_ic_close_cont" href="{$closeUrl}"></a>
+                </div>
+            {/if}            
             <h3>{text key='forum+search_results'}</h3>
             <div class="owm_float_left">
                 <a class="owm_nav_cap_left" href="{$backUrl}"></a>
-            </div>
-            {if !empty($closeUrl)}
-                <div class="owm_box_menu owm_float_right">
-                    <a class="owm_forum_nav_right" href="{$closeUrl}"></a>
-                </div>
-            {/if}            
+            </div>           
         </div>
         {if !empty($topics)}
             <div id="forum-topics-wrapper">
@@ -29,7 +29,7 @@
                 });
             {/script}
         {else}
-            <div class="ow_anno ow_center">{text key='forum+no_posts_found'}</div>
+            <div class="owm_anno owm_info owm_std_margin_top">{text key='forum+no_posts_found'}</div>
         {/if}
     </div>
 </div>
