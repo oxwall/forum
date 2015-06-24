@@ -10,11 +10,11 @@
         {assign var="showShareButton"  value=$socialSharing <> ""}
 
         {if $showQuoteButton && $showFlagButton && $showShareButton}
-            {assign var="buttonsWidth" value=33}
+            {assign var="buttonsClass" value="owm_card_toolbar_3b"}
         {else if ($showQuoteButton && $showFlagButton) || ($showFlagButton && $showShareButton) || ($showShareButton && $showQuoteButton) }
-            {assign var="buttonsWidth" value=50}
+            {assign var="buttonsClass" value="owm_card_toolbar_2b"}
         {else}
-            {assign var="buttonsWidth" value=100}
+            {assign var="buttonsClass" value="owm_card_toolbar_1b"}
         {/if}
 
         <div class="owm_card clearfix owm_std_margin_bottom">
@@ -83,21 +83,21 @@
             </div>
             {if $showQuoteButton || $showFlagButton || $showShareButton}
                 <div class="owm_card_toolbar owm_border">
-                    <ul class="owm_card_toolbar_btns owm_bg_color_3 clearfix" data-id="{$post.id}" data-type="{if $firstTopic->id == $post.id}{$topicEnityType}{else}{$postEnityType}{/if}">
+                    <ul class="{$buttonsClass} owm_card_toolbar_btns owm_bg_color_3 clearfix" data-id="{$post.id}" data-type="{if $firstTopic->id == $post.id}{$topicEnityType}{else}{$postEnityType}{/if}">
                         {if $showQuoteButton}
-                            <li class="owm_card_toolbar_quote owm_border" style="width:{$buttonsWidth}%">
+                            <li class="owm_card_toolbar_quote owm_border">
                                 <a href="#"><span>{text key='forum+quote'}</span></a>
                             </li>
                         {/if}
  
                         {if $showFlagButton}
-                            <li class="owm_card_toolbar_flag owm_border" style="width:{$buttonsWidth}%">
+                            <li class="owm_card_toolbar_flag owm_border">
                                 <a href="#"><span>{text key='forum+flag'}</span></a>
                             </li>
                         {/if}
                         
                         {if $showShareButton}
-                            <li class="owm_card_toolbar_share owm_border" style="width:{$buttonsWidth}%">
+                            <li class="owm_card_toolbar_share owm_border">
                                 {$socialSharing}
                             </li>
                         {/if}
