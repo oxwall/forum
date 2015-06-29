@@ -20,7 +20,7 @@
                     &raquo; <a href="{url_for_route for="group-default:[groupId=>`$topic.groupId`]"}">{$topic.groupName}</a>
                 </div>
                 <div class="owm_forum_description">
-                    {text key='forum+author'}: {$displayNames[$topic.userId]}
+                    {text key='forum+author'}: <a href="{$authorsUrls[$topic.userId]}">{$displayNames[$topic.userId]}</a>
                 </div>
             </div>
         </div>
