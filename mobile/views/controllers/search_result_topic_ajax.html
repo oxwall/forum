@@ -1,34 +1,32 @@
 {foreach from=$topics item=topic}                
-    <div class="owm_box_body">
-        <div class="owm_box_body_cont">
-            <div class="owm_box_padding">
-                <a class="owm_topic_list_format {if $topic.new}owm_topic_list_unread{/if} {if $topic.locked}owm_topic_list_locked{/if}" href="{$topic.topicUrl}">
-                    <div class="owm_topic_name owm_small_margin_bottom">
-                        {if $topic.sticky}
-                            <span class="owm_topic_sticky_icon"></span>
-                        {/if}
-                        {if isset($attachments[$topic.id])}
-                            <span class="owm_topic_attach_icon"></span>
-                        {/if}
-                        {$topic.title}
-                        <div class="owm_forum_counter owm_float_right">
-                            {if $topic.replyCount}{$topic.replyCount}{else}&nbsp;{/if}
-                        </div>
+    <div class="owm_forum_search_result_topic owm_bg_color_1">
+        <div class="owm_forum_group_body owm_padding">
+            <div class="owm_topic_list_format {if $topic.new}owm_topic_list_unread{/if} {if $topic.locked}owm_topic_list_locked{/if}" style="cursor: pointer;" onclick="location.href='{$topic.topicUrl}'">
+                <div class="owm_topic_name owm_small_margin_bottom">
+                    {if $topic.sticky}
+                        <span class="owm_topic_sticky_icon"></span>
+                    {/if}
+                    {if isset($attachments[$topic.id])}
+                        <span class="owm_topic_attach_icon"></span>
+                    {/if}
+                    {$topic.title}
+                    <div class="owm_forum_counter owm_float_right">
+                        {if $topic.replyCount}{$topic.replyCount}{else}&nbsp;{/if}
                     </div>
-                    <div>
-                        {text key='forum+topic_location'}
-                        <a href="{url_for_route for="forum-default"}#section-{$topic.sectionId}">{$topic.sectionName}</a>
-                        &raquo; <a href="{url_for_route for="group-default:[groupId=>`$topic.groupId`]"}">{$topic.groupName}</a>
-                    </div>
-                    <div class="owm_forum_description">
-                        {text key='forum+author'}: {$displayNames[$topic.userId]}
-                    </div>
-                </a>
+                </div>
+                <div class="owm_topic_location owm_small_margin_bottom">
+                    {text key='forum+topic_location'}
+                    <a href="{url_for_route for="forum-default"}#section-{$topic.sectionId}">{$topic.sectionName}</a>
+                    &raquo; <a href="{url_for_route for="group-default:[groupId=>`$topic.groupId`]"}">{$topic.groupName}</a>
+                </div>
+                <div class="owm_forum_description">
+                    {text key='forum+author'}: <a href="{$authorsUrls[$topic.userId]}">{$displayNames[$topic.userId]}</a>
+                </div>
             </div>
         </div>
     </div>
-    <div class="owm_box_bottom">
-        <div class="owm_box_toolbar owm_forum_additional_info owm_forum_list_unread">
+    <div class="owm_forum_search_result_toolbar owm_border owm_bg_color_3">
+        <div class="owm_padding owm_forum_additional_info owm_forum_list_unread">
             <div class="owm_forum_additional_item owm_forum_additional_views">
                 {$topic.viewCount}
             </div>

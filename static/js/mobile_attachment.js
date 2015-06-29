@@ -43,12 +43,12 @@ ForumAttachments = function(settings)
        {
            if ( length > 1 )
            {
-               return length + " " + OWM.getLanguageText("forum", "attached_files");
+               return length + " " + OWM.getLanguageText("forum", "attached_files") + "<a class=\"owm_attach_edit\" href=\"#\"></a>";
            }
 
            // get the first file info
            var file = filesList[0];
-           return file.name + " (" + file.size + "KB)";
+           return file.name + " <span class=\"ow_file_attachment_size\">(" + file.size + "KB)</span><a class=\"owm_attach_edit\" href=\"#\"></a>";
        }
 
        return "";
@@ -106,7 +106,7 @@ ForumAttachments = function(settings)
             });
 
             attachmentsSettings.attachDefaultTitle.show();
-            attachmentsSettings.firstAttachName.text("").hide();
+            attachmentsSettings.firstAttachName.html("").hide();
             filesList = [];
         }
    });
@@ -125,15 +125,15 @@ ForumAttachments = function(settings)
        filesList.push({ id: file.id, name: file.name, size: file.size });
 
        // show the single attached name
-       if ( !attachmentsSettings.firstAttachName.text() )
+       if ( !attachmentsSettings.firstAttachName.html() )
        {
            attachmentsSettings.attachDefaultTitle.hide();
-           attachmentsSettings.firstAttachName.text(getAttachedFilesName()).show();
+           attachmentsSettings.firstAttachName.html(getAttachedFilesName()).show();
            return;
        }
 
        // update the attach name
-       attachmentsSettings.firstAttachName.text(getAttachedFilesName());
+       attachmentsSettings.firstAttachName.html(getAttachedFilesName());
    });
 
    // listen to delete files event
@@ -155,12 +155,12 @@ ForumAttachments = function(settings)
        if ( !filesList.length )
        {
            attachmentsSettings.attachDefaultTitle.show();
-           attachmentsSettings.firstAttachName.text("").hide();
+           attachmentsSettings.firstAttachName.html("").hide();
            return;
        }
 
        // update the first attach file name
-       attachmentsSettings.firstAttachName.text(getAttachedFilesName()).show();
+       attachmentsSettings.firstAttachName.html(getAttachedFilesName()).show();
    });
 
     //-- public functions --//

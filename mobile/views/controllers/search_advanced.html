@@ -7,92 +7,87 @@
         }
     {/literal}
 {/style}
-
-<div class="owm_forum_page owm_forum_section">
-    <div class="owm_dnd_widget">
-        <div class="owm_box">
-            <div class="owm_box_cap clearfix">
-                <h3>{text key='forum+back_forum'}</h3>
-                <div class="owm_box_menu owm_float_left">
-                    <a class="owm_forum_nav_left" href="{$closeUrl}"></a>
+<div class="owm_forum_page owm_forum_advanced_search">
+    <div class="owm_std_margin_bottom">
+        <div class="owm_nav_cap owm_nav_cap_left_cont owm_bg_color_3 owm_border clearfix">
+            <h3>{text key='forum+back_forum'}</h3>
+            <div class="owm_float_left">
+                <a class="owm_nav_cap_left" href="{$closeUrl}"></a>
+            </div>
+        </div>
+        {form name="search_form"}
+            <div class="owm_forum_search_form">
+                <div class="owm_field_container owm_section owm_std_margin_bottom">
+                    <span class="owm_section_label">{text key="forum+basic"}</span>
+                    <div class="owm_section_border"></div>
+                </div>
+                <div class="owm_field_container owm_small_margin_bottom">
+                    <div class="owm_field_wrap">
+                        {input name="keyword" class="ow_smallmargin"}
+                    </div>
+                </div>
+                <div class="owm_field_container owm_small_margin_bottom">
+                    <div class="owm_field_wrap">
+                        {input name="username"}
+                    </div>
+                </div>
+                <div class="owm_field_container owm_section owm_std_margin_bottom">
+                    <span class="owm_section_label">{text key="forum+where_to_search"}</span>
+                    <div class="owm_section_border"></div>
+                </div>
+                <div class="owm_field_container owm_std_margin_bottom">
+                    <div class="owm_form_label owm_small_margin_bottom">
+                        {label name="parts[]"}
+                    </div>
+                    <div class="owm_field_wrap owm_select_wrap">
+                        <div class="ow_inline owm_inline">
+                            {input name="parts[]"}
+                        </div>
+                    </div>
+                </div>
+                <div class="owm_field_container owm_std_margin_bottom">
+                    <div class="owm_form_label owm_small_margin_bottom">
+                        {label name="search_in"}
+                    </div>
+                    <div class="owm_field_container owm_std_margin_bottom">
+                        <div class="owm_radio_wrap">
+                            {input name="search_in"}
+                        </div>
+                    </div>
+                </div>
+                <div class="owm_field_container owm_section owm_std_margin_bottom">
+                    <span class="owm_section_label">
+                        {text key="forum+additional"}
+                    </span>
+                    <div class="owm_section_border"></div>
+                </div>
+                <div class="owm_field_container owm_std_margin_bottom">
+                    <div class="owm_form_label owm_small_margin_bottom">
+                        {label name="period"}
+                    </div>
+                    <div class="owm_field_wrap owm_select_wrap">
+                        <div class="ow_inline owm_inline">
+                            {input name="period"}
+                        </div>
+                    </div>     
+                </div>
+                <div class="owm_field_container owm_std_margin_bottom">
+                    <div class="owm_form_label owm_small_margin_bottom">
+                        {label name="sort"}
+                    </div>
+                    <div class="owm_field_wrap owm_select_wrap">
+                        <div class="ow_inline owm_inline">
+                            {input name="sort"}
+                        </div>
+                    </div>
+                    <div class="owm_radio_wrap">
+                            {input name="sort_direction"}
+                    </div>
+                </div>
+                <div class="owm_btn_wide owm_small_margin_top">
+                    {submit name="submit"}
                 </div>
             </div>
-            {form name="search_form"}
-                <div class="owm_forum_search_form">
-                    <div class="owm_field_container owm_section owm_std_margin_bottom">
-                        <span class="owm_section_label">{text key="forum+basic"}</span>
-                        <div class="owm_section_border"></div>
-                    </div>
-                    <div class="owm_field_container owm_small_margin_bottom  ow_alt1">
-                        <div class="owm_field_wrap">
-                            {input name="keyword" class="ow_smallmargin"}
-                        </div>
-                    </div>
-                    <div class="owm_field_container owm_small_margin_bottom  ow_alt1">
-                        <div class="owm_field_wrap">
-                            {input name="username"}
-                        </div>
-                    </div>
-                    <div class="owm_field_container owm_section owm_std_margin_bottom">
-                        <span class="owm_section_label">{text key="forum+where_to_search"}</span>
-                        <div class="owm_section_border"></div>
-                    </div>
-                    <div class="owm_field_container owm_std_margin_bottom  ow_alt1">
-                        <div class="owm_form_label owm_small_margin_bottom">
-                            {label name="parts[]"}
-                        </div>
-                        <div class="owm_field_wrap owm_select_wrap">
-                            <div class="ow_inline owm_inline">
-                                {input name="parts[]"}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="owm_field_container owm_std_margin_bottom  ow_alt1">
-                        <div class="owm_form_label owm_small_margin_bottom">
-                            {label name="search_in"}
-                        </div>
-                        <div class="owm_field_wrap owm_select_wrap">
-                            <div class="ow_inline owm_inline">
-                                {input name="search_in"}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="owm_field_container owm_section owm_std_margin_bottom">
-                        <span class="owm_section_label">
-                            {text key="forum+additional"}
-                        </span>
-                        <div class="owm_section_border"></div>
-                    </div>
-                    <div class="owm_field_container owm_std_margin_bottom  ow_alt1">
-                        <div class="owm_form_label owm_small_margin_bottom">
-                            {label name="period"}
-                        </div>
-                        <div class="owm_field_wrap owm_select_wrap">
-                            <div class="ow_inline owm_inline">
-                                {input name="period"}
-                            </div>
-                        </div>     
-                    </div>
-                    <div class="owm_field_container owm_std_margin_bottom  ow_alt1">
-                        <div class="owm_form_label owm_small_margin_bottom">
-                            {label name="sort"}
-                        </div>
-                        <div class="owm_field_wrap owm_select_wrap">
-                            <div class="ow_inline owm_inline">
-                                {input name="sort"}
-                                {input name="sort_direction"}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="owm_btn_wide owm_small_margin_top">
-                        <span class="ow_button">
-                            <span class=" ow_button ow_ic_submit">
-                                {submit name="submit"}
-                            </span>
-                        </span>
-                    </div>
-                </div>
-            {/form}
-        </div>
+        {/form}
     </div>
 </div>

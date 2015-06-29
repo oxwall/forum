@@ -108,6 +108,8 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
         $this->assign('stickyTopics', $stickyTopics);
         $this->assign('regularTopics', $regularTopics);
         $this->assign('displayNames', BOL_UserService::getInstance()->getDisplayNamesForList($authors));
+        $this->assign('authorsUrls', BOL_UserService::getInstance()->getUserUrlsForList($authors));
+
         $this->assign('group',   $groupInfo);
         $this->assign('attachments', FORUM_BOL_PostAttachmentService::getInstance()->
                 getAttachmentsCountByTopicIdList($topicIds));
