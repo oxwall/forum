@@ -5,15 +5,9 @@
         }
     {/literal}
 {/style}
-
-<div class="owm_forum_page owm_forum_section">
+<div class="owm_forum_page owm_forum_topic_view">
     <div class="owm_std_margin_bottom">
-        <div class="owm_nav_cap owm_nav_cap_context owm_bg_color_3 clearfix">
-            <h3>{$topicInfo.title}</h3>
-            <div class="owm_float_left">
-                <a class="owm_nav_cap_left" href="{url_for_route for="group-default:[groupId=>`$topicInfo.groupId`]"}"></a>
-            </div>
-
+        <div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
             {if $canEdit || $canLock || $canSticky || $canSubscribe}
                 <div class="owm_view_more owm_float_right">
                     {component 
@@ -28,7 +22,11 @@
                         isSubscribed=$isSubscribed
                     }
                 </div>
-            {/if}
+            {/if}       
+            <h3>{$topicInfo.title}</h3>
+            <div class="owm_float_left">
+                <a class="owm_nav_cap_left" href="{url_for_route for="group-default:[groupId=>`$topicInfo.groupId`]"}"></a>
+            </div>
         </div>
 
         {component 
@@ -176,7 +174,7 @@
         {if $canPost}
             {if !$topicInfo.locked}
                 <!-- post form -->
-                <textarea id="forum_new_post_wrappper" class="invitation" readonly="readonly">{text key='forum+write_reply'}</textarea>
+                <input id="forum_new_post_wrappper" class="invitation" readonly="readonly" type="text" value="{text key='forum+write_reply'}" />
                 {script}
                     /**
                      * Show a new post form
@@ -193,7 +191,7 @@
                 <!-- end of post form -->
             {else}
                 <div class="owm_forum_topic_locked">
-                    <textarea id="forum_new_post_wrappper" class="invitation" disabled="disabled">{text key='forum+topic_is_locked'}</textarea>
+                    <input id="forum_new_post_wrappper" class="invitation" disabled="disabled" type="text" value="{text key='forum+topic_is_locked'}" />
                 </div>
             {/if}
         {/if}

@@ -1,10 +1,10 @@
 {foreach from=$topics item=topic}
     {if $drawTopicWrapper}
-        <div class="owm_nav_cap owm_nav_cap_left_space owm_bg_color_3 clearfix">
-            <h3>{$topic.title}</h3>
+        <div class="owm_nav_cap owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
             <div class="owm_float_right">
                 <a class="owm_nav_cap_right" href="{$topic.topicUrl}"></a>
-            </div>
+            </div>        
+            <h3>{$topic.title}</h3>
         </div>
     {/if}
     {if !empty($topic.posts)}
@@ -15,7 +15,7 @@
                     <div class="owm_card_cap owm_padding">
                         <div class="owm_card_date">#{$iteration++} {$post.createStamp}</div>
                     </div>
-                    <div class="owm_card_content">
+                    <div class="owm_card_content owm_border">
                         <div class="owm_card_header owm_bg_color_3 clearfix">
                             <div class="owm_card_user owm_card_user_context owm_padding">
                                 <div class="owm_card_user_pic">
@@ -44,8 +44,8 @@
                         </div>
                         <div class="owm_card_body owm_bg_color_1">
                             <div class="owm_post_content">
-                                <p>{$post.text}</p>
-                                <p><a href="{$post.postUrl}" class="ow_lbutton">{text key='base+more'}</a></p>
+                                {$post.text}
+                                <a href="{$post.postUrl}" class="owm_lbutton owm_bg_color_3">{text key='base+more'}</a>
                             </div>
                         </div>
                     </div>

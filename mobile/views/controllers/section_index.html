@@ -1,13 +1,13 @@
 <div class="owm_forum_page owm_forum_section">
     <div class="owm_std_margin_bottom">
-        <div class="owm_nav_cap owm_bg_color_3 clearfix">
+        <div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
+            {if $canEdit}
+                <a id="owm_forum_new_topic_link" href="#" class="owm_nav_left_item_add owm_float_right"></a>
+            {/if}           
             <h3>{$section->name}</h3>
             <div class="owm_float_left">
                 <a class="owm_nav_cap_left" href="{url_for_route for="forum-default"}"></a>
             </div>
-            {if $canEdit}
-                    <a id="owm_forum_new_topic_link" href="#" class="owm_nav_left_item_add"></a>
-            {/if}
         </div>
         {component class="FORUM_MCMP_ForumSearch" scope="section" id="{$section->id}"}
         {component class="FORUM_MCMP_ForumSection" sectionId="{$section->id}"}
