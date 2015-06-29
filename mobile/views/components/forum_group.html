@@ -1,8 +1,14 @@
+{style}
+    .owm_topic_list_format {
+        cursor:pointer;
+    }
+{/style}
+
 {foreach from=$topics item=topic}
 
     <div class="owm_forum_group_body owm_bg_color_1" data-id="{$topic.id}">
         <div class="owm_padding">
-            <a class="owm_topic_list_format {if $topic.new}owm_topic_list_unread{/if} {if $topic.locked}owm_topic_list_locked{/if}" href="{$topic.topicUrl}">
+            <div class="owm_topic_list_format {if $topic.new}owm_topic_list_unread{/if} {if $topic.locked}owm_topic_list_locked{/if}" onclick="location.href='{$topic.topicUrl}'">
                 <div class="owm_topic_name owm_small_margin_bottom">
                     {if $topic.sticky}
                         <span class="owm_topic_sticky_icon"></span>
@@ -16,9 +22,9 @@
                     </div>
                 </div>
                 <div class="owm_forum_description">
-                    {text key='forum+author'}: {$displayNames[$topic.userId]}
+                    {text key='forum+author'}: <a href="{$authorsUrls[$topic.userId]}">{$displayNames[$topic.userId]}</a>
                 </div>
-            </a>
+            </div>
         </div>
     </div>
     <div class="owm_forum_group_toolbar owm_border owm_bg_color_3">

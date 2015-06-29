@@ -160,6 +160,7 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
         $closeUrl = OW::getSession()->get('last_forum_page');
         $this->assign('closeUrl', ($closeUrl ? $closeUrl : OW::getRouter()->urlForRoute('forum-default')));
         $this->assign('displayNames', BOL_UserService::getInstance()->getDisplayNamesForList($authors));
+        $this->assign('authorsUrls', BOL_UserService::getInstance()->getUserUrlsForList($authors));
         $this->assign('iteration',  ($page - 1) * $iterationPerPage + 1);
         $this->assign('onlineUsers', BOL_UserService::getInstance()->findOnlineStatusForUserList($authors));
         $this->assign('postsCount', $this->forumService->findPostCountListByUserIds($authors));
