@@ -98,8 +98,7 @@ $sql = "CREATE TABLE IF NOT EXISTS `".$dbPref."forum_post` (
   `createStamp` int(11) NOT NULL,
   PRIMARY KEY  (`id`),
   KEY `topicId` (`topicId`),
-  KEY `createStamp` (`createStamp`),
-  FULLTEXT KEY `post_text` (`text`)
+  KEY `createStamp` (`createStamp`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;";
 
 OW::getDbo()->query($sql);
@@ -147,11 +146,10 @@ $sql = "CREATE TABLE IF NOT EXISTS `".$dbPref."forum_topic` (
   `temp` TINYINT(1) NOT NULL DEFAULT '0',
   `viewCount` int(11) NOT NULL default '0',
   `lastPostId` int(11) NOT NULL default '0',
-  `status` enum('approval','approved','blocked') NOT NULL DEFAULT 'approved',
+  `status` enum('approval','approved') NOT NULL DEFAULT 'approved',
   PRIMARY KEY  (`id`),
   KEY `groupId` (`groupId`),
   KEY `lastPostId` (`lastPostId`),
-  FULLTEXT KEY `topic_title` (`title`),
   KEY `status` (`status`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;";
 
@@ -184,6 +182,17 @@ if ( $sectionId )
     
     $groupId = OW::getDbo()->insert($sql);    
 }
+
+$sql = "CREATE TABLE IF NOT EXISTS `".$dbPref."forum_update_search_index` (
+        `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+        `type` varchar(50) NOT NULL,
+        `entityId` int(10) unsigned NOT NULL,
+        `lastEntityId` int(10) unsigned DEFAULT NULL,
+        `priority` tinyint(1) unsigned NOT NULL DEFAULT '0',
+        PRIMARY KEY (`id`)
+    ) ENGINE=MyIsam DEFAULT CHARSET=utf8;";
+
+OW::getDbo()->query($sql);
 
 OW::getPluginManager()->addPluginSettingsRouteName('forum', 'forum_admin_config');
 OW::getPluginManager()->addUninstallRouteName('forum', 'forum_uninstall');
