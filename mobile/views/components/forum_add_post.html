@@ -43,10 +43,17 @@
             <div class="owm_quote owm_std_margin_bottom" id="forum_post_attach_wrapper">
                 {$quoteText}
             </div>
+            <div>
+                <a href="javascript://" id="forum_close_floatbox">{text key='forum+back_to_post'}</a>
+                {script}
+                    $("#forum_close_floatbox").click(function(){
+                        OWM.getActiveFloatBox().close();
+                    });
+                {/script}
+            </div>
         </div>
     </div>
 {/if}
-
 
 {if $enableAttachments}
     <div style="display: none">
@@ -80,7 +87,7 @@
                     });
                 });
                 $("#forum_view_quote_close").bind("click", function(e){
-                    if(confirm('{text key='base+are_you_sure'}')) {
+                    if(confirm('{text key='forum+delete_quote_confirm'}')) {
                         $(this).parent().remove();
                     }
                 });

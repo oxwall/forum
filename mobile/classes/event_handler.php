@@ -140,6 +140,32 @@ class FORUM_MCLASS_EventHandler
         $event->setData($data);
     }
 
+    public function onMobileTopMenuAddLink( BASE_CLASS_EventCollector $event )
+    {
+        if ( !OW::getUser()->isAuthenticated() )
+        {
+            $backUri =  OW::getRouter()->uriForRoute('forum-default') . '?add_topic=1';
+            $url = OW::getRequest()->
+                    buildUrlQueryString(OW::getRouter()->urlForRoute('static_sign_in'), array('back-uri' => $backUri));
+
+            $event->add(array(
+                'prefix' => 'forum',
+                'key' => 'forum_mobile',
+                'url' => $url
+            ));
+        }
+        else
+        {
+            $event->add(array(
+                'prefix' => 'forum',
+                'key' => 'forum_mobile',
+                'url' => OW::getRequest()->buildUrlQueryString(OW::getRouter()->urlForRoute('forum-default'), array(
+                    'add_topic' => 1
+                ))
+            ));
+        }
+    }
+
     public function init()
     {
         FORUM_CLASS_EventHandler::getInstance()->genericInit();
@@ -148,5 +174,6 @@ class FORUM_MCLASS_EventHandler
 
         $em->bind('feed.on_item_render', array($this, 'feedOnItemRender'));
         $em->bind('feed.on_item_render', array($this, 'onFeedItemRenderDisableActions'));
+        $em->bind('base.mobile_top_menu_add_options', array($this, 'onMobileTopMenuAddLink'));
     }
 }

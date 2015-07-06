@@ -1,4 +1,13 @@
 <div class="owm_forum_page">
     {component class="FORUM_MCMP_ForumSearch"}
     {component class="FORUM_MCMP_ForumSection"}
+
+    {if $addTopic}
+        {script}
+            // show the topic form
+            OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [], {
+                "title" : "{text key='forum+create_new_topic'}"
+            });
+        {/script}
+    {/if}
 </div>

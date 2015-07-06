@@ -76,7 +76,7 @@ class FORUM_CLASS_TopicEditForm extends Form
         // post
         if ( $mobileWysiwyg )
         {
-            $textField = new Textarea('text');
+            $textField = new MobileWysiwygTextarea('text');
         }
         else {
             $textField = new WysiwygTextarea('text', array(
