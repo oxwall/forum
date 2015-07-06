@@ -41,9 +41,30 @@ class FORUM_MCTRL_Forum extends FORUM_MCTRL_AbstractForum
      */
     public function index()
     {
+        $addTopic = false;
+
         OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_index'));
         OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_index'));
+
+        if ( !empty($_GET['add_topic']) ) 
+        {
+            if ( !OW::getUser()->isAuthenticated() )
+            {
+                throw new AuthenticateException();
+            }
+
+            // check permissions
+            if ( !OW::getUser()->isAuthorized('forum', 'edit') )
+            {
+                $status = BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'edit');
+                throw new AuthorizationException($status['msg']);
+            }
+
+            $addTopic = true;
+        }
+
+        $this->assign('addTopic', $addTopic);
     }
 }
 
