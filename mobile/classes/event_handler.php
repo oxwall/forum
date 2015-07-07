@@ -124,22 +124,6 @@ class FORUM_MCLASS_EventHandler
         $event->setData($data);
     }
 
-    public function onFeedItemRenderDisableActions( OW_Event $event )
-    {
-        $params = $event->getParams();
-
-        if ( !in_array($params["action"]["entityType"], array("forum-topic", "forum-post")) )
-        {
-            return;
-        }
-
-        $data = $event->getData();
-
-        $data["disabled"] = true;
-
-        $event->setData($data);
-    }
-
     public function onMobileTopMenuAddLink( BASE_CLASS_EventCollector $event )
     {
         if ( !OW::getUser()->isAuthenticated() )
@@ -173,7 +157,6 @@ class FORUM_MCLASS_EventHandler
         $em = OW::getEventManager();
 
         $em->bind('feed.on_item_render', array($this, 'feedOnItemRender'));
-        $em->bind('feed.on_item_render', array($this, 'onFeedItemRenderDisableActions'));
         $em->bind('base.mobile_top_menu_add_options', array($this, 'onMobileTopMenuAddLink'));
     }
 }
