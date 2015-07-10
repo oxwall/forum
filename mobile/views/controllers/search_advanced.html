@@ -2,7 +2,7 @@
     {literal}
         .owm_forum_search_form .ow_multiselect {
             width: 100%;
-            height:200px;
+            max-height:17px;
             max-width: none;
         }
     {/literal}
@@ -10,10 +10,10 @@
 <div class="owm_forum_page owm_forum_advanced_search">
     <div class="owm_std_margin_bottom">
         <div class="owm_nav_cap owm_nav_cap_left_cont owm_bg_color_3 owm_border clearfix">
-            <h3>{text key='forum+back_forum'}</h3>
             <div class="owm_float_left">
                 <a class="owm_nav_cap_left" href="{$closeUrl}"></a>
-            </div>
+            </div>            
+            <h3>{text key='forum+back_forum'}</h3>
         </div>
         {form name="search_form"}
             <div class="owm_forum_search_form">
