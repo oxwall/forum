@@ -150,6 +150,18 @@ class FORUM_MCLASS_EventHandler
         }
     }
 
+    public function onNotificationRender( OW_Event $e )
+    {
+        $params = $e->getParams();
+
+        if ( $params['pluginKey'] == 'forum'
+            && in_array($params['entityType'], array('forum_topic_reply')))
+        {
+            $data = $params['data'];
+            $e->setData($data);
+        }
+    }
+
     public function init()
     {
         FORUM_CLASS_EventHandler::getInstance()->genericInit();
@@ -158,5 +170,6 @@ class FORUM_MCLASS_EventHandler
 
         $em->bind('feed.on_item_render', array($this, 'feedOnItemRender'));
         $em->bind('base.mobile_top_menu_add_options', array($this, 'onMobileTopMenuAddLink'));
+        $em->bind('mobile.notifications.on_item_render', array($this, 'onNotificationRender'));
     }
 }
