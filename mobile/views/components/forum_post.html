@@ -2,8 +2,13 @@
 
 {foreach from=$postList item=post}
     <div class="{if $firstTopic->id == $post.id}owm_forum_topic owm_forum_topic_view{else}owm_forum_reply{/if}" id="post-{$post.id}">
-        {add_content key="forum.before_post_add_content" postId=$post.id userId=$post.userId text=$post.text}      
-        {assign var="socialSharing" value={add_content key="socialsharing.get_mobile_button" description=$post.text url=$post.postUrl buttonLabelKey="socialsharing+share_title" entityType="forum_topic" entityId=$topicInfo.id}}
+        {add_content key="forum.before_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
+
+        {if $firstTopicPost->id == $post.id}
+            {assign var="socialSharing" value={add_content key="socialsharing.get_mobile_button" description=$post.text title=$topicInfo.title image='' buttonLabelKey="socialsharing+share_title" entityType="forum_topic" entityId=$post.topicId}}
+        {else}
+            {assign var="socialSharing" value=""}
+        {/if}
 
         {assign var="showQuoteButton"  value=$canQuote && $post.userId != $userId}
         {assign var="showFlagButton"   value=$userId <> 0}
@@ -49,7 +54,7 @@
                     </div>
                     {if ($isModerator || ($userId == $post.userId && !$topicInfo.locked)) && $post.id != $firstTopic->id}
                         <div class="owm_view_more owm_float_right">
-                             {component 
+                             {component
                                 class="FORUM_MCMP_ForumPostContextMenu"
                                 topicId=$post.topicId
                                 postId=$post.id
@@ -89,13 +94,13 @@
                                 <a href="#"><span>{text key='forum+quote'}</span></a>
                             </li>
                         {/if}
- 
+
                         {if $showFlagButton}
                             <li class="owm_card_toolbar_flag owm_border">
                                 <a href="#"><span>{text key='forum+flag'}</span></a>
                             </li>
                         {/if}
-                        
+
                         {if $showShareButton}
                             <li class="owm_card_toolbar_share owm_border">
                                 {$socialSharing}
@@ -104,9 +109,9 @@
                     </ul>
                 </div>
             {/if}
- 
+
             {add_content key="forum.after_post_add_content" postId=$post.id userId=$post.userId text=$post.text}
- 
+
             {if $firstTopic->id == $post.id}
                 {add_content key='forum.topic.content.after_first_post'}
             {/if}
@@ -115,7 +120,7 @@
 {/foreach}
 
 <div>
-    
+
 </div>
 {if isset($paging)}{$paging}{/if}
 
@@ -136,7 +141,7 @@
                 e.preventDefault();
 
                 // show the post form
-                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id}, "postId" : $(this).parent().attr("data-id") }], 
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id}, "postId" : $(this).parent().attr("data-id") }],
                 {
                     "title" : "{text key='forum+add_post_title'}"
                 });
@@ -149,7 +154,7 @@
             {
                 e.preventDefault();
 
-                if ( confirm("{text key='forum+delete_post_confirm'}") ) 
+                if ( confirm("{text key='forum+delete_post_confirm'}") )
                 {
                     $.post($(this).attr("href"), function(data)
                     {
@@ -162,13 +167,13 @@
                     });
                 }
             });
- 
+
             // edit post
             $(".forum_edit_post").bind("click", function(e)
             {
                 e.preventDefault();
- 
-                OWM.ajaxFloatBox("FORUM_MCMP_ForumEditPost", [{ "topicId" : "{$topicInfo.id}", "postId" : $(this).attr("data-id") }], 
+
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumEditPost", [{ "topicId" : "{$topicInfo.id}", "postId" : $(this).attr("data-id") }],
                 {
                     "title" : "{text key='forum+edit_post_title'}"
                 });

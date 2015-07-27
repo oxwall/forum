@@ -97,6 +97,7 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         OW::getLanguage()->addKeyForJs('forum', 'confirm_delete_attachment');
 
         // assign view variables
+        $this->assign('firstTopicPost', $this->forumService->findTopicFirstPost($topicDto->id));
         $this->assign('userId', $userId);
         $this->assign('topicInfo', $topicInfo);
         $this->assign('page', $page);
