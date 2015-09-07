@@ -105,6 +105,7 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
 
         // assign view variables
         $this->assign('canEdit', $canEdit);
+        $this->assign('promotion', BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'edit'));
         $this->assign('stickyTopics', $stickyTopics);
         $this->assign('regularTopics', $regularTopics);
         $this->assign('displayNames', BOL_UserService::getInstance()->getDisplayNamesForList($authors));

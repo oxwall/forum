@@ -10,34 +10,34 @@
         <div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
             {if $canEdit || $canLock || $canSticky || $canSubscribe}
                 <div class="owm_view_more owm_float_right">
-                    {component 
+                    {component
                         class="FORUM_MCMP_ForumTopicContextMenu"
                         isOwner=$isOwner
                         isModerator=$isModerator
-                        topicInfo=$topicInfo 
-                        canEdit=$canEdit 
-                        canLock=$canLock 
-                        canSticky=$canSticky 
+                        topicInfo=$topicInfo
+                        canEdit=$canEdit
+                        canLock=$canLock
+                        canSticky=$canSticky
                         canSubscribe=$canSubscribe
                         isSubscribed=$isSubscribed
                     }
                 </div>
-            {/if}       
+            {/if}
             <div class="owm_float_left">
                 <a class="owm_nav_cap_left" href="{url_for_route for="group-default:[groupId=>`$topicInfo.groupId`]"}"></a>
             </div>
-            <h3>{$topicInfo.title}</h3>            
+            <h3>{$topicInfo.title}</h3>
         </div>
 
-        {component 
-            class="FORUM_MCMP_ForumSearch" 
-            scope="topic" 
+        {component
+            class="FORUM_MCMP_ForumSearch"
+            scope="topic"
             id="{$topicInfo.id}"
         }
 
-        {component 
-            class="FORUM_MCMP_ForumPost" 
-            page=$page 
+        {component
+            class="FORUM_MCMP_ForumPost"
+            page=$page
             topicInfo=$topicInfo
             canEdit=$canEdit
             canPost=$canPost
@@ -59,7 +59,7 @@
                     topicAction(confirmText, "{url_for_route for="subscribe-topic:[topicId=>`$topicInfo.id`]"}", function()
                     {
                         // show or hide action buttons
-                        if ( unsubscribe ) 
+                        if ( unsubscribe )
                         {
                             $("#unsubscribe_topic").hide();
                             $("#subscribe_topic").show();
@@ -88,7 +88,7 @@
                     topicAction(confirmText, "{url_for_route for="sticky-topic:[topicId=>`$topicInfo.id`]"}", function()
                     {
                         // show or hide action buttons
-                        if ( unsticky ) 
+                        if ( unsticky )
                         {
                             $("#unsticky_topic").hide();
                             $("#sticky_topic").show();
@@ -119,7 +119,7 @@
                     });
                 });
             {/script}
-            <!-- end of lock/unlock topic -->               
+            <!-- end of lock/unlock topic -->
         {/if}
 
         {if $canEdit}
@@ -133,7 +133,7 @@
                     e.preventDefault();
 
                     // show the topic form
-                    OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [{ "groupId" : {$topicInfo.groupId} }], 
+                    OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [{ "groupId" : {$topicInfo.groupId} }],
                     {
                         "title" : "{text key='forum+new_topic_btn'}"
                     });
@@ -147,7 +147,7 @@
                     $("#forum_edit_topic").bind("click", function(e)
                     {
                         // show the edit topic form
-                        OWM.ajaxFloatBox("FORUM_MCMP_ForumEditTopic", [{ "topicId" : {$topicInfo.id} }], 
+                        OWM.ajaxFloatBox("FORUM_MCMP_ForumEditTopic", [{ "topicId" : {$topicInfo.id} }],
                         {
                             "title" : "{text key='forum+edit_topic'}"
                         });
@@ -179,10 +179,10 @@
                     /**
                      * Show a new post form
                      */
-                    $("#forum_new_post_wrappper").focus(function() 
-                    {                
+                    $("#forum_new_post_wrappper").focus(function()
+                    {
                         // show the post form
-                        OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id} }], 
+                        OWM.ajaxFloatBox("FORUM_MCMP_ForumAddPost", [{ "topicId" : {$topicInfo.id} }],
                         {
                             "title" : "{text key='forum+add_post_title'}"
                         });
@@ -199,7 +199,7 @@
         {script}
             topicAction = function(confirmText, url, callback)
             {
-                if ( confirm(confirmText) ) 
+                if ( confirm(confirmText) )
                 {
                     $.post(url, function(data)
                     {

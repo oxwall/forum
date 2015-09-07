@@ -47,24 +47,16 @@ class FORUM_MCTRL_Forum extends FORUM_MCTRL_AbstractForum
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_index'));
         OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_index'));
 
-        if ( !empty($_GET['add_topic']) ) 
+        $isModerator = OW::getUser()->isAuthorized('forum');
+
+        if ( !empty($_GET['add_topic']) && OW::getUser()->isAuthenticated() )
         {
-            if ( !OW::getUser()->isAuthenticated() )
-            {
-                throw new AuthenticateException();
-            }
-
-            // check permissions
-            if ( !OW::getUser()->isAuthorized('forum', 'edit') )
-            {
-                $status = BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'edit');
-                throw new AuthorizationException($status['msg']);
-            }
-
             $addTopic = true;
         }
 
         $this->assign('addTopic', $addTopic);
+        $this->assign('canEdit', OW::getUser()->isAuthorized('forum', 'edit') || $isModerator ? true : false);
+        $this->assign('promotion', BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'edit'));
     }
 }
 
