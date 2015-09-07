@@ -4,10 +4,14 @@
 
     {if $addTopic}
         {script}
-            // show the topic form
-            OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [], {
-                "title" : "{text key='forum+create_new_topic'}"
-            });
+            {if $canEdit}
+                // show the topic form
+                OWM.ajaxFloatBox("FORUM_MCMP_ForumAddTopic", [], {
+                    "title" : "{text key='forum+create_new_topic'}"
+                });
+            {elseif $promotion.status == 'promoted'}
+                OWM.error('{$promotion.msg|escape:quotes}');
+            {/if}
         {/script}
     {/if}
 </div>

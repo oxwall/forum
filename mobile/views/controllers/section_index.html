@@ -3,6 +3,8 @@
         <div class="owm_nav_cap owm_nav_cap_left_cont owm_nav_cap_right_cont owm_bg_color_3 owm_border clearfix">
             {if $canEdit}
                 <a id="owm_forum_new_topic_link" href="#" class="owm_nav_left_item_add owm_float_right"></a>
+            {else if $promotion.status == 'promoted'}
+                <a id="owm_forum_new_topic_link" href="javascript://" class="owm_nav_left_item_add owm_float_right" onclick="OWM.error('{$promotion.msg|escape:quotes}');"></a>
             {/if}           
             <div class="owm_float_left">
                 <a class="owm_nav_cap_left" href="{url_for_route for="forum-default"}"></a>

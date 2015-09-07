@@ -66,6 +66,7 @@ class FORUM_MCTRL_Section extends FORUM_MCTRL_AbstractForum
         // assign view variables
         $this->assign('section', $forumSection);
         $this->assign('canEdit', $canEdit);
+        $this->assign('promotion', BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'edit'));
 
         // remember the last forum page
         OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
