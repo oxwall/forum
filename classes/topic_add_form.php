@@ -28,76 +28,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-class ForumTopicValidator extends OW_Validator
-{
-    /**
-     * Topic list
-     *
-     * @var array
-     */
-    protected $topicList = array();
-
-    /**
-     * Class constructor
-     *
-     * @param array $topicList
-     */
-    public function __construct( array $topicList  = array() )
-    {
-        $this->topicList = $topicList;
-        $this->errorMessage = OW::getLanguage()->text('forum', 'topic_doesnt_exist');
-    }
-
-    /**
-     * Set topic list
-     *
-     * @param array $topicList
-     * @return void
-     */
-    public function setTopicList( array $topicList = array() )
-    {
-        $this->topicList = $topicList;
-    }
-
-    /**
-     * Is data valid
-     *
-     * @param mixed $value
-     * @return boolean
-     */
-    public function isValid( $value )
-    {
-        return is_scalar($value) && in_array($value, $this->topicList);
-    }
-
-    /**
-     * Get js validator
-     *
-     * @return string
-     */
-    public function getJsValidator()
-    {
-        $values = json_encode($this->topicList);
-
-        $js = "{
-            validate : function( value )
-        	{
-        	    if ( $.inArray(value, {$values}) == -1 )
-        	    {
-        	        throw this.getErrorMessage();
-        	    }
-        	},
-
-        	getErrorMessage : function()
-        	{
-        		return " . json_encode($this->getError()) . "
-    		}
-        }";
-
-        return $js;
-    }
-}
-
 /**
  * @author Alex Ermashev <alexermashev@gmail.com>
  * @package ow.ow_plugins.forum
@@ -194,7 +124,7 @@ class FORUM_CLASS_TopicAddForm extends Form
 
             $groupField->setRequired(true);
             $groupField->addValidator(new IntValidator());
-            $groupField->addValidator(new ForumTopicValidator($groupIds));
+            $groupField->addValidator(new InArrayValidator($groupIds));
         }
 
         $this->addElement($groupField);
