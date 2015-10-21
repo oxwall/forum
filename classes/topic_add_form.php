@@ -109,8 +109,22 @@ class FORUM_CLASS_TopicAddForm extends Form
                 $groupField->setValue($groupId);
             }
 
+            // process list of groups for the validator
+            $groupIds = array();
+
+            foreach($groupSelect as $group)
+            {
+                if ( !$group['value'] || $group['disabled'] )
+                {
+                    continue;
+                }
+
+                $groupIds[] = $group['value'];
+            }
+
             $groupField->setRequired(true);
             $groupField->addValidator(new IntValidator());
+            $groupField->addValidator(new InArrayValidator($groupIds));
         }
 
         $this->addElement($groupField);
