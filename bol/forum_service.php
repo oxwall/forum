@@ -994,7 +994,19 @@ final class FORUM_BOL_ForumService
             {
                 $pluginKey = $forumSection->isHidden ? $forumSection->entity : 'forum';
                 $action = $forumSection->isHidden ? 'add_topic' : 'edit';
-                BOL_AuthorizationService::getInstance()->trackAction($pluginKey, $action);
+
+
+                if ( $action == 'edit' )
+                {
+                    if ( $topicDto->status == 'approved' )
+                    {
+                        BOL_AuthorizationService::getInstance()->trackAction($pluginKey, $action);
+                    }
+                }
+                else
+                {
+                    BOL_AuthorizationService::getInstance()->trackAction($pluginKey, $action);
+                }
             }
         }
 
@@ -1200,15 +1212,6 @@ final class FORUM_BOL_ForumService
         $event = new OW_Event('feed.action', $params);
         OW::getEventManager()->trigger($event);
 
-        if ( $isHidden && !empty($forumSection) )
-        {
-            BOL_AuthorizationService::getInstance()->trackAction($forumSection->entity, 'add_topic');
-        }
-        else
-        {
-            BOL_AuthorizationService::getInstance()->trackAction('forum', 'edit');
-        }
-
         $topicUrl = OW::getRouter()->urlForRoute('topic-default', array('topicId' => $topicDto->id));
 
         $params = array(
@@ -1227,6 +1230,20 @@ final class FORUM_BOL_ForumService
         OW::getEventManager()->trigger(new OW_Event(FORUM_BOL_ForumService::EVENT_AFTER_TOPIC_ADD, array(
             'topicId' => $topicDto->id
         )));
+
+        if ( $isHidden && !empty($forumSection) )
+        {
+            BOL_AuthorizationService::getInstance()->trackAction($forumSection->entity, 'add_topic');
+        }
+        else
+        {
+            $newTopicInfo = $this->findTopicById($topicDto->id);
+
+            if ($newTopicInfo->status == 'approved')
+            {
+                BOL_AuthorizationService::getInstance()->trackAction('forum', 'edit');
+            }
+        }
 
         return $topicDto;
     }
