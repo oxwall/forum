@@ -658,6 +658,31 @@ class FORUM_CLASS_EventHandler
         }
     }
 
+    public function afterContentApprove( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( $params["entityType"] != FORUM_BOL_ForumService::FEED_ENTITY_TYPE )
+        {
+            return;
+        }
+
+        if ( !$params["isNew"] )
+        {
+            return;
+        }
+
+        $forumService = FORUM_BOL_ForumService::getInstance();
+        $topic = $forumService->findTopicById($params["entityId"]);
+
+        if ( $topic === null )
+        {
+            return;
+        }
+
+        BOL_AuthorizationService::getInstance()->trackActionForUser($topic->userId, 'forum', 'edit');
+    }
+
     public function genericInit()
     {
         $em = OW::getEventManager();
@@ -678,6 +703,7 @@ class FORUM_CLASS_EventHandler
         $em->bind('feed.collect_configurable_activity', array($this, 'feedCollectConfigurableActivity'));
         $em->bind('forum.subscribe_user', array($this, 'subscribeUser'));
         $em->bind('feed.after_like_added', array($this, 'feedTopicLike'));
+        $em->bind('moderation.after_content_approve', array($this, 'afterContentApprove'));
 
         $credits = new FORUM_CLASS_Credits();
         $em->bind('usercredits.on_action_collect', array($credits, 'bindCreditActionsCollect'));
