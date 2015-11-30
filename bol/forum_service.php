@@ -1164,7 +1164,7 @@ final class FORUM_BOL_ForumService
      * @param object $forumSection
      * @return FORUM_BOL_Topic
      */
-    public function addTopic( FORUM_BOL_Group $forumGroup, $isHidden, $userId, array $data, $forumSection = null )
+    public function addTopic( $forumGroup, $isHidden, $userId, array $data, $forumSection = null )
     {
          $topicDto = new FORUM_BOL_Topic();
 
