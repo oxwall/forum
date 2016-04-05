@@ -232,7 +232,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
 
             if ( $iteration == 0 )
             {
-                $firstPostText = substr(htmlspecialchars(strip_tags($post['text'])), 0, 154);
+                $firstPostText = htmlspecialchars(mb_substr(strip_tags($post['text']), 0, 154, 'UTF-8'));
             }
 
             // get list of users
