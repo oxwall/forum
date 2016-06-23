@@ -53,7 +53,6 @@ foreach( $event->getData() as $widgetInfo )
     }
 }
 
-
 require_once dirname(__FILE__) . DS .  'classes' . DS . 'credits.php';
 $credits = new FORUM_CLASS_Credits();
 $credits->triggerCreditActionsAdd();
@@ -63,3 +62,11 @@ OW::getNavigation()->addMenuItem(OW_Navigation::MOBILE_TOP, 'forum-default', 'fo
 
 require_once dirname(__FILE__) . DS .  'bol' . DS . 'text_search_service.php';
 FORUM_BOL_TextSearchService::getInstance()->activateEntities();
+
+// register sitemap entities
+BOL_SeoService::getInstance()->addSitemapEntity('forum', 'forum_sitemap', 'forum', array(
+    'forum_list',
+    'forum_section',
+    'forum_group',
+    'forum_topic'
+));

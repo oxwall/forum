@@ -1714,6 +1714,42 @@ final class FORUM_BOL_ForumService
     }
 
     /**
+     * Find latest public groups ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestPublicGroupsIds($first, $count)
+    {
+        return $this->groupDao->findLatestPublicGroupsIds($first, $count);
+    }
+
+    /**
+     * Find latest public sections ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestPublicSectionsIds($first, $count)
+    {
+        return $this->sectionDao->findLatestPublicSectionsIds($first, $count);
+    }
+
+    /**
+     * Find latest topics ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestPublicTopicsIds($first, $count)
+    {
+        return $this->topicDao->findLatestPublicTopicsIds($first, $count);
+    }
+
+    /**
      * Returns group by specified entity id
      *
      * @param string $entity

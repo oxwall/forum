@@ -28,15 +28,13 @@
  * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-OW::getNavigation()->deleteMenuItem('forum', 'forum');
 
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_ForumTopicsWidget');
-$widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_LatestTopicsWidget');
+// register sitemap entities
+Updater::getSeoService()->addSitemapEntity('forum', 'forum_sitemap', 'forum', array(
+    'forum_list',
+    'forum_section',
+    'forum_group',
+    'forum_topic'
+));
 
-
-// Mobile deactivation
-OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');
-FORUM_BOL_TextSearchService::getInstance()->deactivateEntities();
-
-// remove from sitemap
-BOL_SeoService::getInstance()->removeSitemapEntity('forum');
+Updater::getLanguageService()->importPrefixFromZip(__DIR__ . DS . 'langs.zip', 'forum');

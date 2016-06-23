@@ -200,6 +200,23 @@ class FORUM_BOL_SectionDao extends OW_BaseDao
     }
 
     /**
+     * Find latest public sections ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestPublicSectionsIds($first, $count)
+    {
+        $example = new OW_Example();
+        $example->andFieldEqual('isHidden', 0);
+        $example->setLimitClause($first, $count);
+        $example->setOrder('id DESC');
+
+        return $this->findListByExample($example);
+    }
+
+    /**
      * Returns list of not hidden sections
      *
      * @return array of FORUM_BOL_Section

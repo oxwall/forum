@@ -683,6 +683,70 @@ class FORUM_CLASS_EventHandler
         BOL_AuthorizationService::getInstance()->trackActionForUser($topic->userId, 'forum', 'edit');
     }
 
+    /**
+     * Get sitemap urls
+     *
+     * @param OW_Event $event
+     * @return void
+     */
+    public function onSitemapGetUrls( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( OW::getUser()->isAuthorized('forum', 'view') )
+        {
+            $offset = (int) $params['offset'];
+            $limit  = (int) $params['limit'];
+            $urls   = array();
+
+            switch ( $params['entity'] )
+            {
+                case 'forum_topic' :
+                    $topics = FORUM_BOL_ForumService::getInstance()->findLatestPublicTopicsIds($offset, $limit);
+
+                    foreach ( $topics as $topicId )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('topic-default', array(
+                            'topicId' => $topicId
+                        ));
+                    }
+                    break;
+
+                case 'forum_group' :
+                    $groups = FORUM_BOL_ForumService::getInstance()->findLatestPublicGroupsIds($offset, $limit);
+
+                    foreach ( $groups as $group )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('group-default', array(
+                            'groupId' => $group->id
+                        ));
+                    }
+                    break;
+
+                case 'forum_section' :
+                    $sections = FORUM_BOL_ForumService::getInstance()->findLatestPublicSectionsIds($offset, $limit);
+
+                    foreach ( $sections as $section )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('section-default', array(
+                            'sectionId' => $section->id
+                        ));
+                    }
+                    break;
+
+                case 'forum_list' :
+                    $urls[] = OW::getRouter()->urlForRoute('forum-default');
+                    $urls[] = OW::getRouter()->urlForRoute('forum_advanced_search');
+                    break;
+            }
+
+            if ( $urls )
+            {
+                $event->setData($urls);
+            }
+        }
+    }
+
     public function genericInit()
     {
         $em = OW::getEventManager();
@@ -710,5 +774,6 @@ class FORUM_CLASS_EventHandler
         $em->bind('usercredits.get_action_key', array($credits, 'getActionKey'));
 
         $em->bind('socialsharing.get_entity_info', array($this, 'sosialSharingGetForumInfo'));
+        $em->bind("base.sitemap.get_urls", array($this, 'onSitemapGetUrls'));
     }
 }
