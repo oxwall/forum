@@ -110,5 +110,15 @@ class FORUM_CTRL_Section extends OW_ActionController
 
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum'));
         OW::getDocument()->setHeadingIconClass('ow_ic_forum');
+
+        $params = array(
+            "entityKey" => "section",
+            "title" => "forum+meta_title_section",
+            "description" => "forum+meta_desc_section",
+            "keywords" => "forum+meta_keywords_section",
+            "vars" => array( "section_name" => $forumSection->name )
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 }

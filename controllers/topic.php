@@ -457,8 +457,8 @@ class FORUM_CTRL_Topic extends OW_ActionController
         // remember the last forum page
         OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
 
-        OW::getDocument()->setTitle($topicInfo['title']);
-        OW::getDocument()->setDescription($firstPostText);
+//        OW::getDocument()->setTitle($topicInfo['title']);
+//        OW::getDocument()->setDescription($firstPostText);
 
         $this->addComponent('search', new FORUM_CMP_ForumSearch(array('scope' => 'topic', 'topicId' => $topicDto->id)));
 
@@ -476,6 +476,16 @@ class FORUM_CTRL_Topic extends OW_ActionController
             array_push($tb, $toolbarItem);
         }
         $this->assign('tb', $tb);
+
+        $params = array(
+            "entityKey" => "topic",
+            "title" => "forum+meta_title_topic",
+            "description" => "forum+meta_desc_topic",
+            "keywords" => "forum+meta_keywords_topic",
+            "vars" => array( "topic_name" => $topicInfo['title'], "topic_description" => $firstPostText )
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     public function ajaxDeleteAttachment()

@@ -189,9 +189,18 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
             ? $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result.html')
             : $this->setTemplate($plugin->getMobileCtrlViewDir() . 'search_result_topic.html');
 
-        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+//        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading($pageTitle);
-        OW::getDocument()->setTitle($pageTitle);
+//        OW::getDocument()->setTitle($pageTitle);
+
+        $params = array(
+            "entityKey" => "advSearchResult",
+            "title" => "forum+meta_title_adv_search_result",
+            "description" => "forum+meta_desc_adv_search_result",
+            "keywords" => "forum+meta_keywords_adv_searche_result"
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     /**
@@ -212,9 +221,18 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
         $closeUrl = OW::getSession()->get('last_forum_page');
         $this->assign('closeUrl', ($closeUrl ? $closeUrl : OW::getRouter()->urlForRoute('forum-default')));
         
-        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+//        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading($pageTitle);
-        OW::getDocument()->setTitle($pageTitle);
+//        OW::getDocument()->setTitle($pageTitle);
+
+        $params = array(
+            "entityKey" => "advSearch",
+            "title" => "forum+meta_title_adv_search",
+            "description" => "forum+meta_desc_adv_search",
+            "keywords" => "forum+meta_keywords_adv_searche"
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     /**

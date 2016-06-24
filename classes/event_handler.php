@@ -747,6 +747,120 @@ class FORUM_CLASS_EventHandler
         }
     }
 
+    public function onCollectMetaData( BASE_CLASS_EventCollector $e )
+    {
+        $language = OW::getLanguage();
+
+        $items = array(
+            array(
+                "entityKey" => "home",
+                "entityLabel" => $language->text("forum", "seo_meta_home_label"),
+                "iconClass" => "ow_ic_house",
+                "langs" => array(
+                    "title" => "forum+meta_title_home",
+                    "description" => "forum+meta_desc_home",
+                    "keywords" => "forum+meta_keywords_home"
+                ),
+                "vars" => array("site_name")
+            ),
+            array(
+                "entityKey" => "advSearch",
+                "entityLabel" => $language->text("forum", "seo_meta_adv_search_label"),
+                "iconClass" => "ow_ic_lens",
+                "langs" => array(
+                    "title" => "forum+meta_title_adv_search",
+                    "description" => "forum+meta_desc_adv_search",
+                    "keywords" => "forum+meta_keywords_adv_searche"
+                ),
+                "vars" => array("site_name")
+            ),
+            array(
+                "entityKey" => "advSearchResult",
+                "entityLabel" => $language->text("forum", "seo_meta_adv_search_result_label"),
+                "iconClass" => "ow_ic_newsfeed",
+                "langs" => array(
+                    "title" => "forum+meta_title_adv_search_result",
+                    "description" => "forum+meta_desc_adv_search_result",
+                    "keywords" => "forum+meta_keywords_adv_searche_result"
+                ),
+                "vars" => array("site_name")
+            ),
+            array(
+                "entityKey" => "section",
+                "entityLabel" => $language->text("forum", "seo_meta_section_label"),
+                "iconClass" => "ow_ic_forum",
+                "langs" => array(
+                    "title" => "forum+meta_title_section",
+                    "description" => "forum+meta_desc_section",
+                    "keywords" => "forum+meta_keywords_section"
+                ),
+                "vars" => array("site_name", "section_name")
+            ),
+            array(
+                "entityKey" => "group",
+                "entityLabel" => $language->text("forum", "seo_meta_group_label"),
+                "iconClass" => "ow_ic_forum",
+                "langs" => array(
+                    "title" => "forum+meta_title_group",
+                    "description" => "forum+meta_desc_group",
+                    "keywords" => "forum+meta_keywords_group"
+                ),
+                "vars" => array("site_name", "group_name", "group_description")
+            ),
+            array(
+                "entityKey" => "topic",
+                "entityLabel" => $language->text("forum", "seo_meta_topic_label"),
+                "iconClass" => "ow_ic_forum",
+                "langs" => array(
+                    "title" => "forum+meta_title_topic",
+                    "description" => "forum+meta_desc_topic",
+                    "keywords" => "forum+meta_keywords_topic"
+                ),
+                "vars" => array("site_name", "topic_name", "topic_description")
+            ),
+            array(
+                "entityKey" => "sectionSearch",
+                "entityLabel" => $language->text("forum", "seo_meta_section_search_label"),
+                "iconClass" => "ow_ic_lens",
+                "langs" => array(
+                    "title" => "forum+meta_title_section_search",
+                    "description" => "forum+meta_desc_section_search",
+                    "keywords" => "forum+meta_keywords_section_search"
+                ),
+                "vars" => array("site_name", "section_name")
+            ),
+            array(
+                "entityKey" => "groupSearch",
+                "entityLabel" => $language->text("forum", "seo_meta_group_search_label"),
+                "iconClass" => "ow_ic_lens",
+                "langs" => array(
+                    "title" => "forum+meta_title_group_search",
+                    "description" => "forum+meta_desc_group_search",
+                    "keywords" => "forum+meta_keywords_group_search"
+                ),
+                "vars" => array("site_name", "group_name", "group_description")
+            ),
+            array(
+                "entityKey" => "topicSearch",
+                "entityLabel" => $language->text("forum", "seo_meta_topic_search_label"),
+                "iconClass" => "ow_ic_lens",
+                "langs" => array(
+                    "title" => "forum+meta_title_topic_search",
+                    "description" => "forum+meta_desc_topic_search",
+                    "keywords" => "forum+meta_keywords_topic_search"
+                ),
+                "vars" => array("site_name", "topic_name", "topic_description")
+            ),
+        );
+
+        foreach ($items as &$item)
+        {
+            $item["sectionLabel"] = $language->text("forum", "seo_meta_section");
+            $item["sectionKey"] = "forum";
+            $e->add($item);
+        }
+    }
+
     public function genericInit()
     {
         $em = OW::getEventManager();

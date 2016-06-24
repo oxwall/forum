@@ -253,6 +253,15 @@ class FORUM_CTRL_Search extends OW_ActionController
         OW::getDocument()->setHeading($lang->text('forum', 'search_advanced_heading'));
         OW::getDocument()->setHeadingIconClass('ow_ic_forum');
         OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
+
+        $params = array(
+            "entityKey" => "advSearchResult",
+            "title" => "forum+meta_title_adv_search_result",
+            "description" => "forum+meta_desc_adv_search_result",
+            "keywords" => "forum+meta_keywords_adv_searche_result"
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     /**
@@ -290,6 +299,15 @@ class FORUM_CTRL_Search extends OW_ActionController
         OW::getDocument()->setHeading($lang->text('forum', 'search_advanced_heading'));
         OW::getDocument()->setHeadingIconClass('ow_ic_forum');
         OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
+
+        $params = array(
+            "entityKey" => "advSearch ",
+            "title" => "forum+meta_title_adv_search",
+            "description" => "forum+meta_desc_adv_search",
+            "keywords" => "forum+meta_keywords_adv_searche"
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     /**
