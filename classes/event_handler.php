@@ -715,10 +715,10 @@ class FORUM_CLASS_EventHandler
                 case 'forum_group' :
                     $groups = FORUM_BOL_ForumService::getInstance()->findLatestPublicGroupsIds($offset, $limit);
 
-                    foreach ( $groups as $group )
+                    foreach ( $groups as $groupId )
                     {
                         $urls[] = OW::getRouter()->urlForRoute('group-default', array(
-                            'groupId' => $group->id
+                            'groupId' => $groupId
                         ));
                     }
                     break;
@@ -726,10 +726,10 @@ class FORUM_CLASS_EventHandler
                 case 'forum_section' :
                     $sections = FORUM_BOL_ForumService::getInstance()->findLatestPublicSectionsIds($offset, $limit);
 
-                    foreach ( $sections as $section )
+                    foreach ( $sections as $sectionId )
                     {
                         $urls[] = OW::getRouter()->urlForRoute('section-default', array(
-                            'sectionId' => $section->id
+                            'sectionId' => $sectionId
                         ));
                     }
                     break;
