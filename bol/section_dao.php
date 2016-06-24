@@ -213,7 +213,7 @@ class FORUM_BOL_SectionDao extends OW_BaseDao
         $example->setLimitClause($first, $count);
         $example->setOrder('id DESC');
 
-        return $this->findListByExample($example);
+        return $this->findIdListByExample($example);
     }
 
     /**
