@@ -78,6 +78,7 @@ class FORUM_CTRL_Index extends OW_ActionController
 //            OW::getDocument()->setDescription(htmlspecialchars($firstGroup['description']));
 
             $params = array(
+                "sectionKey" => "forum",
                 "entityKey" => "home",
                 "title" => "forum+meta_title_home",
                 "description" => "forum+meta_desc_home",

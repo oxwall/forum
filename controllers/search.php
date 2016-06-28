@@ -255,6 +255,7 @@ class FORUM_CTRL_Search extends OW_ActionController
         OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "advSearchResult",
             "title" => "forum+meta_title_adv_search_result",
             "description" => "forum+meta_desc_adv_search_result",
@@ -301,6 +302,7 @@ class FORUM_CTRL_Search extends OW_ActionController
         OW::getNavigation()->activateMenuItem(OW_Navigation::MAIN, 'forum', 'forum');
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "advSearch ",
             "title" => "forum+meta_title_adv_search",
             "description" => "forum+meta_desc_adv_search",

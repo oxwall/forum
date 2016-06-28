@@ -112,6 +112,7 @@ class FORUM_CTRL_Section extends OW_ActionController
         OW::getDocument()->setHeadingIconClass('ow_ic_forum');
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "section",
             "title" => "forum+meta_title_section",
             "description" => "forum+meta_desc_section",

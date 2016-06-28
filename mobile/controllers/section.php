@@ -76,6 +76,7 @@ class FORUM_MCTRL_Section extends FORUM_MCTRL_AbstractForum
 //        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_section'));
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "section",
             "title" => "forum+meta_title_section",
             "description" => "forum+meta_desc_section",

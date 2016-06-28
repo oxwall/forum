@@ -629,6 +629,7 @@ class FORUM_CLASS_EventHandler
         $em->bind('forum.install_widget', array($this, 'installWidget'));
         $em->bind('forum.delete_widget', array($this, 'deleteWidget'));
         $em->bind('feed.on_item_render', array($this, 'feedOnItemRender'));
+        $em->bind("base.collect_seo_meta_data", array($this, 'onCollectMetaData'));
     }
 
     public function sosialSharingGetForumInfo( OW_Event $event )

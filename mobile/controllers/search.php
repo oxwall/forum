@@ -194,6 +194,7 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
 //        OW::getDocument()->setTitle($pageTitle);
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "advSearchResult",
             "title" => "forum+meta_title_adv_search_result",
             "description" => "forum+meta_desc_adv_search_result",
@@ -226,6 +227,7 @@ class FORUM_MCTRL_Search extends FORUM_MCTRL_AbstractForum
 //        OW::getDocument()->setTitle($pageTitle);
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "advSearch",
             "title" => "forum+meta_title_adv_search",
             "description" => "forum+meta_desc_adv_search",

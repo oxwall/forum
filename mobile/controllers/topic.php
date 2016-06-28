@@ -121,6 +121,7 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
 //        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_topic'));
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "topic",
             "title" => "forum+meta_title_topic",
             "description" => "forum+meta_desc_topic",

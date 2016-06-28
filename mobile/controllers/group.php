@@ -140,6 +140,7 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
 //        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_group'));
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "group",
             "title" => "forum+meta_title_group",
             "description" => "forum+meta_desc_group",

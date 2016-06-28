@@ -88,6 +88,7 @@ class FORUM_CTRL_Group extends OW_ActionController
         $this->addComponent('groupCmp', new FORUM_CMP_ForumGroup(array('groupId' => $params['groupId'], 'caption' => true)));
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "group",
             "title" => "forum+meta_title_group",
             "description" => "forum+meta_desc_group",

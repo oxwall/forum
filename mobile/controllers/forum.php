@@ -59,6 +59,7 @@ class FORUM_MCTRL_Forum extends FORUM_MCTRL_AbstractForum
         $this->assign('promotion', BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'edit'));
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "home",
             "title" => "forum+meta_title_home",
             "description" => "forum+meta_desc_home",

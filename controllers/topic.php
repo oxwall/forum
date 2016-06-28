@@ -478,6 +478,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
         $this->assign('tb', $tb);
 
         $params = array(
+            "sectionKey" => "forum",
             "entityKey" => "topic",
             "title" => "forum+meta_title_topic",
             "description" => "forum+meta_desc_topic",
