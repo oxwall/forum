@@ -694,7 +694,7 @@ class FORUM_CLASS_EventHandler
     {
         $params = $event->getParams();
 
-        if ( OW::getUser()->isAuthorized('forum', 'view') )
+        if ( BOL_AuthorizationService::getInstance()->isActionAuthorizedForGuest('forum', 'view') )
         {
             $offset = (int) $params['offset'];
             $limit  = (int) $params['limit'];
