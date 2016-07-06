@@ -43,9 +43,9 @@ class FORUM_MCTRL_Forum extends FORUM_MCTRL_AbstractForum
     {
         $addTopic = false;
 
-        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+//        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_index'));
-        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_index'));
+//        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_index'));
 
         $isModerator = OW::getUser()->isAuthorized('forum');
 
@@ -57,6 +57,16 @@ class FORUM_MCTRL_Forum extends FORUM_MCTRL_AbstractForum
         $this->assign('addTopic', $addTopic);
         $this->assign('canEdit', OW::getUser()->isAuthorized('forum', 'edit') || $isModerator ? true : false);
         $this->assign('promotion', BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'edit'));
+
+        $params = array(
+            "sectionKey" => "forum",
+            "entityKey" => "home",
+            "title" => "forum+meta_title_home",
+            "description" => "forum+meta_desc_home",
+            "keywords" => "forum+meta_keywords_home"
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 }
 

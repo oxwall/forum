@@ -86,5 +86,16 @@ class FORUM_CTRL_Group extends OW_ActionController
         // remember the last forum page
         OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
         $this->addComponent('groupCmp', new FORUM_CMP_ForumGroup(array('groupId' => $params['groupId'], 'caption' => true)));
+
+        $params = array(
+            "sectionKey" => "forum",
+            "entityKey" => "group",
+            "title" => "forum+meta_title_group",
+            "description" => "forum+meta_desc_group",
+            "keywords" => "forum+meta_keywords_group",
+            "vars" => array( "group_name" => $groupInfo->name, "group_description" => $groupInfo->description )
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 }

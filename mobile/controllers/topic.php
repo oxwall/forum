@@ -97,7 +97,8 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         OW::getLanguage()->addKeyForJs('forum', 'confirm_delete_attachment');
 
         // assign view variables
-        $this->assign('firstTopicPost', $this->forumService->findTopicFirstPost($topicDto->id));
+        $firstPost = $this->forumService->findTopicFirstPost($topicDto->id);
+        $this->assign('firstTopicPost', $firstPost);
         $this->assign('userId', $userId);
         $this->assign('topicInfo', $topicInfo);
         $this->assign('page', $page);
@@ -115,9 +116,20 @@ class FORUM_MCTRL_Topic extends FORUM_MCTRL_AbstractForum
         OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
 
         // set current page settings
-        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+//        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_topic'));
-        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_topic'));
+//        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_topic'));
+
+        $params = array(
+            "sectionKey" => "forum",
+            "entityKey" => "topic",
+            "title" => "forum+meta_title_topic",
+            "description" => "forum+meta_desc_topic",
+            "keywords" => "forum+meta_keywords_topic",
+            "vars" => array( "topic_name" => $topicInfo['title'], "topic_description" => $firstPost->text )
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 
     
