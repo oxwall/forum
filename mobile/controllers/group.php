@@ -135,8 +135,19 @@ class FORUM_MCTRL_Group extends FORUM_MCTRL_AbstractForum
         // remember the last forum page
         OW::getSession()->set('last_forum_page', OW_URL_HOME . OW::getRequest()->getRequestUri());
 
-        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
+//        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
         OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_group'));
-        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_group'));
+//        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_group'));
+
+        $params = array(
+            "sectionKey" => "forum",
+            "entityKey" => "group",
+            "title" => "forum+meta_title_group",
+            "description" => "forum+meta_desc_group",
+            "keywords" => "forum+meta_keywords_group",
+            "vars" => array( "group_name" => $groupInfo->name, "group_description" => $groupInfo->description )
+        );
+
+        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
     }
 }

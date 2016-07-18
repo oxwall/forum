@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<prefix name="forum" label="Forum" language_tag="en" language_label="English">
+    <key name="seo_meta_section"><value>Forum</value></key>
+    <key name="seo_meta_home_label"><value>Forum Homepage</value></key>
+    <key name="meta_title_home"><value>Forum | {$site_name}</value></key>
+    <key name="meta_desc_home"><value>Welcome to the discussion forum at {$site_name}. Create new posts, read what others have to say, and join the conversation.</value></key>
+    <key name="meta_keywords_home"><value></value></key>
+    <key name="seo_meta_adv_search_label"><value>Forum Advanced Search Page</value></key>
+    <key name="meta_title_adv_search"><value>Advanced search {$site_name} Forum</value></key>
+    <key name="meta_desc_adv_search"><value>Use advanced search to find information you need within {$site_name} forum.</value></key>
+    <key name="meta_keywords_adv_searche"><value></value></key>
+    <key name="seo_meta_adv_search_result_label"><value>Forum Advanced Search Results Page</value></key>
+    <key name="meta_title_adv_search_result"><value>Search results for {$site_name} Forum</value></key>
+    <key name="meta_desc_adv_search_result"><value>View the results of your forum search on {$site_name}.</value></key>
+    <key name="meta_keywords_adv_searche_result"><value></value></key>
+    <key name="seo_meta_section_label"><value>Separate Sub-forum Page</value></key>
+    <key name="meta_title_section"><value>{$section_name} at {$site_name} Forum</value></key>
+    <key name="meta_desc_section"><value>{$section_name}</value></key>
+    <key name="meta_keywords_section"><value></value></key>
+    <key name="seo_meta_group_label"><value>Separate Sub-forum Category Page</value></key>
+    <key name="meta_title_group"><value>{$group_name} at {$site_name} Forum</value></key>
+    <key name="meta_desc_group"><value>{$group_description}</value></key>
+    <key name="meta_keywords_group"><value></value></key>
+    <key name="seo_meta_topic_label"><value>Separate Forum Thread Page</value></key>
+    <key name="meta_title_topic"><value>{$topic_name} at {$site_name} Forum</value></key>
+    <key name="meta_desc_topic"><value>{$topic_description}</value></key>
+    <key name="meta_keywords_topic"><value></value></key>
+    <key name="seo_meta_section_search_label"><value>Separate Sub-forum Search Page</value></key>
+    <key name="meta_title_section_search"><value>{$section_name} search at {$site_name} Forum</value></key>
+    <key name="meta_desc_section_search"><value>Search results for {$section_name} sub-forum on {$site_name} forum.</value></key>
+    <key name="meta_keywords_section_search"><value></value></key>
+    <key name="seo_meta_group_search_label"><value>Sub-forum Category Search Page</value></key>
+    <key name="meta_title_group_search"><value>{$group_name} search at {$site_name} Forum</value></key>
+    <key name="meta_desc_group_search"><value>Search results for {$group_name} threads on {$site_name} forum.</value></key>
+    <key name="meta_keywords_group_search"><value></value></key>
+    <key name="seo_meta_topic_search_label"><value>Forum Thread Search</value></key>
+    <key name="meta_title_topic_search"><value>{$topic_name} search at {$site_name} Forum</value></key>
+    <key name="meta_desc_topic_search"><value>Search results for {$topic_name} topic on {$site_name} forum.</value></key>
+    <key name="meta_keywords_topic_search"><value></value></key>
+</prefix>

@@ -37,3 +37,6 @@ $widget = BOL_ComponentAdminService::getInstance()->deleteWidget('FORUM_CMP_Late
 // Mobile deactivation
 OW::getNavigation()->deleteMenuItem('forum', 'forum_mobile');
 FORUM_BOL_TextSearchService::getInstance()->deactivateEntities();
+
+// remove from sitemap
+BOL_SeoService::getInstance()->removeSitemapEntity('forum');

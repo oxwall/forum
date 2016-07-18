@@ -104,6 +104,23 @@ class FORUM_BOL_GroupDao extends OW_BaseDao
     }
 
     /**
+     * Find latest public groups ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestPublicGroupsIds($first, $count)
+    {
+        $example = new OW_Example();
+        $example->andFieldEqual('isPrivate', 0);
+        $example->setLimitClause($first, $count);
+        $example->setOrder('id DESC');
+
+        return $this->findIdListByExample($example);
+    }
+
+    /**
      * Returns new group order
      * 
      * @param int $sectionId

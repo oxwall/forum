@@ -29,44 +29,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @author Alex Ermashev <alexermashev@gmail.com>
- * @package ow.plugin.forum.mobile.controllers
- * @since 1.6.0
- */
-class FORUM_MCTRL_Forum extends FORUM_MCTRL_AbstractForum
-{
-    /**
-     * Forum index
-     */
-    public function index()
-    {
-        $addTopic = false;
+// register sitemap entities
+Updater::getSeoService()->addSitemapEntity('forum', 'forum_sitemap', 'forum', array(
+    'forum_list',
+    'forum_section',
+    'forum_group',
+    'forum_topic'
+));
 
-//        OW::getDocument()->setDescription(OW::getLanguage()->text('forum', 'meta_description_forums'));
-        OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_index'));
-//        OW::getDocument()->setTitle(OW::getLanguage()->text('forum', 'forum_index'));
-
-        $isModerator = OW::getUser()->isAuthorized('forum');
-
-        if ( !empty($_GET['add_topic']) && OW::getUser()->isAuthenticated() )
-        {
-            $addTopic = true;
-        }
-
-        $this->assign('addTopic', $addTopic);
-        $this->assign('canEdit', OW::getUser()->isAuthorized('forum', 'edit') || $isModerator ? true : false);
-        $this->assign('promotion', BOL_AuthorizationService::getInstance()->getActionStatus('forum', 'edit'));
-
-        $params = array(
-            "sectionKey" => "forum",
-            "entityKey" => "home",
-            "title" => "forum+meta_title_home",
-            "description" => "forum+meta_desc_home",
-            "keywords" => "forum+meta_keywords_home"
-        );
-
-        OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
-    }
-}
-
+Updater::getLanguageService()->importPrefixFromZip(__DIR__ . DS . 'langs.zip', 'forum');

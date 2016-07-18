@@ -629,6 +629,7 @@ class FORUM_CLASS_EventHandler
         $em->bind('forum.install_widget', array($this, 'installWidget'));
         $em->bind('forum.delete_widget', array($this, 'deleteWidget'));
         $em->bind('feed.on_item_render', array($this, 'feedOnItemRender'));
+        $em->bind("base.collect_seo_meta_data", array($this, 'onCollectMetaData'));
     }
 
     public function sosialSharingGetForumInfo( OW_Event $event )
@@ -683,6 +684,184 @@ class FORUM_CLASS_EventHandler
         BOL_AuthorizationService::getInstance()->trackActionForUser($topic->userId, 'forum', 'edit');
     }
 
+    /**
+     * Get sitemap urls
+     *
+     * @param OW_Event $event
+     * @return void
+     */
+    public function onSitemapGetUrls( OW_Event $event )
+    {
+        $params = $event->getParams();
+
+        if ( BOL_AuthorizationService::getInstance()->isActionAuthorizedForGuest('forum', 'view') )
+        {
+            $offset = (int) $params['offset'];
+            $limit  = (int) $params['limit'];
+            $urls   = array();
+
+            switch ( $params['entity'] )
+            {
+                case 'forum_topic' :
+                    $topics = FORUM_BOL_ForumService::getInstance()->findLatestPublicTopicsIds($offset, $limit);
+
+                    foreach ( $topics as $topicId )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('topic-default', array(
+                            'topicId' => $topicId
+                        ));
+                    }
+                    break;
+
+                case 'forum_group' :
+                    $groups = FORUM_BOL_ForumService::getInstance()->findLatestPublicGroupsIds($offset, $limit);
+
+                    foreach ( $groups as $groupId )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('group-default', array(
+                            'groupId' => $groupId
+                        ));
+                    }
+                    break;
+
+                case 'forum_section' :
+                    $sections = FORUM_BOL_ForumService::getInstance()->findLatestPublicSectionsIds($offset, $limit);
+
+                    foreach ( $sections as $sectionId )
+                    {
+                        $urls[] = OW::getRouter()->urlForRoute('section-default', array(
+                            'sectionId' => $sectionId
+                        ));
+                    }
+                    break;
+
+                case 'forum_list' :
+                    $urls[] = OW::getRouter()->urlForRoute('forum-default');
+                    $urls[] = OW::getRouter()->urlForRoute('forum_advanced_search');
+                    break;
+            }
+
+            if ( $urls )
+            {
+                $event->setData($urls);
+            }
+        }
+    }
+
+    public function onCollectMetaData( BASE_CLASS_EventCollector $e )
+    {
+        $language = OW::getLanguage();
+
+        $items = array(
+            array(
+                "entityKey" => "home",
+                "entityLabel" => $language->text("forum", "seo_meta_home_label"),
+                "iconClass" => "ow_ic_house",
+                "langs" => array(
+                    "title" => "forum+meta_title_home",
+                    "description" => "forum+meta_desc_home",
+                    "keywords" => "forum+meta_keywords_home"
+                ),
+                "vars" => array("site_name")
+            ),
+            array(
+                "entityKey" => "advSearch",
+                "entityLabel" => $language->text("forum", "seo_meta_adv_search_label"),
+                "iconClass" => "ow_ic_lens",
+                "langs" => array(
+                    "title" => "forum+meta_title_adv_search",
+                    "description" => "forum+meta_desc_adv_search",
+                    "keywords" => "forum+meta_keywords_adv_searche"
+                ),
+                "vars" => array("site_name")
+            ),
+            array(
+                "entityKey" => "advSearchResult",
+                "entityLabel" => $language->text("forum", "seo_meta_adv_search_result_label"),
+                "iconClass" => "ow_ic_newsfeed",
+                "langs" => array(
+                    "title" => "forum+meta_title_adv_search_result",
+                    "description" => "forum+meta_desc_adv_search_result",
+                    "keywords" => "forum+meta_keywords_adv_searche_result"
+                ),
+                "vars" => array("site_name")
+            ),
+            array(
+                "entityKey" => "section",
+                "entityLabel" => $language->text("forum", "seo_meta_section_label"),
+                "iconClass" => "ow_ic_forum",
+                "langs" => array(
+                    "title" => "forum+meta_title_section",
+                    "description" => "forum+meta_desc_section",
+                    "keywords" => "forum+meta_keywords_section"
+                ),
+                "vars" => array("site_name", "section_name")
+            ),
+            array(
+                "entityKey" => "group",
+                "entityLabel" => $language->text("forum", "seo_meta_group_label"),
+                "iconClass" => "ow_ic_forum",
+                "langs" => array(
+                    "title" => "forum+meta_title_group",
+                    "description" => "forum+meta_desc_group",
+                    "keywords" => "forum+meta_keywords_group"
+                ),
+                "vars" => array("site_name", "group_name", "group_description")
+            ),
+            array(
+                "entityKey" => "topic",
+                "entityLabel" => $language->text("forum", "seo_meta_topic_label"),
+                "iconClass" => "ow_ic_forum",
+                "langs" => array(
+                    "title" => "forum+meta_title_topic",
+                    "description" => "forum+meta_desc_topic",
+                    "keywords" => "forum+meta_keywords_topic"
+                ),
+                "vars" => array("site_name", "topic_name", "topic_description")
+            ),
+            array(
+                "entityKey" => "sectionSearch",
+                "entityLabel" => $language->text("forum", "seo_meta_section_search_label"),
+                "iconClass" => "ow_ic_lens",
+                "langs" => array(
+                    "title" => "forum+meta_title_section_search",
+                    "description" => "forum+meta_desc_section_search",
+                    "keywords" => "forum+meta_keywords_section_search"
+                ),
+                "vars" => array("site_name", "section_name")
+            ),
+            array(
+                "entityKey" => "groupSearch",
+                "entityLabel" => $language->text("forum", "seo_meta_group_search_label"),
+                "iconClass" => "ow_ic_lens",
+                "langs" => array(
+                    "title" => "forum+meta_title_group_search",
+                    "description" => "forum+meta_desc_group_search",
+                    "keywords" => "forum+meta_keywords_group_search"
+                ),
+                "vars" => array("site_name", "group_name", "group_description")
+            ),
+            array(
+                "entityKey" => "topicSearch",
+                "entityLabel" => $language->text("forum", "seo_meta_topic_search_label"),
+                "iconClass" => "ow_ic_lens",
+                "langs" => array(
+                    "title" => "forum+meta_title_topic_search",
+                    "description" => "forum+meta_desc_topic_search",
+                    "keywords" => "forum+meta_keywords_topic_search"
+                ),
+                "vars" => array("site_name", "topic_name", "topic_description")
+            ),
+        );
+
+        foreach ($items as &$item)
+        {
+            $item["sectionLabel"] = $language->text("forum", "seo_meta_section");
+            $item["sectionKey"] = "forum";
+            $e->add($item);
+        }
+    }
+
     public function genericInit()
     {
         $em = OW::getEventManager();
@@ -710,5 +889,6 @@ class FORUM_CLASS_EventHandler
         $em->bind('usercredits.get_action_key', array($credits, 'getActionKey'));
 
         $em->bind('socialsharing.get_entity_info', array($this, 'sosialSharingGetForumInfo'));
+        $em->bind("base.sitemap.get_urls", array($this, 'onSitemapGetUrls'));
     }
 }

@@ -89,6 +89,39 @@ class FORUM_BOL_TopicDao extends OW_BaseDao
     }
 
     /**
+     * Find latest topics ids
+     *
+     * @param integer $first
+     * @param integer $count
+     * @return array
+     */
+    public function findLatestPublicTopicsIds($first, $count)
+    {
+        $query = "SELECT
+            a.`id`
+        FROM
+            `" . $this->getTableName() . "` a
+        INNER JOIN
+            `" . FORUM_BOL_GroupDao::getInstance()->getTableName() . "` b
+        ON
+            a.`groupId` = b.`id`
+                AND
+            b.`isPrivate` = :private
+        WHERE
+            a.`status` = :status
+        ORDER BY
+            a.`id` DESC
+        LIMIT :f, :c";
+
+        return $this->dbo->queryForColumnList($query, array(
+            'private' => 0,
+            'status' => 'approved',
+            'f' => (int) $first,
+            'c' => (int) $count,
+        ));
+    }
+
+    /**
      * Returns forum group's topic count
      * 
      * @param int 

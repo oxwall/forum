@@ -74,8 +74,19 @@ class FORUM_CTRL_Index extends OW_ActionController
 
             $groupName = htmlspecialchars($firstGroup['name']);
             OW::getDocument()->setHeading(OW::getLanguage()->text('forum', 'forum_page_heading', array('forum' => $groupName)));
-            OW::getDocument()->setTitle($groupName);
-            OW::getDocument()->setDescription(htmlspecialchars($firstGroup['description']));
+//            OW::getDocument()->setTitle($groupName);
+//            OW::getDocument()->setDescription(htmlspecialchars($firstGroup['description']));
+
+            $params = array(
+                "sectionKey" => "forum",
+                "entityKey" => "home",
+                "title" => "forum+meta_title_home",
+                "description" => "forum+meta_desc_home",
+                "keywords" => "forum+meta_keywords_home"
+            );
+
+            OW::getEventManager()->trigger(new OW_Event("base.provide_page_meta_info", $params));
+
         }
         else
         {
