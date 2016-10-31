@@ -388,12 +388,12 @@ var ForumTopic = {
 		});
 		
 		$(".delete_topic").bind("click", function() {
-			self.confirmAction(self.deleteTopicUrl, OW.getLanguageText('forum', 'delete_topic_confirm'));
+			self.confirmActionPost(self.deleteTopicUrl, OW.getLanguageText('forum', 'delete_topic_confirm'));
 		});		
 	
 		$(".delete_post a").bind("click", function() {
 			var postId = $(this).attr("id");
-			self.confirmAction(self.deletePostUrl, OW.getLanguageText('forum', 'delete_post_confirm'), postId);
+			self.confirmActionPost(self.deletePostUrl, OW.getLanguageText('forum', 'delete_post_confirm'), postId);
 		});
 		
 		$(".quote_post a").bind("click", function() {
@@ -441,6 +441,25 @@ var ForumTopic = {
 			url = (postId) ? url.replace('postId', postId) : url;
 			window.location.href = url;
 		}		
+	},
+
+	confirmActionPost: function(url, confirmText, postId)
+	{
+		var result = window.confirm(confirmText);
+		if ( result ) {
+			url = (postId) ? url.replace('postId', postId) : url;
+			$.ajax({
+				url: url,
+				type: "post",
+				dataType: "json",
+				success: function(result){
+					if ( result != undefined )
+					{
+						window.location.href = result.url;
+					}
+				}
+			});
+		}
 	},
 	
 	quotePost: function(postId)
