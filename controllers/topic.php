@@ -584,7 +584,8 @@ class FORUM_CTRL_Topic extends OW_ActionController
      */
     public function deletePost( array $params )
     {
-        if ( !isset($params['topicId']) || !($topicId = (int) $params['topicId']) || !isset($params['postId']) || !($postId = (int) $params['postId']) )
+        if ( !isset($params['topicId']) || !($topicId = (int) $params['topicId']) || !isset($params['postId']) ||
+            !($postId = (int) $params['postId']) || !OW::getRequest()->isPost() )
         {
             throw new Redirect404Exception();
         }
@@ -628,7 +629,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
             $postUrl = $this->forumService->getPostUrl($topicId, $postId, false);
         }
 
-        $this->redirect($postUrl);
+        exit(json_encode(array('url' => $postUrl)));
     }
 
     /**
@@ -733,7 +734,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
      */
     public function deleteTopic( array $params )
     {
-        if ( !isset($params['topicId']) || !($topicId = (int) $params['topicId']) )
+        if ( !isset($params['topicId']) || !($topicId = (int) $params['topicId']) || !OW::getRequest()->isPost())
         {
             throw new Redirect404Exception();
         }
@@ -771,7 +772,7 @@ class FORUM_CTRL_Topic extends OW_ActionController
             }
         }
 
-        $this->redirect($redirectUrl);
+        exit(json_encode(array('url' => $redirectUrl)));
     }
 
     /**
