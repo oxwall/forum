@@ -46,14 +46,14 @@ class FORUM_CMP_ForumSearch extends OW_Component
         
         $this->scope = $params['scope'];
         
-        $value = isset($params['token']) ? trim(htmlspecialchars($params['token'])) : null;
-        $userValue = isset($params['userToken']) ? trim(htmlspecialchars($params['userToken'])) : null;
+        $value = isset($params['token']) ? trim(htmlspecialchars($params['token'])) : '';
+        $userValue = isset($params['userToken']) ? trim(htmlspecialchars($params['userToken'])) : '';
         $invitation = $this->getInvitationLabel();
         
         $inputParams = array(
             'type' => 'text',
-            'class' => !mb_strlen($value) ? 'invitation' : '',
-            'value' => mb_strlen($value) ? $value : $invitation,
+            'class' => mb_strlen($value) === 0 ? 'invitation' : '',
+            'value' => mb_strlen($value) !== 0 ? $value : $invitation,
             'id' => UTIL_HtmlTag::generateAutoId('input')
         );
         $this->assign('input', UTIL_HtmlTag::generateTag('input', $inputParams));
@@ -108,7 +108,7 @@ class FORUM_CMP_ForumSearch extends OW_Component
         });
         ';
         
-        if ( !mb_strlen($value) )
+        if ( mb_strlen($value) === 0 )
         {
             $script .=
             '$("#" + input).focus(function() {
