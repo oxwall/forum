@@ -35,6 +35,8 @@
  */
 class FORUM_CLASS_TopicEditForm extends Form
 {
+    const PLUGIN_KEY = FORUM_BOL_ForumService::PLUGIN_KEY;
+
     /**
      * Class constructor
      * 
@@ -46,24 +48,24 @@ class FORUM_CLASS_TopicEditForm extends Form
      */
     public function __construct( $name, $uid, FORUM_BOL_Topic $topicDto, FORUM_BOL_Post $postDto, $mobileWysiwyg = false ) 
     {
-        parent::__construct($name);
+        parent::__construct($name, self::PLUGIN_KEY);
 
         $lang = OW::getLanguage();
 
-        $topicIdField = new HiddenField('topic-id');
+        $topicIdField = new HiddenField('topic-id', self::PLUGIN_KEY);
         $topicIdField->setValue($topicDto->id);
         $this->addElement($topicIdField);
 
-        $postIdField = new HiddenField('post-id');
+        $postIdField = new HiddenField('post-id', self::PLUGIN_KEY);
         $postIdField->setValue($postDto->id);
         $this->addElement($postIdField);
 
-        $attachmentUid = new HiddenField('attachmentUid');
+        $attachmentUid = new HiddenField('attachmentUid', self::PLUGIN_KEY);
         $attachmentUid->setValue($uid);
         $this->addElement($attachmentUid);
 
         // title
-        $titleField = new TextField('title');
+        $titleField = new TextField('title', self::PLUGIN_KEY);
         $titleField->setValue($topicDto->title);
         $titleField->setRequired(true);
         $sValidator = new StringValidator(FORUM_CLASS_TopicAddForm::MIN_TITLE_LENGTH, FORUM_CLASS_TopicAddForm::MAX_TITLE_LENGTH);
@@ -76,10 +78,10 @@ class FORUM_CLASS_TopicEditForm extends Form
         // post
         if ( $mobileWysiwyg )
         {
-            $textField = new MobileWysiwygTextarea('text');
+            $textField = new MobileWysiwygTextarea('text', self::PLUGIN_KEY);
         }
         else {
-            $textField = new WysiwygTextarea('text', array(
+            $textField = new WysiwygTextarea('text', self::PLUGIN_KEY, array(
                 BOL_TextFormatService::WS_BTN_IMAGE, 
                 BOL_TextFormatService::WS_BTN_VIDEO, 
                 BOL_TextFormatService::WS_BTN_HTML
@@ -93,7 +95,7 @@ class FORUM_CLASS_TopicEditForm extends Form
         $textField->addValidator($sValidator);
         $this->addElement($textField);
 
-        $submit = new Submit('save');
+        $submit = new Submit('save', self::PLUGIN_KEY);
         $submit->setValue($lang->text('base', 'edit_button'));
         $this->addElement($submit);
     }

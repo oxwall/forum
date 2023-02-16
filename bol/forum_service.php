@@ -38,6 +38,8 @@
  */
 final class FORUM_BOL_ForumService
 {
+    const PLUGIN_KEY = 'forum';
+
     const EVENT_AFTER_POST_DELETE = 'forum.after_post_delete';
     const EVENT_AFTER_POST_EDIT = 'forum.after_post_edit';
     const EVENT_AFTER_TOPIC_DELETE = 'forum.after_topic_delete';

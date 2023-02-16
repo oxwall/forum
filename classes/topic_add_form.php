@@ -35,6 +35,8 @@
  */
 class FORUM_CLASS_TopicAddForm extends Form
 {
+    const PLUGIN_KEY = FORUM_BOL_ForumService::PLUGIN_KEY;
+
     /**
      * Min title length
      */
@@ -75,16 +77,16 @@ class FORUM_CLASS_TopicAddForm extends Form
             array $groupSelect, $groupId = null, $mobileWysiwyg = false, $isSectionHidden  = false) 
     {
 
-        parent::__construct($name);
+        parent::__construct($name, self::PLUGIN_KEY);
         $lang = OW::getLanguage();
 
         // attachments
-        $attachmentUidField = new HiddenField('attachmentUid');
+        $attachmentUidField = new HiddenField('attachmentUid', self::PLUGIN_KEY);
         $attachmentUidField->setValue($attachmentUid);
         $this->addElement($attachmentUidField);
 
         // title
-        $titleField = new TextField('title');
+        $titleField = new TextField('title', self::PLUGIN_KEY);
         $titleField->setRequired(true);
         $sValidator = new StringValidator(self::MIN_TITLE_LENGTH, self::MAX_TITLE_LENGTH);
         $sValidator->setErrorMessage($lang->
@@ -96,12 +98,12 @@ class FORUM_CLASS_TopicAddForm extends Form
         // group
         if ( $isSectionHidden )
         {
-            $groupField = new HiddenField('group');
+            $groupField = new HiddenField('group', self::PLUGIN_KEY);
             $groupField->setValue($groupId);
         }
         else
         {
-            $groupField = new ForumSelectBox('group');
+            $groupField = new ForumSelectBox('group', self::PLUGIN_KEY);
             $groupField->setOptions($groupSelect);
 
             if ( $groupId )
@@ -132,10 +134,10 @@ class FORUM_CLASS_TopicAddForm extends Form
         // post
         if ( $mobileWysiwyg )
         {
-            $textField = new MobileWysiwygTextarea('text');
+            $textField = new MobileWysiwygTextarea('text', self::PLUGIN_KEY);
         }
         else {
-            $textField = new WysiwygTextarea('text', array(
+            $textField = new WysiwygTextarea('text', self::PLUGIN_KEY, array(
                 BOL_TextFormatService::WS_BTN_IMAGE, 
                 BOL_TextFormatService::WS_BTN_VIDEO, 
                 BOL_TextFormatService::WS_BTN_HTML
@@ -149,13 +151,13 @@ class FORUM_CLASS_TopicAddForm extends Form
         $this->addElement($textField);
 
         // subscribe
-        $subscribeField = new CheckboxField('subscribe');
+        $subscribeField = new CheckboxField('subscribe', self::PLUGIN_KEY);
         $subscribeField->setLabel($lang->text('forum', 'subscribe'));
         $subscribeField->setValue(true);
         $this->addElement($subscribeField);
 
         // submit
-        $submit = new Submit('post');
+        $submit = new Submit('post', self::PLUGIN_KEY);
         $submit->setValue($lang->text('forum', 'add_post_btn'));
         $this->addElement($submit);
     }

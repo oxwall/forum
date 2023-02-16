@@ -44,9 +44,9 @@ class ForumSelectBox extends Selectbox
      *
      * @param array $params
      */
-    public function __construct( $params = null )
+    public function __construct( $params = null, $id = '' )
     {
-        parent::__construct($params);
+        parent::__construct($params, $id);
     }
 
     /**
