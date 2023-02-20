@@ -35,6 +35,8 @@
  */
 class FORUM_CLASS_AdvancedSearchForm extends Form
 {
+    const PLUGIN_KEY = FORUM_BOL_ForumService::PLUGIN_KEY;
+
     /**
      * Class constructor
      * 
@@ -43,26 +45,26 @@ class FORUM_CLASS_AdvancedSearchForm extends Form
      */
     public function __construct( $name, array $sections = array() ) 
     {
-        parent::__construct($name);
+        parent::__construct($name, self::PLUGIN_KEY);
 
         $this->setMethod(self::METHOD_GET);
         $this->setAction(OW::getRouter()->urlForRoute('forum_advanced_search_result'));
 
         // keyword
-        $keywordField = new TextField('keyword');
+        $keywordField = new TextField('keyword', self::PLUGIN_KEY);
         $keywordField->setHasInvitation(true);
         $keywordField->setInvitation(OW::getLanguage()->text('forum', 'forms_search_keyword_field_invitation'));
         $this->addElement($keywordField);
 
         // username
-        $userNameField = new TextField('username');
+        $userNameField = new TextField('username', self::PLUGIN_KEY);
         $userNameField->setLabel(OW::getLanguage()->text('forum', 'forms_search_username_field_label'));
         $userNameField->setHasInvitation(true);
         $userNameField->setInvitation(OW::getLanguage()->text('forum', 'forms_search_username_field_invitation'));
         $this->addElement($userNameField);
 
         // parts
-        $partsField = new SelectBox('parts[]');
+        $partsField = new SelectBox('parts[]', self::PLUGIN_KEY);
         $partsField->setLabel(OW::getLanguage()->text('forum', 'forms_search_parts_field_label'));
         $partsField->addAttribute('multiple',  'multiple');
         $partsField->addAttribute('class',  'ow_multiselect');
@@ -90,7 +92,7 @@ class FORUM_CLASS_AdvancedSearchForm extends Form
         $this->addElement($partsField);
 
         // search in
-        $searchInField = new RadioField('search_in');
+        $searchInField = new RadioField('search_in', self::PLUGIN_KEY);
         $searchInField->setLabel(OW::getLanguage()->text('forum', 'forms_search_search_in_field_label'));
         $searchInField->addOptions(array(
            'message' => OW::getLanguage()->text('forum', 'forms_search_search_in_field_value_message'),
@@ -100,7 +102,7 @@ class FORUM_CLASS_AdvancedSearchForm extends Form
         $this->addElement($searchInField);
 
         // period
-        $periodField = new SelectBox('period');
+        $periodField = new SelectBox('period', self::PLUGIN_KEY);
         $periodField->setLabel(OW::getLanguage()->text('forum', 'forms_search_period_field_label'));
         $periodField->addOptions(array(
            'today' => OW::getLanguage()->text('forum', 'forms_search_search_period_value_today'),
@@ -114,7 +116,7 @@ class FORUM_CLASS_AdvancedSearchForm extends Form
         $this->addElement($periodField);
 
         // sort
-        $sortField = new SelectBox('sort');
+        $sortField = new SelectBox('sort', self::PLUGIN_KEY);
         $sortField->setLabel(OW::getLanguage()->text('forum', 'forms_search_sort_field_label'));
         $sortField->addOptions(array(
            'date' => OW::getLanguage()->text('forum', 'forms_search_sort_value_date'),
@@ -124,7 +126,7 @@ class FORUM_CLASS_AdvancedSearchForm extends Form
         $this->addElement($sortField);
 
         // sort direction
-        $sortDirectionField = new RadioField('sort_direction');
+        $sortDirectionField = new RadioField('sort_direction'. self::PLUGIN_KEY);
         $sortDirectionField->setLabel(OW::getLanguage()->text('forum', 'forms_search_sort_direction_field_label'));
         $sortDirectionField->addOptions(array(
            'increase' => OW::getLanguage()->text('forum', 'forms_search_sort_direction_field_value_increase'),
@@ -134,7 +136,7 @@ class FORUM_CLASS_AdvancedSearchForm extends Form
         $this->addElement($sortDirectionField);
 
         // submit
-        $submit = new Submit('submit');
+        $submit = new Submit('submit', self::PLUGIN_KEY);
         $submit->setLabel(OW::getLanguage()->text('forum', 'forms_search_submit_field_label'));
         $this->addElement($submit);
     }

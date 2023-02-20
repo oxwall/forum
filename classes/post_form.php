@@ -35,6 +35,8 @@
  */
 class FORUM_CLASS_PostForm extends Form
 {
+    const PLUGIN_KEY = FORUM_BOL_ForumService::PLUGIN_KEY;
+
     /**
      * Min text length
      */
@@ -62,25 +64,25 @@ class FORUM_CLASS_PostForm extends Form
     public function __construct( $name, $attachmentUid, $topicId, $mobileWysiwyg = false ) 
     {
 
-        parent::__construct($name);
+        parent::__construct($name, self::PLUGIN_KEY);
         $lang = OW::getLanguage();
 
-        $topicIdField = new HiddenField('topic');
+        $topicIdField = new HiddenField('topic', self::PLUGIN_KEY);
         $topicIdField->setValue($topicId);
         $this->addElement($topicIdField);
 
         // attachments
-        $attachmentUidField = new HiddenField('attachmentUid');
+        $attachmentUidField = new HiddenField('attachmentUid', self::PLUGIN_KEY);
         $attachmentUidField->setValue($attachmentUid);
         $this->addElement($attachmentUidField);
 
         // text
         if ( $mobileWysiwyg )
         {
-            $textField = new MobileWysiwygTextarea('text');
+            $textField = new MobileWysiwygTextarea('text', self::PLUGIN_KEY);
         }
         else {
-            $textField = new WysiwygTextarea('text', array(
+            $textField = new WysiwygTextarea('text', self::PLUGIN_KEY, array(
                 BOL_TextFormatService::WS_BTN_IMAGE, 
                 BOL_TextFormatService::WS_BTN_VIDEO, 
                 BOL_TextFormatService::WS_BTN_HTML
@@ -94,7 +96,7 @@ class FORUM_CLASS_PostForm extends Form
         $this->addElement($textField);
 
         // submit
-        $submit = new Submit('submit');
+        $submit = new Submit('submit', self::PLUGIN_KEY);
         $submit->setValue($lang->text('forum', 'add_post_btn'));
         $this->addElement($submit);
     }

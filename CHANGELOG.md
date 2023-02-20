@@ -1,3 +1,7 @@
+# Version 1.9.0 (10800)
+- php 8 support
+- add static ids for form elements
+
 # Version 1.8.4 (10800)
 - fixed display of quoted text for Simplicity theme (contributed by WalterMisar https://github.com/oxwall/simplicity/pull/7)
 
