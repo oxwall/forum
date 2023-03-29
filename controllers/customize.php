@@ -268,7 +268,7 @@ class FORUM_CTRL_Customize extends OW_ActionController
             $groupDto->description = $groupDescription;
             $groupDto->order = $forumService->getNewGroupOrder($sectionDto->id);
             $groupDto->isPrivate = (bool) $isPrivate;
-            $groupDto->roles = count($roles) ? json_encode($roles) : null;
+            $groupDto->roles = ($roles !== null) ? json_encode($roles) : null;
 
             $forumService->saveOrUpdateGroup($groupDto);
 
@@ -366,7 +366,7 @@ class FORUM_CTRL_Customize extends OW_ActionController
             $groupDto->name = $groupName;
             $groupDto->description = $groupDescription;
             $groupDto->isPrivate = (bool) $isPrivate;
-            $groupDto->roles = count($roles) ? json_encode($roles) : null;
+            $groupDto->roles = ($roles !== null) ? json_encode($roles) : null;
 
             $forumService->saveOrUpdateGroup($groupDto);
 
