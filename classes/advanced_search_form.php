@@ -126,7 +126,7 @@ class FORUM_CLASS_AdvancedSearchForm extends Form
         $this->addElement($sortField);
 
         // sort direction
-        $sortDirectionField = new RadioField('sort_direction'. self::PLUGIN_KEY);
+        $sortDirectionField = new RadioField('sort_direction', self::PLUGIN_KEY);
         $sortDirectionField->setLabel(OW::getLanguage()->text('forum', 'forms_search_sort_direction_field_label'));
         $sortDirectionField->addOptions(array(
            'increase' => OW::getLanguage()->text('forum', 'forms_search_sort_direction_field_value_increase'),
