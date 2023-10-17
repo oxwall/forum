@@ -239,7 +239,7 @@ class FORUM_CTRL_Customize extends OW_ActionController
             $sectionName = trim($_POST['section']);
             $groupDescription = trim($_POST['description']);
             $isPrivate = $_POST['is-private'] == 'on';
-            $roles = !empty($_POST['roles']) ? $_POST['roles'] : null;
+            $roles = !empty($_POST['roles']) ? $_POST['roles'] : [];
 
             if ( !$groupName || !$sectionName || !$groupDescription )
             {
@@ -348,7 +348,7 @@ class FORUM_CTRL_Customize extends OW_ActionController
             $groupName = trim($_POST['group-name']);
             $groupDescription = trim($_POST['description']);
             $isPrivate = $_POST['is-private'] == 'on';
-            $roles = !empty($_POST['roles']) ? $_POST['roles'] : null;
+            $roles = !empty($_POST['roles']) ? $_POST['roles'] : [];
 
             if ( !$groupId || !$groupName || !$groupDescription )
             {
